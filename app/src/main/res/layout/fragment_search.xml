@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:id="@+id/search_result_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="10dp"
+        android:visibility="gone"
+        android:paddingTop="58dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lookup_textview"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:fontFamily="@font/roboto"
+                android:gravity="top"
+                android:visibility="gone"
+                android:text="Looking for ABC"
+                android:textColor="#0866FF"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/empty_textview"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:fontFamily="@font/roboto"
+                android:visibility="gone"
+                android:gravity="top"
+                android:text="no result found"
+                android:textColor="@color/grey"
+                android:textSize="18sp" />
+
+            <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+                android:id="@+id/result_spin"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:visibility="gone"
+                app:button_background_color="#757575" />
+
+            <LinearLayout
+                android:id="@+id/search_result_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <ScrollView
+        android:id="@+id/recent_search_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="10dp"
+        android:paddingTop="58dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:fontFamily="@font/roboto_medium"
+                android:gravity="center_vertical"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:text="Recently"
+                android:textColor="@color/black"
+                android:textSize="20sp" />
+
+            <LinearLayout
+                android:id="@+id/recent_search_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:orientation="vertical"></LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:paddingTop="7dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal">
+
+            <com.example.socialmediaapp.customview.button.CircleButton
+                android:id="@+id/back_button"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                app:background_bound="35dp"
+                app:button_background="@drawable/back_24" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingRight="15dp">
+
+                <com.example.socialmediaapp.customview.RoundedEditText
+                    android:id="@+id/search_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:paddingStart="15dp"
+                    android:paddingTop="0dp"
+                    android:paddingEnd="50dp"
+                    android:paddingBottom="0dp"
+                    android:textSize="16sp"
+                    app:custom_corner_ratio="15"
+                    app:default_info="Search" />
+
+
+                <com.example.socialmediaapp.customview.button.CircleButton
+                    android:id="@+id/erase_text_button"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="right"
+                    android:layout_marginRight="5dp"
+                    app:background_bound="22dp"
+                    app:button_background="@drawable/cross_small_24" />
+            </FrameLayout>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_gravity="bottom"
+            android:background="#dee2e6" />
+    </FrameLayout>
+
+</FrameLayout>

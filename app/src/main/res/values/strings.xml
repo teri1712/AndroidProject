@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">SocialMediaApp</string>
+    <string name="forget_password"><u>Forget password?</u></string>
+    <string name="sign_up"><u>Signup</u></string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>

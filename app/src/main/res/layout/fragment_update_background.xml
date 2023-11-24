@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical"
+
+    >
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/edit_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:orientation="horizontal">
+
+                <com.example.socialmediaapp.customview.button.CircleButton
+                    android:id="@+id/back_button"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    app:background_bound="30dp"
+                    app:button_background="@drawable/back_24" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/roboto"
+                    android:gravity="center_vertical"
+                    android:text="Change Background"
+                    android:textColor="@color/black"
+                    android:textSize="20sp" />
+
+                <com.example.socialmediaapp.customview.button.RoundedButton
+                    android:id="@+id/save_button"
+                    android:layout_width="70dp"
+                    android:layout_height="match_parent"
+                    android:layout_margin="3dp"
+                    app:button_background_color="#0866FF"
+                    app:button_text="Save"
+                    app:button_text_color="@color/white"
+                    app:button_text_size="18sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1.5dp"
+                android:background="#e9ecef" />
+
+            <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+                android:id="@+id/spinner"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="25dp"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal"
+                android:paddingLeft="15dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:fontFamily="@font/roboto"
+                    android:gravity="top"
+                    android:padding="0dp"
+                    android:text="To:"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="7dp"
+                    android:drawableLeft="@drawable/world_24"
+                    android:drawablePadding="5dp"
+                    android:drawableTint="@color/grey"
+                    android:fontFamily="@font/roboto"
+                    android:gravity="top"
+                    android:padding="0dp"
+                    android:text="Public"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <com.example.socialmediaapp.customview.DefaultBackgroundEditText
+                android:id="@+id/status_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="10dp"
+                android:gravity="top"
+                android:paddingStart="10dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:textCursorDrawable="@null"
+                android:textSize="18sp"
+                app:default_info="Say something about your avatar"
+
+                />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/simulate_image_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="230dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/suzy_background" />
+
+
+                <FrameLayout
+                    android:layout_width="170dp"
+                    android:layout_height="170dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="120dp">
+
+                    <com.example.socialmediaapp.customview.button.CircleButton
+                        android:id="@+id/avatar_button"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_margin="1dp"
+                        app:background_bound="0dp"
+                        app:enable_on_click = "false"
+                        app:button_background="@drawable/suzy_avatar" />
+
+
+                    <com.example.socialmediaapp.customview.CircleStrokeView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                </FrameLayout>
+
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/fullname"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="15dp"
+                android:fontFamily="@font/roboto_medium"
+                android:gravity="center"
+                android:paddingLeft="0dp"
+                android:paddingTop="0dp"
+                android:paddingRight="0dp"
+                android:paddingBottom="0dp"
+                android:text="Bae Suzy"
+                android:textColor="@color/black"
+                android:textSize="35sp" />
+
+
+
+            <ImageView
+                android:id="@+id/image_view"
+                android:layout_width="match_parent"
+                android:layout_height="230dp"
+                android:scaleType="centerCrop"
+                android:layout_marginTop="30dp"
+                android:src="@drawable/emyeu" />
+
+
+        </LinearLayout>
+    </ScrollView>
+
+
+    />
+</FrameLayout>

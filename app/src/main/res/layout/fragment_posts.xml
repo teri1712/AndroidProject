@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".home.fragment.main.PostFragment">
+
+    <com.example.socialmediaapp.customview.container.SpinningFrame
+        android:layout_width="match_parent"
+        app:scrollview_id = "@id/home_scroll_pane"
+        android:layout_height="match_parent">
+
+        <ScrollView
+            android:id="@+id/home_scroll_pane"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#d3d3d3"
+            android:descendantFocusability="beforeDescendants"
+            android:fillViewport="true"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginTop="50dp"
+                    android:background="@color/white"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
+
+                    <com.example.socialmediaapp.customview.button.CircleButton
+                        android:id="@+id/avatar_button"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_centerVertical="true"
+                        android:layout_marginLeft="10dp"
+                        app:background_bound="40dp"
+                        app:button_background="@drawable/user_24" />
+
+                    <com.example.socialmediaapp.customview.RoundedEditText
+                        android:id="@+id/open_create_post"
+                        android:layout_width="296dp"
+                        android:layout_height="40dp"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="12dp"
+                        android:layout_toStartOf="@+id/select_image"
+                        android:layout_toEndOf="@+id/avatar_button"
+                        android:clickable="true"
+                        android:focusable="false"
+                        android:paddingStart="18dp"
+                        android:paddingTop="0dp"
+                        android:paddingBottom="0dp"
+                        android:textSize="16sp"
+                        app:custom_corner_ratio="50"
+                        app:default_info="What are you thinking?" />
+
+                    <com.example.socialmediaapp.customview.button.CircleButton
+                        android:id="@+id/select_image"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginRight="10dp"
+                        app:background_bound="25dp"
+                        app:button_background="@drawable/picture_green_24" />
+
+                </RelativeLayout>
+
+                <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+                    android:id="@+id/load_spinner"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="10dp"
+                    android:visibility="gone"
+                    app:button_background_color="#757575" />
+
+                <LinearLayout
+                    android:id="@+id/posts_panel"
+                    android:layout_width="match_parent"
+                    android:orientation="vertical"
+                    android:layout_height="match_parent"></LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+
+    </com.example.socialmediaapp.customview.container.SpinningFrame>
+
+    <FrameLayout
+        android:id="@+id/header_frame"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@color/white">
+
+        <LinearLayout
+            android:id="@+id/header_panel"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal"
+            android:visibility="visible">
+
+            <TextView
+                android:id="@+id/facebook"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="7dp"
+                android:fontFamily="@font/lato_bold"
+                android:text="facebook"
+                android:textColor="#0866FF"
+                android:textSize="32sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layoutDirection="rtl"
+                android:orientation="horizontal">
+
+                <com.example.socialmediaapp.customview.button.CircleButton
+                    android:id="@+id/message_button"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="5dp"
+                    android:gravity="top"
+                    app:background_bound="30dp"
+                    app:button_background="@drawable/messenger" />
+
+                <com.example.socialmediaapp.customview.button.CircleButton
+                    android:id="@+id/search_button"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="5dp"
+                    android:gravity="top"
+                    app:background_bound="20dp"
+                    app:button_background="@drawable/search_24" />
+            </LinearLayout>
+        </LinearLayout>
+
+
+    </FrameLayout>
+
+</FrameLayout>

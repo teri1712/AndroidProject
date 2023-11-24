@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".home.fragment.EditInformationFragment">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:id="@+id/background_image"
+                        android:layout_width="match_parent"
+                        android:layout_height="230dp"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/suzy_background" />
+
+                    <com.example.socialmediaapp.customview.button.CircleButton
+                        android:id="@+id/select_background_button"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:layout_gravity="bottom|right"
+                        android:layout_marginRight="8dp"
+                        android:layout_marginBottom="8dp"
+                        app:background_bound="17dp"
+                        app:button_background="@drawable/camera_24"
+                        app:button_background_color="#dee2e6" />
+                </FrameLayout>
+
+                <FrameLayout
+                    android:layout_width="170dp"
+                    android:layout_height="170dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="120dp">
+
+                    <com.example.socialmediaapp.customview.button.CircleButton
+                        android:id="@+id/avatar_button"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_margin="1dp"
+                        app:background_bound="0dp"
+                        app:button_background="@drawable/suzy_avatar"
+                        app:enable_on_click="false" />
+
+
+                    <com.example.socialmediaapp.customview.CircleStrokeView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                    <com.example.socialmediaapp.customview.button.CircleButton
+                        android:id="@+id/select_avatar_button"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:layout_gravity="bottom|right"
+                        android:layout_marginRight="8dp"
+                        android:layout_marginBottom="8dp"
+                        app:background_bound="17dp"
+                        app:button_background="@drawable/camera_24"
+                        app:button_background_color="#dee2e6" />
+                </FrameLayout>
+
+            </FrameLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="15dp"
+                android:background="#dee2e6" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/roboto_medium"
+                android:gravity="center_vertical"
+                android:text="Informations"
+                android:textColor="@color/black"
+                android:textSize="20sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="20dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="5dp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:gravity="center_vertical"
+                    android:text="Full name"
+                    android:textColor="@color/black"
+                    android:textSize="17sp" />
+
+                <TextView
+                    android:id="@+id/usernameValidationStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:fontFamily="@font/roboto"
+                    android:paddingLeft="5dp"
+                    android:text="Fullname can't not be empty"
+                    android:textColor="@color/design_default_color_error"
+                    android:textSize="16sp"
+                    android:visibility="gone" />
+
+                <com.example.socialmediaapp.customview.RoundedEditText
+                    android:id="@+id/fullname_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:imeOptions="actionNext"
+                    android:inputType="text"
+                    android:nextFocusDown="@+id/alias_edit_text"
+                    android:paddingStart="15dp"
+                    android:paddingTop="0dp"
+                    android:paddingBottom="0dp"
+                    android:text="fullname"
+                    android:textCursorDrawable="@null"
+                    android:textSize="16sp"
+                    app:custom_corner_ratio="10"
+                    app:default_info="username" />
+
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="5dp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:gravity="center_vertical"
+                    android:text="Alias"
+                    android:textColor="@color/black"
+                    android:textSize="17sp" />
+
+                <TextView
+                    android:id="@+id/aliasValidationStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:fontFamily="@font/roboto"
+                    android:paddingLeft="5dp"
+                    android:text="Alias can't not be empty"
+                    android:textColor="@color/design_default_color_error"
+                    android:textSize="16sp"
+                    android:visibility="gone" />
+
+                <com.example.socialmediaapp.customview.RoundedEditText
+                    android:id="@+id/alias_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:imeOptions="actionNext"
+                    android:inputType="text"
+                    android:nextFocusDown="@+id/gender_edit_text"
+                    android:paddingStart="15dp"
+                    android:paddingTop="0dp"
+                    android:paddingBottom="0dp"
+
+                    android:text="Suzy"
+                    android:textCursorDrawable="@null"
+                    android:textSize="16sp"
+                    app:custom_corner_ratio="10"
+                    app:default_info="username" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="5dp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:gravity="center_vertical"
+                    android:text="Gender"
+                    android:textColor="@color/black"
+                    android:textSize="17sp" />
+
+
+                <TextView
+                    android:id="@+id/genderValidationStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:fontFamily="@font/roboto"
+                    android:paddingLeft="5dp"
+                    android:text="Gender should either 'male' or 'female'"
+                    android:textColor="@color/design_default_color_error"
+                    android:textSize="16sp"
+                    android:visibility="gone" />
+
+                <com.example.socialmediaapp.customview.RoundedEditText
+                    android:id="@+id/gender_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:imeOptions="actionNext"
+                    android:inputType="text"
+                    android:nextFocusDown="@+id/birthday_edit_text"
+                    android:paddingStart="15dp"
+                    android:paddingTop="0dp"
+                    android:paddingBottom="0dp"
+                    android:text="Girl"
+                    android:textCursorDrawable="@null"
+                    android:textSize="16sp"
+                    app:custom_corner_ratio="10"
+                    app:default_info="username" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="5dp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:gravity="center_vertical"
+                    android:text="Birthday"
+                    android:textColor="@color/black"
+                    android:textSize="17sp" />
+
+                <TextView
+                    android:id="@+id/birthdayValidationStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:fontFamily="@font/roboto"
+                    android:paddingLeft="5dp"
+                    android:text="Birthday should in form mm/DD/yy"
+                    android:textColor="@color/design_default_color_error"
+                    android:textSize="16sp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.example.socialmediaapp.customview.RoundedEditText
+                        android:id="@+id/birthday_edit_text"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:paddingStart="15dp"
+                        android:paddingTop="0dp"
+                        android:paddingBottom="0dp"
+                        android:text="10/10/1995"
+                        android:textCursorDrawable="@null"
+                        android:textSize="16sp"
+                        app:custom_corner_ratio="10"
+                        app:default_info="username" />
+
+
+                    <com.example.socialmediaapp.customview.button.CircleButton
+                        android:id="@+id/date_picker_button"
+                        android:layout_width="40dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="5dp"
+                        app:background_bound="35dp"
+                        app:button_background="@drawable/calendar"
+                        app:button_background_color="#1F0866FF" />
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <com.example.socialmediaapp.customview.button.RoundedButton
+                android:id="@+id/submit_button"
+
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                app:button_background_color="#0866FF"
+                app:button_text="Send"
+                app:button_text_color="@color/white"
+                app:button_text_font="@font/roboto"
+                app:button_text_size="16sp" />
+
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="15dp"
+                android:background="#dee2e6" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@drawable/security_24"
+                android:drawablePadding="10dp"
+                android:fontFamily="@font/roboto_medium"
+                android:gravity="center_vertical"
+                android:text="Security"
+                android:textColor="@color/black"
+                android:textSize="20sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="20dp"
+                android:orientation="vertical">
+
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:drawableLeft="@drawable/lock_24"
+                    android:drawablePadding="5dp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:gravity="center_vertical"
+                    android:text="Confirm old password"
+                    android:textColor="@color/black"
+                    android:textSize="17sp" />
+
+                <com.example.socialmediaapp.customview.RoundedEditText
+                    android:id="@+id/old_password_confirm"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="5dp"
+                    android:drawableRight="@drawable/hide"
+                    android:fontFamily="@font/roboto"
+                    android:gravity="center_vertical"
+                    android:inputType="textPassword"
+                    android:paddingStart="15dp"
+                    android:paddingTop="0dp"
+                    android:paddingEnd="15dp"
+                    android:paddingBottom="0dp"
+                    android:text="password"
+                    android:textCursorDrawable="@null"
+                    android:textSize="16sp"
+                    app:custom_corner_ratio="10"
+                    app:default_info="password" />
+
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:gravity="center_vertical"
+                    android:text="Type your new password"
+                    android:textColor="@color/black"
+                    android:textSize="17sp" />
+
+                <com.example.socialmediaapp.customview.RoundedEditText
+                    android:id="@+id/new_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="10dp"
+                    android:drawableRight="@drawable/hide"
+                    android:fontFamily="@font/roboto"
+                    android:gravity="center_vertical"
+                    android:inputType="textPassword"
+                    android:paddingStart="15dp"
+                    android:paddingTop="0dp"
+                    android:paddingEnd="15dp"
+                    android:paddingBottom="0dp"
+                    android:text="password"
+                    android:textCursorDrawable="@null"
+                    android:textSize="16sp"
+                    app:custom_corner_ratio="10"
+                    app:default_info="password" />
+
+            </LinearLayout>
+
+            <com.example.socialmediaapp.customview.button.RoundedButton
+                android:id="@+id/change_password_button"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                app:button_background_color="#20000000"
+                app:button_text="Submit"
+                app:button_text_font="@font/roboto"
+                app:button_text_size="16sp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+        android:id="@+id/spinner"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="50dp"
+        android:visibility="gone" />
+
+</FrameLayout>

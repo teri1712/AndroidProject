@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/content_panel"
+
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#d3d3d3"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/information_panel"
+                android:layout_width="match_parent"
+                android:layout_height="400dp"
+                android:background="@color/white"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="290dp">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp">
+
+                        <ImageView
+                            android:id="@+id/background_button"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/suzy_background" />
+
+
+                    </FrameLayout>
+
+
+                    <FrameLayout
+                        android:layout_width="190dp"
+                        android:layout_height="190dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="90dp">
+
+                        <com.example.socialmediaapp.customview.button.CircleButton
+                            android:id="@+id/avatar_button"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_margin="1dp"
+                            app:background_bound="0dp"
+                            app:button_background="@drawable/suzy_avatar" />
+
+
+                        <com.example.socialmediaapp.customview.CircleStrokeView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+
+
+                    </FrameLayout>
+
+                </FrameLayout>
+
+
+                <TextView
+                    android:id="@+id/fullname"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="15dp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:gravity="center"
+                    android:paddingLeft="0dp"
+                    android:paddingTop="0dp"
+                    android:paddingRight="0dp"
+                    android:paddingBottom="0dp"
+                    android:text="Bae Suzy"
+                    android:textColor="@color/black"
+                    android:textSize="35sp" />
+
+            </LinearLayout>
+
+            <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+                android:id="@+id/load_spinner"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="5dp"
+                app:button_background_color="#757575" />
+
+            <LinearLayout
+                android:id="@+id/post_panel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical" />
+        </LinearLayout>
+
+
+    </ScrollView>
+
+
+</FrameLayout>

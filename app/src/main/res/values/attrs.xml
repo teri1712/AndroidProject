@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="waving_button">
+        <attr name="wave_color" format="color" />
+    </declare-styleable>
+    <declare-styleable name="normal_button">
+        <attr name="inactive_background" format="reference" />
+        <attr name="active_background" format="reference" />
+        <attr name="is_active" format="boolean" />
+
+
+        <attr name="button_background" format="reference" />
+        <attr name="background_bound" format="dimension" />
+        <attr name="button_background_color" format="color" />
+        <attr name="button_press_color" format="color" />
+        <attr name="request_press_paint" format="boolean" />
+        <attr name="enable_on_click" format="boolean" />
+
+
+        <attr name="button_text" format="string" />
+        <attr name="button_text_color" format="color" />
+        <attr name="button_text_size" format="dimension" />
+        <attr name="button_text_font" format="reference" />
+
+
+        <attr name="padding_between_text_and_background" format="dimension" />
+
+    </declare-styleable>
+    <declare-styleable name="custom_edit_text">
+        <attr name="custom_corner_ratio" format="integer" />
+        <attr name="default_info" format="string" />
+    </declare-styleable>
+    <declare-styleable name="post_text_view">
+        <attr name="text_content" format="string" />
+    </declare-styleable>
+
+    <declare-styleable name="progress_dot">
+        <attr name="count" format="integer" />
+        <attr name="window_count" format="integer" />
+        <attr name="dot_size" format="integer" />
+        <attr name="dot_margin" format="integer" />
+    </declare-styleable>
+    <declare-styleable name="state_view">
+        <attr name="state" format="string" />
+    </declare-styleable>
+    <declare-styleable name="my_container">
+        <attr name="scrollview_id" format="reference" />
+    </declare-styleable>
+
+</resources>

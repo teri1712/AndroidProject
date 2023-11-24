@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activitiy.LoginFormActivity">
+
+    <LinearLayout
+        android:layout_width="350dp"
+        android:layout_height="608dp"
+        android:layout_centerInParent="true"
+        android:layout_gravity="center"
+        android:layout_marginTop="20dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/signinTextView"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:layout_marginBottom="30dp"
+            android:focusable="true"
+            android:fontFamily="@font/lato_bold"
+            android:gravity="center"
+            android:text="Sign in"
+            android:textColor="@color/black"
+            android:textSize="40sp" />
+
+
+        <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+            android:id="@+id/authenProgress"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+
+        <com.example.socialmediaapp.customview.RoundedEditText
+            android:id="@+id/username"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="20dp"
+
+            android:imeOptions="actionNext"
+            android:inputType="text"
+            android:nextFocusDown="@+id/password"
+            android:paddingStart="20dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp"
+            android:text="username"
+            android:textCursorDrawable="@null"
+            app:custom_corner_ratio="10"
+            app:default_info="username" />
+
+        <TextView
+            android:id="@+id/usernameValidationStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:fontFamily="@font/roboto"
+            android:paddingLeft="5dp"
+            android:textColor="@color/design_default_color_error"
+            android:textSize="16sp"
+            android:visibility="gone" />
+
+        <com.example.socialmediaapp.customview.RoundedEditText
+            android:id="@+id/password"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="15dp"
+            android:drawableRight="@drawable/hide"
+            android:gravity="center_vertical"
+            android:inputType="textPassword"
+            android:paddingStart="20dp"
+            android:paddingTop="0dp"
+            android:paddingEnd="15dp"
+            android:paddingBottom="0dp"
+            android:text="password"
+            android:imeOptions="actionDone"
+
+            android:textCursorDrawable="@null"
+            app:custom_corner_ratio="10"
+            app:default_info="password" />
+
+        <TextView
+            android:id="@+id/passwordValidationStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:fontFamily="@font/roboto"
+            android:paddingLeft="5dp"
+            android:textColor="@color/design_default_color_error"
+            android:textSize="16sp"
+            android:visibility="gone" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_marginTop="10dp">
+
+            <CheckBox
+                android:id="@+id/rememberMe"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/roboto"
+                android:text="Remember me"
+                android:textColor="@color/grey"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/forgetPassword"
+                android:layout_width="176dp"
+                android:layout_height="match_parent"
+                android:layout_alignParentRight="true"
+                android:layout_gravity="center_horizontal"
+                android:clickable="true"
+                android:fontFamily="@font/roboto"
+                android:gravity="right|center_vertical"
+                android:text="Forget password?"
+                android:textColor="@color/signup_text_color"
+                android:textSize="16sp" />
+        </RelativeLayout>
+
+
+        <com.example.socialmediaapp.customview.button.RoundedButton
+            android:id="@+id/submit"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="15dp"
+            app:button_background_color="#0866FF"
+            app:button_text="Signin"
+            app:button_text_color="@color/white"
+            app:button_text_font="@font/roboto"
+            app:button_text_size="16sp" />
+
+        <TextView
+            android:id="@+id/orSigninWith"
+            android:layout_width="170dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:fontFamily="@font/roboto"
+            android:gravity="center"
+            android:text="or signin with"
+            android:textColor="@color/black"
+            android:textSize="16sp" />
+
+        <com.example.socialmediaapp.customview.button.CircleButton
+            android:id="@+id/oauth2Button"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@null"
+            app:background_bound="30dp"
+            app:button_background="@drawable/google" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="20dp"
+            android:background="#ddd" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="29dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/createANewAccount"
+                android:layout_width="175dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:fontFamily="@font/roboto"
+                android:gravity="center"
+                android:text="create a new account?"
+                android:textColor="@color/grey"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/signup"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal"
+                android:clickable="true"
+                android:fontFamily="@font/roboto"
+                android:gravity="center"
+                android:text="Signup"
+                android:textColor="@color/signup_text_color"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+</FrameLayout>

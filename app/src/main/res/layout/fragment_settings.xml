@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#040866FF"
+    tools:context=".home.fragment.main.SettingsFragment">
+
+    <ScrollView
+        android:id="@+id/home_scroll_pane"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/notify_list_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:orientation="vertical">
+
+            <View
+                android:id="@+id/padding_head_fragment"
+                android:layout_width="match_parent"
+                android:layout_height="60dp" />
+
+            <com.example.socialmediaapp.customview.container.ShadowRoundedPanel
+                android:layout_width="match_parent"
+                android:layout_height="135dp"
+                android:layout_marginLeft="12dp"
+                android:layout_marginRight="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="15px"
+                    android:orientation="vertical">
+
+                    <com.example.socialmediaapp.customview.container.TopHalfRoundedPanel
+                        android:layout_width="match_parent"
+                        android:layout_height="75dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="horizontal">
+
+                            <com.example.socialmediaapp.customview.button.CircleButton
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginLeft="10dp"
+                                app:background_bound="40dp"
+                                app:button_background="@drawable/user_24" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="25dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginLeft="12dp"
+                                android:layout_weight="1"
+                                android:fontFamily="@font/roboto"
+                                android:paddingLeft="0dp"
+                                android:paddingTop="0dp"
+                                android:paddingRight="0dp"
+                                android:paddingBottom="0dp"
+                                android:text="Thái Minh Trí"
+                                android:textColor="@color/black"
+                                android:textSize="17sp"
+                                android:textStyle="bold" />
+
+                            <com.example.socialmediaapp.customview.button.CircleButton
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginRight="10dp"
+                                android:layout_marginBottom="4dp"
+                                app:background_bound="24dp"
+                                app:button_background="@drawable/settings_24" />
+
+
+                        </LinearLayout>
+                    </com.example.socialmediaapp.customview.container.TopHalfRoundedPanel>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#10000000" />
+
+                    <com.example.socialmediaapp.customview.container.BottomHalfRoundedPanel
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="horizontal">
+
+                            <com.example.socialmediaapp.customview.button.CircleButton
+                                android:layout_width="35dp"
+                                android:layout_height="35dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginLeft="15dp"
+                                app:background_bound="23dp"
+                                app:button_background="@drawable/add_24" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="25dp"
+                                android:gravity="center_vertical"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginLeft="12dp"
+                                android:layout_weight="1"
+                                android:fontFamily="@font/roboto"
+                                android:paddingLeft="0dp"
+                                android:paddingTop="0dp"
+                                android:paddingRight="0dp"
+                                android:paddingBottom="0dp"
+                                android:text="Create new profile"
+                                android:textColor="#757575"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+
+
+                        </LinearLayout>
+
+                    </com.example.socialmediaapp.customview.container.BottomHalfRoundedPanel>
+
+
+                </LinearLayout>
+
+
+            </com.example.socialmediaapp.customview.container.ShadowRoundedPanel>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="25dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:fontFamily="@font/roboto"
+                android:paddingLeft="0dp"
+                android:paddingTop="0dp"
+                android:paddingRight="0dp"
+                android:paddingBottom="0dp"
+                android:text="All shorcuts"
+                android:textColor="@color/black"
+                android:textSize="16sp" />
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="15dp"
+                android:background="@null"
+                android:columnCount="2"
+                android:rowCount="2">
+
+                <com.example.socialmediaapp.customview.container.ShadowRoundedClickablePanel
+                    android:layout_height="85dp"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_margin="15px"
+                        android:orientation="vertical">
+                        <View
+                            android:layout_width="90px"
+                            android:layout_height="90px"
+                            android:background="@drawable/friend"
+                            android:layout_marginLeft="12dp"
+                            android:layout_marginTop="7dp"
+                            />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="12dp"
+                            android:layout_marginTop="3dp"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/roboto"
+                            android:paddingLeft="0dp"
+                            android:paddingTop="0dp"
+                            android:paddingRight="0dp"
+                            android:paddingBottom="0dp"
+                            android:text="Friends"
+                            android:textColor="@color/black"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+
+
+                    </LinearLayout>
+
+                </com.example.socialmediaapp.customview.container.ShadowRoundedClickablePanel>
+                <com.example.socialmediaapp.customview.container.ShadowRoundedClickablePanel
+                    android:layout_height="85dp"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_margin="15px"
+                        android:orientation="vertical">
+                        <View
+                            android:layout_width="90px"
+                            android:layout_height="90px"
+                            android:background="@drawable/groups"
+                            android:layout_marginLeft="12dp"
+                            android:layout_marginTop="7dp"
+                            />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="12dp"
+                            android:layout_marginTop="3dp"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/roboto"
+                            android:paddingLeft="0dp"
+                            android:paddingTop="0dp"
+                            android:paddingRight="0dp"
+                            android:paddingBottom="0dp"
+                            android:text="Groups"
+                            android:textColor="@color/black"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+
+
+                    </LinearLayout>
+
+                </com.example.socialmediaapp.customview.container.ShadowRoundedClickablePanel>
+                <com.example.socialmediaapp.customview.container.ShadowRoundedClickablePanel
+                    android:layout_height="85dp"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_margin="15px"
+                        android:orientation="vertical">
+                        <View
+                            android:layout_width="90px"
+                            android:layout_height="90px"
+                            android:background="@drawable/reel"
+                            android:layout_marginLeft="12dp"
+                            android:layout_marginTop="7dp"
+                            />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="12dp"
+                            android:layout_marginTop="3dp"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/roboto"
+                            android:paddingLeft="0dp"
+                            android:paddingTop="0dp"
+                            android:paddingRight="0dp"
+                            android:paddingBottom="0dp"
+                            android:text="Reels"
+                            android:textColor="@color/black"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+
+
+                    </LinearLayout>
+
+                </com.example.socialmediaapp.customview.container.ShadowRoundedClickablePanel>
+                <com.example.socialmediaapp.customview.container.ShadowRoundedClickablePanel
+                    android:layout_height="85dp"
+                    android:layout_width="0dp"
+                    android:layout_columnWeight="1">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_margin="15px"
+                        android:orientation="vertical">
+                        <View
+                            android:layout_width="90px"
+                            android:layout_height="90px"
+                            android:background="@drawable/video"
+                            android:layout_marginLeft="12dp"
+                            android:layout_marginTop="7dp"
+                            />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="12dp"
+                            android:layout_marginTop="3dp"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/roboto"
+                            android:paddingLeft="0dp"
+                            android:paddingTop="0dp"
+                            android:paddingRight="0dp"
+                            android:paddingBottom="0dp"
+                            android:text="Videos"
+                            android:textColor="@color/black"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+
+
+                    </LinearLayout>
+
+                </com.example.socialmediaapp.customview.container.ShadowRoundedClickablePanel>
+
+
+            </GridLayout>
+
+            <com.example.socialmediaapp.customview.button.RoundedButton
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                app:button_text_font="@font/roboto"
+                app:button_text="Logout"
+                app:button_text_size="16sp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/header_frame"
+        android:layout_width="match_parent"
+        android:layout_height="40dp">
+
+        <LinearLayout
+            android:id="@+id/header_panel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:visibility="visible">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="12dp"
+                android:layout_marginTop="10dp"
+                android:fontFamily="@font/lato_bold"
+                android:text="Settings"
+                android:textColor="@color/black"
+                android:textSize="23sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layoutDirection="rtl"
+                android:orientation="horizontal">
+
+                <com.example.socialmediaapp.customview.button.CircleButton
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginRight="10dp"
+                    android:gravity="top"
+                    app:background_bound="20dp"
+                    app:button_background="@drawable/search_24" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </FrameLayout>
+</FrameLayout>
