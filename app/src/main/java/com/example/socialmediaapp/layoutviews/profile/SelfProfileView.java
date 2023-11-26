@@ -12,8 +12,8 @@ import com.example.socialmediaapp.R;
 import com.example.socialmediaapp.customview.button.CircleButton;
 import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.layoutviews.profile.base.ProfileView;
-import com.example.socialmediaapp.viewmodels.models.post.ImagePost;
-import com.example.socialmediaapp.viewmodels.models.user.profile.SelfProfile;
+import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
+import com.example.socialmediaapp.viewmodel.models.user.profile.SelfProfile;
 
 public class SelfProfileView extends ProfileView {
     private CircleButton selectAvatarButton, selectBackgroundButton;

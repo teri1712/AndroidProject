@@ -17,7 +17,7 @@ import java.util.List;
 public interface PostDao {
 
     @Query("select * from Post")
-    List<Post> getPosts();
+    List<Post> getPosts(int countLoaded);
 
     @Insert
     void insertAllPost(List<Post> post);

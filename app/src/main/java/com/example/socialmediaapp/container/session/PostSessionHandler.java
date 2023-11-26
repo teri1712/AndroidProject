@@ -2,7 +2,8 @@ package com.example.socialmediaapp.container.session;
 
 
 import android.content.Context;
-import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
@@ -16,33 +17,21 @@ import androidx.work.WorkerParameters;
 import com.example.socialmediaapp.apis.PostApi;
 import com.example.socialmediaapp.apis.entities.PostDataSyncBody;
 import com.example.socialmediaapp.container.ApplicationContainer;
-import com.example.socialmediaapp.container.session.helper.DataAccessHelper;
-import com.example.socialmediaapp.container.session.helper.PostAccessHelper;
-import com.example.socialmediaapp.services.ServiceApi;
-import com.example.socialmediaapp.viewmodels.models.repo.interceptor.FetchResponse;
+import com.example.socialmediaapp.viewmodel.models.post.base.Post;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.Executor;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.subjects.PublishSubject;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class PostSessionHandler extends SessionHandler {
-    public class PostDataSync {
-        public Integer likeCount, commentCount, shareCount;
-    }
-
     private Integer postId;
-    private MutableLiveData<PostDataSync> dataSyncEmitter;
+    private MutableLiveData<Post> dataSyncEmitter;
     private WorkManager workManager = ApplicationContainer.getInstance().workManager;
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public PostSessionHandler(Integer postId) {
         super();
@@ -50,7 +39,7 @@ public class PostSessionHandler extends SessionHandler {
         dataSyncEmitter = new MutableLiveData<>();
     }
 
-    public MutableLiveData<PostDataSync> getDataSyncEmitter() {
+    public MutableLiveData<Post> getDataSyncEmitter() {
         return dataSyncEmitter;
     }
 
@@ -116,8 +105,8 @@ public class PostSessionHandler extends SessionHandler {
         post(new Runnable() {
             @Override
             public void run() {
-                Data query = new Data.Builder().putInt("post id",postId).build();
-                OneTimeWorkRequest req = new OneTimeWorkRequest.Builder(LikeHandleWorker.class).setInputData(query).build();
+                Data query = new Data.Builder().putInt("post id", postId).build();
+                OneTimeWorkRequest req = new OneTimeWorkRequest.Builder(DataSyncWorker.class).setInputData(query).build();
                 workManager.enqueue(req);
 
                 ListenableFuture<WorkInfo> future = workManager.getWorkInfoById(req.getId());
@@ -128,9 +117,19 @@ public class PostSessionHandler extends SessionHandler {
                         try {
                             workInfo = future.get();
                             Data out = workInfo.getOutputData();
-                            Gson gson = new Gson();
-                            PostDataSync postDataSync = gson.fromJson(out.getString("result"), PostDataSync.class);
-                            dataSyncEmitter.postValue(postDataSync);
+                            Integer countLike = out.getInt("count like", -1);
+                            Integer countComment = out.getInt("count comment", -1);
+                            Integer countShare = out.getInt("count share", -1);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Post post = new Post();
+                                    post.setLikeCount(countLike);
+                                    post.setCommentCount(countComment);
+                                    post.setShareCount(countShare);
+                                    dataSyncEmitter.setValue(post);
+                                }
+                            });
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -200,14 +199,7 @@ public class PostSessionHandler extends SessionHandler {
 
                 PostDataSyncBody body = res.body();
 
-                PostDataSync postDataSync = new PostDataSync();
-                postDataSync.commentCount = body.commentCount;
-                postDataSync.likeCount = body.likeCount;
-                postDataSync.shareCount = body.shareCount;
-
-                String json = new Gson().toJson(postDataSync);
-
-                return Result.success(new Data.Builder().putString("result", json).build());
+                return Result.success(new Data.Builder().putInt("like count", body.likeCount).putInt("comment count", body.commentCount).putInt("share count", body.shareCount).build());
             } catch (IOException e) {
                 e.printStackTrace();
             }

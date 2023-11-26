@@ -2,7 +2,6 @@ package com.example.socialmediaapp.home.fragment;
 
 import android.content.Context;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.Spannable;
@@ -17,7 +16,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
@@ -26,16 +24,14 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.socialmediaapp.R;
 import com.example.socialmediaapp.activitiy.HomePage;
 import com.example.socialmediaapp.customview.button.CircleButton;
-import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
 import com.example.socialmediaapp.layoutviews.items.UserBasicInfoItem;
-import com.example.socialmediaapp.viewmodels.HomePageViewModel;
-import com.example.socialmediaapp.viewmodels.SearchFragmentViewModel;
-import com.example.socialmediaapp.viewmodels.UpdateAvatarViewModel;
-import com.example.socialmediaapp.viewmodels.factory.ViewModelFactory;
-import com.example.socialmediaapp.viewmodels.models.repo.Update;
-import com.example.socialmediaapp.viewmodels.models.user.UserBasicInfo;
+import com.example.socialmediaapp.viewmodel.HomePageViewModel;
+import com.example.socialmediaapp.viewmodel.SearchFragmentViewModel;
+import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
+import com.example.socialmediaapp.viewmodel.models.repo.Update;
+import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
 
 import java.util.List;
 

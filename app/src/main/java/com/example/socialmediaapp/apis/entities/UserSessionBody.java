@@ -5,36 +5,27 @@ import java.util.List;
 
 public class UserSessionBody {
     private UserInformationBody userInfo;
-    private List<UserBasicInfoBody> recentSearch;
-    private PostBody avatarPost;
-    private PostBody backgroundPost;
+    private Integer avatarId;
+    private Integer backgroundId;
 
-    public PostBody getAvatarPost() {
-        return avatarPost;
+    public Integer getAvatarId() {
+        return avatarId;
     }
 
-    public void setAvatarPost(PostBody avatarPost) {
-        this.avatarPost = avatarPost;
+    public void setAvatarId(Integer avatarId) {
+        this.avatarId = avatarId;
     }
 
-    public PostBody getBackgroundPost() {
-        return backgroundPost;
+    public Integer getBackgroundId() {
+        return backgroundId;
     }
 
-    public void setBackgroundPost(PostBody backgroundPost) {
-        this.backgroundPost = backgroundPost;
+    public void setBackgroundId(Integer backgroundId) {
+        this.backgroundId = backgroundId;
     }
 
     public UserInformationBody getUserInfo() {
         return userInfo;
-    }
-
-    public List<UserBasicInfoBody> getRecentSearch() {
-        return recentSearch;
-    }
-
-    public void setRecentSearch(List<UserBasicInfoBody> recentSearch) {
-        this.recentSearch = recentSearch;
     }
 
     public void setUserInfo(UserInformationBody userInfo) {

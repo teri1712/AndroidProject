@@ -8,7 +8,6 @@ import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -25,19 +24,18 @@ import com.example.socialmediaapp.layoutviews.profile.model.FriendProfileConfigu
 import com.example.socialmediaapp.layoutviews.profile.model.FriendRequestProfileConfigurer;
 import com.example.socialmediaapp.layoutviews.profile.model.RequestFriendProfileConfigurer;
 import com.example.socialmediaapp.layoutviews.profile.model.StrangerProfileConfigurer;
-import com.example.socialmediaapp.viewmodels.HomePageViewModel;
-import com.example.socialmediaapp.viewmodels.ViewProfileViewModel;
-import com.example.socialmediaapp.viewmodels.factory.ViewModelFactory;
-import com.example.socialmediaapp.viewmodels.models.post.ImagePost;
-import com.example.socialmediaapp.viewmodels.models.post.base.Post;
-import com.example.socialmediaapp.viewmodels.models.repo.Update;
-import com.example.socialmediaapp.viewmodels.models.user.UserInformation;
-import com.example.socialmediaapp.viewmodels.models.user.profile.SelfProfile;
-import com.example.socialmediaapp.viewmodels.models.user.profile.NotMeProfile;
-import com.example.socialmediaapp.viewmodels.models.user.UserBasicInfo;
-import com.example.socialmediaapp.viewmodels.models.user.profile.base.UserProfile;
+import com.example.socialmediaapp.viewmodel.HomePageViewModel;
+import com.example.socialmediaapp.viewmodel.ViewProfileViewModel;
+import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
+import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
+import com.example.socialmediaapp.viewmodel.models.post.base.Post;
+import com.example.socialmediaapp.viewmodel.models.repo.Update;
+import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
+import com.example.socialmediaapp.viewmodel.models.user.profile.SelfProfile;
+import com.example.socialmediaapp.viewmodel.models.user.profile.NotMeProfile;
+import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
+import com.example.socialmediaapp.viewmodel.models.user.profile.base.UserProfile;
 
-import java.util.List;
 import java.util.Objects;
 
 public class ViewProfileFragment extends Fragment implements FragmentAnimation {

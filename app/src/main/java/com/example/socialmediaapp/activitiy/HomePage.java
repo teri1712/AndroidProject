@@ -7,12 +7,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
 
 import android.animation.ObjectAnimator;
-import android.content.Intent;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,6 +23,12 @@ import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 
 import com.example.socialmediaapp.R;
+import com.example.socialmediaapp.container.ApplicationContainer;
+import com.example.socialmediaapp.container.session.DataAccessHandler;
+import com.example.socialmediaapp.container.session.SessionHandler;
+import com.example.socialmediaapp.container.session.UserSessionHandler;
+import com.example.socialmediaapp.container.session.helper.CommentAccessHelper;
+import com.example.socialmediaapp.container.session.helper.PostAccessHelper;
 import com.example.socialmediaapp.customview.button.ActiveFragmentButton;
 import com.example.socialmediaapp.home.fragment.CommentFragment;
 import com.example.socialmediaapp.home.fragment.CreatePostFragment;
@@ -40,13 +45,13 @@ import com.example.socialmediaapp.home.fragment.main.VideoFragment;
 import com.example.socialmediaapp.home.fragment.ViewImageFragment;
 import com.example.socialmediaapp.home.fragment.ViewProfileFragment;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
-import com.example.socialmediaapp.viewmodels.HomePageViewModel;
-import com.example.socialmediaapp.viewmodels.factory.ViewModelFactory;
-import com.example.socialmediaapp.viewmodels.items.PostItemViewModel;
-import com.example.socialmediaapp.viewmodels.models.HomePageContent;
-import com.example.socialmediaapp.viewmodels.models.post.ImagePost;
-import com.example.socialmediaapp.viewmodels.models.repo.Update;
-import com.example.socialmediaapp.viewmodels.models.user.UserBasicInfo;
+import com.example.socialmediaapp.viewmodel.models.UserSession;
+import com.example.socialmediaapp.viewmodel.models.post.Comment;
+import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
+import com.example.socialmediaapp.viewmodel.models.post.base.Post;
+import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
+import com.example.socialmediaapp.viewmodel.refactor.PostDataViewModel;
+import com.example.socialmediaapp.viewmodel.refactor.UserSessionViewModel;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,25 +59,23 @@ import java.util.Map;
 
 public class HomePage extends AppCompatActivity {
 
+    private HashMap<String, Fragment> fragments;
+
     private HorizontalScrollView scroll_page;
     private ViewGroup page_panel;
-    private HashMap<String, Integer> fragments;
-    private HomePageViewModel viewModel;
+    private UserSessionViewModel viewModel;
+    private SessionHandler.SessionRegistry sessionRegistry;
     private ActiveFragmentButton home_button, media_button, friends_button, notify_button, settings_button;
-
     private ActivityResultLauncher<String> pickAvatar;
     private ActivityResultLauncher<String> pickBackground;
     private ViewGroup root;
-    private boolean newBie;
+    private MutableLiveData<String> sessionState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
         root = (ViewGroup) ((ViewGroup) findViewById(android.R.id.content)).getChildAt(0);
-
-        Intent intent = getIntent();
-        newBie = intent.getBooleanExtra("new bie", false);
 
         pickAvatar = registerForActivityResult(new ActivityResultContracts.GetContent(), new ActivityResultCallback<Uri>() {
             @Override
@@ -90,65 +93,61 @@ public class HomePage extends AppCompatActivity {
         });
 
 
-        scroll_page = (HorizontalScrollView) findViewById(R.id.scroll_page);
-        page_panel = (ViewGroup) findViewById(R.id.page_panel);
-        home_button = (ActiveFragmentButton) findViewById(R.id.home_button);
-        media_button = (ActiveFragmentButton) findViewById(R.id.media_button);
-        notify_button = (ActiveFragmentButton) findViewById(R.id.notify_button);
-        friends_button = (ActiveFragmentButton) findViewById(R.id.friends_button);
-        settings_button = (ActiveFragmentButton) findViewById(R.id.settings_button);
+        scroll_page = findViewById(R.id.scroll_page);
+        page_panel = findViewById(R.id.page_panel);
+        home_button = findViewById(R.id.home_button);
+        media_button = findViewById(R.id.media_button);
+        notify_button = findViewById(R.id.notify_button);
+        friends_button = findViewById(R.id.friends_button);
+        settings_button = findViewById(R.id.settings_button);
 
         initViewModel();
         initTouchBehaviour();
-        initViewPostConstruct();
+    }
+
+    public Fragment getFragment(String name) {
+        return fragments.get(name);
     }
 
     private void initViewPostConstruct() {
         fragments = new HashMap<>();
-        fragments.put("posts", R.id.posts);
-        fragments.put("media", R.id.media);
-        fragments.put("friends", R.id.friends);
-        fragments.put("notifications", R.id.notifications);
-        fragments.put("settings", R.id.settings);
+        DataAccessHandler<Post> dataAccessHandler = new DataAccessHandler<>(new PostAccessHelper());
+        fragments.put("posts", new PostFragment(dataAccessHandler));
+        fragments.put("media", new VideoFragment());
+        fragments.put("friends", new FriendFragment());
+        fragments.put("notifications", new NotificationFragment());
+        fragments.put("settings", new SettingsFragment());
         scroll_page.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-
                 FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-                for (Map.Entry<String, Integer> i : fragments.entrySet()) {
-                    findViewById(i.getValue()).getLayoutParams().width = scroll_page.getWidth();
-                    Fragment myFragment;
+                for (Map.Entry<String, Fragment> i : fragments.entrySet()) {
+                    Fragment myFragment = i.getValue();
+                    int containerId = -1;
                     switch (i.getKey()) {
                         case "posts":
-                            myFragment = PostFragment.newInstance();
+                            containerId = R.id.posts;
                             break;
                         case "notifications":
-                            myFragment = new NotificationFragment();
+                            containerId = R.id.notifications;
                             break;
                         case "friends":
-                            myFragment = new FriendFragment();
+                            containerId = R.id.friends;
                             break;
                         case "settings":
-                            myFragment = new SettingsFragment();
+                            containerId = R.id.settings;
                             break;
                         default:
-                            myFragment = new VideoFragment();
+                            containerId = R.id.media;
+
                             break;
                     }
-                    fragmentTransaction.add(i.getValue(), myFragment,i.getKey());
+                    findViewById(containerId).getLayoutParams().width = scroll_page.getWidth();
+                    fragmentTransaction.add(containerId, myFragment, i.getKey());
                 }
                 fragmentTransaction.commit();
                 page_panel.requestLayout();
                 scroll_page.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-            }
-        });
-    }
-
-    private void initViewModel() {
-        viewModel = new ViewModelProvider(this, new ViewModelFactory(this, null)).get(HomePageViewModel.class);
-        viewModel.getHomePageContent().observe(this, new Observer<HomePageContent>() {
-            @Override
-            public void onChanged(HomePageContent homePageContent) {
             }
         });
         MutableLiveData<Integer> cur_fragment = viewModel.getCurFragment();
@@ -171,23 +170,43 @@ public class HomePage extends AppCompatActivity {
                 settings_button.setActive(s == 4);
             }
         });
+        cur_fragment.setValue(0);
+    }
 
-        if (!newBie) {
-            viewModel.loadHomePageContent(this);
-        }else{
-            root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
+    private void initViewModel() {
+        SessionHandler.SessionRegistry rootSession = ApplicationContainer.getInstance().onlineSessionHandler.getSessionRegistry();
+        UserSessionHandler userSessionHandler = new UserSessionHandler();
+
+        rootSession.register(userSessionHandler);
+
+        viewModel = new UserSessionViewModel(userSessionHandler);
+        sessionState = userSessionHandler.getSessionState();
+        sessionState.observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                if (s.equals("started")) {
+                    initViewPostConstruct();
+                    sessionState.removeObserver(this);
+                }
+            }
+        });
+
+        LiveData<UserSession> liveData = viewModel.getLiveData();
+        liveData.observe(this, new Observer<UserSession>() {
+            @Override
+            public void onChanged(UserSession userSession) {
+                boolean newBie = userSession.getUserInfo() == null;
+                if (newBie) {
                     FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                     FrameLayout container = new FrameLayout(HomePage.this);
                     container.setId(View.generateViewId());
                     root.addView(container);
                     fragmentTransaction.add(container.getId(), SetUpInformationFragment.newInstance(), null);
                     fragmentTransaction.commit();
-                    root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                 }
-            });
-        }
+                liveData.removeObserver(this);
+            }
+        });
     }
 
     private void initTouchBehaviour() {
@@ -261,9 +280,10 @@ public class HomePage extends AppCompatActivity {
 
     }
 
-    public HomePageViewModel getViewModel() {
+    public UserSessionViewModel getViewModel() {
         return viewModel;
     }
+
     private boolean waitForPopping = false;
 
     @Override
@@ -361,16 +381,20 @@ public class HomePage extends AppCompatActivity {
         fragmentTransaction.commit();
     }
 
-    public void openCommentFragment(PostItemViewModel post) {
+    public void openCommentFragment(PostDataViewModel postDataViewModel) {
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        FrameLayout container = new FrameLayout(this);
-        container.setId(View.generateViewId());
-        root.addView(container);
         String tag = "comment";
-        fragmentTransaction.replace(container.getId(), CommentFragment.newInstance(post), tag);
+        int postId = postDataViewModel.getLiveData().getValue().getId();
+        DataAccessHandler<Comment> dataAccessHandler = new DataAccessHandler<>(new CommentAccessHelper(postId));
+        postDataViewModel.getSessionRegistry().register(dataAccessHandler);
+        Bundle args = new Bundle();
+        args.putInt("session id", postDataViewModel.getViewCommentSessionId().getValue());
+        args.putInt("count like", postDataViewModel.getCountLike().getValue());
+        fragmentTransaction.replace(R.id.comment_fragment, CommentFragment.newInstance(args), tag);
         fragmentTransaction.addToBackStack(tag);
         fragmentTransaction.commit();
     }
+
     public void openSearchFragment() {
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         FrameLayout container = new FrameLayout(this);
@@ -407,5 +431,19 @@ public class HomePage extends AppCompatActivity {
 
     public View getCommandFrame() {
         return findViewById(R.id.command_frame);
+    }
+
+    public void recyclePostFragment() {
+        DataAccessHandler<Post> dataAccessHandler = new DataAccessHandler<>(new PostAccessHelper());
+        sessionRegistry.register(dataAccessHandler);
+        dataAccessHandler.getSessionState().observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+                fragmentTransaction.replace(R.id.posts, new PostFragment(dataAccessHandler));
+                fragmentTransaction.commit();
+            }
+        });
+
     }
 }

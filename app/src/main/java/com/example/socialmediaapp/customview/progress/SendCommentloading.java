@@ -5,7 +5,6 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -15,9 +14,6 @@ import androidx.annotation.NonNull;
 
 import com.example.socialmediaapp.R;
 import com.example.socialmediaapp.customview.AvatarView;
-import com.example.socialmediaapp.customview.button.CircleButton;
-import com.example.socialmediaapp.viewmodels.models.post.Comment;
-import com.example.socialmediaapp.viewmodels.models.repo.ItemRepository;
 
 public class SendCommentloading extends FrameLayout {
 
@@ -43,9 +39,15 @@ public class SendCommentloading extends FrameLayout {
         backgroundPanel = root.findViewById(R.id.background_panel);
     }
 
-    public void setLoadingContent(String fn, Drawable avatar, String c, Uri image) {
+    public void setAvatar(Drawable avatar) {
         avatarButton.setBackgroundContent(avatar, 0);
+    }
+
+    public void setFullname(String fn) {
         fullname.setText(fn);
+    }
+
+    public void setLoadingContent(String c, Uri image) {
         if (c != null && !c.isEmpty()) {
             content.setText(c);
             content.setVisibility(VISIBLE);

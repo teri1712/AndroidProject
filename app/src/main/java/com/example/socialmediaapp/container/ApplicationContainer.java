@@ -6,15 +6,22 @@ import android.app.Application;
 import androidx.room.Room;
 import androidx.work.WorkManager;
 
+import com.example.socialmediaapp.apis.entities.PostBody;
 import com.example.socialmediaapp.container.database.AppDatabase;
+import com.example.socialmediaapp.container.session.CommentSessionHandler;
 import com.example.socialmediaapp.container.session.DataAccessHandler;
-import com.example.socialmediaapp.viewmodels.models.HomePageContent;
+import com.example.socialmediaapp.container.session.OnlineSessionHandler;
+import com.example.socialmediaapp.container.session.PostSessionHandler;
+import com.example.socialmediaapp.viewmodel.models.HomePageContent;
+import com.example.socialmediaapp.viewmodel.models.UserSession;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import okhttp3.OkHttpClient;
@@ -26,12 +33,11 @@ public class ApplicationContainer extends Application {
     public final String localhost = "http://192.168.0.106:8080";
     public Retrofit retrofit;
     public Set<String> cookies;
-    public Executor localStorageAccessExecutor = Executors.newSingleThreadExecutor();
-    public DataAccessHandler postService;
-    public HomePageContent homePageContent;
-    public Executor dummyExecutor = Executors.newFixedThreadPool(5);
     public AppDatabase database;
     public WorkManager workManager;
+    public HashMap<String, ExecutorService> executors;
+    public OnlineSessionHandler onlineSessionHandler;
+    public Executor dataLayerExecutor = Executors.newSingleThreadExecutor();
 
     private ApplicationContainer() {
         database = Room.databaseBuilder(getApplicationContext(),
@@ -41,6 +47,9 @@ public class ApplicationContainer extends Application {
         Gson gson = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
                 .create();
+        executors = new HashMap<>();
+        onlineSessionHandler = new OnlineSessionHandler();
+
         //for debugging
 //        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
 //        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);

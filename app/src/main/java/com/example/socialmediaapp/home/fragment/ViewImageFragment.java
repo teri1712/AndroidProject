@@ -17,7 +17,7 @@ import com.example.socialmediaapp.R;
 import com.example.socialmediaapp.customview.container.ClickablePanel;
 import com.example.socialmediaapp.customview.textview.PostContentTextVIew;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
-import com.example.socialmediaapp.viewmodels.models.post.ImagePost;
+import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
 
 public class ViewImageFragment extends Fragment implements FragmentAnimation {
 

@@ -1,10 +1,7 @@
 package com.example.socialmediaapp.container.session.helper;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -17,20 +14,14 @@ import androidx.work.WorkerParameters;
 
 import com.example.socialmediaapp.apis.PostApi;
 import com.example.socialmediaapp.apis.entities.CommentBody;
-import com.example.socialmediaapp.apis.entities.PostBody;
 import com.example.socialmediaapp.container.ApplicationContainer;
 import com.example.socialmediaapp.container.converter.DtoConverter;
 import com.example.socialmediaapp.container.converter.HttpBodyConverter;
 import com.example.socialmediaapp.container.dao.CommentDao;
-import com.example.socialmediaapp.container.dao.PostDao;
 import com.example.socialmediaapp.container.dao.UserBasicInfoDao;
 import com.example.socialmediaapp.container.database.AppDatabase;
 import com.example.socialmediaapp.container.entity.Comment;
-import com.example.socialmediaapp.container.entity.ImagePost;
-import com.example.socialmediaapp.container.entity.Post;
 import com.example.socialmediaapp.container.entity.UserBasicInfo;
-import com.example.socialmediaapp.services.ServiceApi;
-import com.example.socialmediaapp.viewmodels.models.post.MediaPost;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.FileNotFoundException;
@@ -38,25 +29,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 
-import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-public class CommentAccessHelper extends DataAccessHelper<com.example.socialmediaapp.viewmodels.models.post.Comment> {
+public class CommentAccessHelper extends DataAccessHelper<com.example.socialmediaapp.viewmodel.models.post.Comment> {
     private CommentDao commentDao;
     private UserBasicInfoDao userBasicInfoDao;
-    private Context context;
+    private Integer postId;
     private WorkManager workManager;
 
-    public CommentAccessHelper(Context context) {
+    public CommentAccessHelper(Integer postId) {
         super();
-        this.context = context;
+        this.postId = postId;
         AppDatabase db = ApplicationContainer.getInstance().database;
         commentDao = db.getCommentDao();
         userBasicInfoDao = db.getUserBasicInfoDao();
@@ -64,34 +52,30 @@ public class CommentAccessHelper extends DataAccessHelper<com.example.socialmedi
     }
 
 
-    private Drawable loadImage(String uriPath) {
-        return new BitmapDrawable(context.getResources(), BitmapFactory.decodeFile(uriPath));
-    }
-
     @Override
-    public List<com.example.socialmediaapp.viewmodels.models.post.Comment> tryToFetchFromLocalStorage(Data query) {
+    public List<com.example.socialmediaapp.viewmodel.models.post.Comment> tryToFetchFromLocalStorage(Data query) {
         List<Comment> comments = commentDao.getComments();
-        List<com.example.socialmediaapp.viewmodels.models.post.Comment> res = new ArrayList<>();
+        List<com.example.socialmediaapp.viewmodel.models.post.Comment> res = new ArrayList<>();
         for (Comment c : comments) {
-            com.example.socialmediaapp.viewmodels.models.post.Comment comment = new com.example.socialmediaapp.viewmodels.models.post.Comment();
+            com.example.socialmediaapp.viewmodel.models.post.Comment comment = new com.example.socialmediaapp.viewmodel.models.post.Comment();
             comment.setId(c.getId());
             comment.setContent(c.getContent());
             comment.setLiked(c.isLiked());
             comment.setTime(c.getTime());
             comment.setCountLike(c.getLikeCount());
             UserBasicInfo u = userBasicInfoDao.findUserBasicInfoById(c.getAuthorId());
-            com.example.socialmediaapp.viewmodels.models.user.UserBasicInfo userBasicInfo = new com.example.socialmediaapp.viewmodels.models.user.UserBasicInfo();
+            com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo userBasicInfo = new com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo();
             userBasicInfo.setFullname(u.getFullname());
             userBasicInfo.setAlias(u.getAlias());
-            userBasicInfo.setAvatar(loadImage(u.getAvatarUri()));
+            userBasicInfo.setAvatar(BitmapFactory.decodeFile(u.getAvatarUri()));
             comment.setAuthor(userBasicInfo);
         }
         return res;
     }
 
     @Override
-    public ListenableFuture<WorkInfo> fetchFromServer(Data query) {
-        OneTimeWorkRequest req = new OneTimeWorkRequest.Builder(FetchCommentWorker.class).setInputData(query).build();
+    public ListenableFuture<WorkInfo> fetchFromServer() {
+        OneTimeWorkRequest req = new OneTimeWorkRequest.Builder(FetchCommentWorker.class).build();
         workManager.enqueue(req);
         return workManager.getWorkInfoById(req.getId());
     }

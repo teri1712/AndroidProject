@@ -12,41 +12,20 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
-import com.example.socialmediaapp.services.ServiceApi;
-import com.example.socialmediaapp.viewmodels.models.post.Comment;
+import com.example.socialmediaapp.viewmodel.models.post.Comment;
 
 public class LikeTextView extends ClickableTextView {
 
     private String actionState;
     private LifecycleOwner lifecycleOwner;
     private MutableLiveData<Boolean> isLiked;
-    private Comment comment;
-
     private Action clickAction;
 
     public void initLikeView(LifecycleOwner lifecycleOwner, MutableLiveData<Boolean> isLiked) {
 
         actionState = "Idle";
         this.isLiked = isLiked;
-        this.comment = comment;
         this.lifecycleOwner = lifecycleOwner;
-
-        isLiked.observe(lifecycleOwner, new Observer<Boolean>() {
-            @Override
-            public void onChanged(Boolean b) {
-                if (b == null) return;
-                setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        isLiked.setValue(!isLiked.getValue());
-                        if (actionState.equals("Idle")) {
-                            performAction();
-                        }
-                    }
-                });
-                isLiked.removeObserver(this);
-            }
-        });
         isLiked.observe(lifecycleOwner, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean isActive) {
@@ -62,6 +41,15 @@ public class LikeTextView extends ClickableTextView {
 
     public void setClickAction(Action clickAction) {
         this.clickAction = clickAction;
+        setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                isLiked.setValue(!isLiked.getValue());
+                if (actionState.equals("Idle")) {
+                    performAction();
+                }
+            }
+        });
     }
 
     private void performAction() {

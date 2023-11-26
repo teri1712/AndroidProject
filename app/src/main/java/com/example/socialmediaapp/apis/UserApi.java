@@ -4,6 +4,7 @@ import com.example.socialmediaapp.apis.entities.HomeEntranceBody;
 import com.example.socialmediaapp.apis.entities.PostBody;
 import com.example.socialmediaapp.apis.entities.UserBasicInfoBody;
 import com.example.socialmediaapp.apis.entities.UserProfileBody;
+import com.example.socialmediaapp.apis.entities.UserSessionBody;
 import com.example.socialmediaapp.apis.entities.requests.UpdateUserRequestBody;
 
 import java.util.List;
@@ -25,14 +26,11 @@ public interface UserApi {
 
     @GET("/user/profile/{alias}")
     Call<UserProfileBody> getUserProfile(@Path("alias") String alias);
-
     @GET("/user/avatar/{alias}")
     Call<ResponseBody> getAvatar(@Path("alias") String alias);
-
     @Multipart
     @PUT("/user/avatar")
     Call<PostBody> changeAvatar(@Part("status") RequestBody status, @Part MultipartBody.Part avatar);
-
     @Multipart
     @PUT("/user/background")
     Call<PostBody> changeBackground(@Part("status") RequestBody status, @Part MultipartBody.Part background);
@@ -41,9 +39,7 @@ public interface UserApi {
     Call<ResponseBody> changeInfo(@Body UpdateUserRequestBody changes);
 
     @GET("/user/homepage")
-    Call<HomeEntranceBody> getHomePageContent();
-
-
+    Call<UserSessionBody> loadUserSession();
     @Multipart
     @POST("/user/new")
     Call<ResponseBody> setUpInfo(@Part("fullname") RequestBody status, @Part("alias") RequestBody type,

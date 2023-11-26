@@ -4,51 +4,27 @@ import android.content.Context;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
 import com.example.socialmediaapp.R;
-import com.example.socialmediaapp.layoutviews.items.PostItemView;
-import com.example.socialmediaapp.services.ServiceApi;
-import com.example.socialmediaapp.viewmodels.models.post.base.Post;
 
 public class LikeButton extends PostButton {
 
     private String actionState;
     private LifecycleOwner lifecycleOwner;
     private MutableLiveData<Boolean> isLiked;
-    private Post post;
+    private Action clickAction;
 
-    public void initLikeAction(LifecycleOwner lifecycleOwner, MutableLiveData<Boolean> isLiked, Post post) {
-
+    public void initLikeView(LifecycleOwner lifecycleOwner, MutableLiveData<Boolean> isLiked) {
         actionState = "Idle";
-        this.isLiked = isLiked;
-        this.post = post;
         this.lifecycleOwner = lifecycleOwner;
-
-        isLiked.observe(lifecycleOwner, new Observer<Boolean>() {
-            @Override
-            public void onChanged(Boolean b) {
-                if (b == null) return;
-                setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        isLiked.setValue(!isLiked.getValue());
-                        if (actionState.equals("Idle")) {
-                            performAction();
-                        }
-                    }
-                });
-                isLiked.removeObserver(this);
-            }
-        });
+        this.isLiked = isLiked;
         isLiked.observe(lifecycleOwner, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean isActive) {
@@ -68,8 +44,8 @@ public class LikeButton extends PostButton {
     private void performAction() {
         actionState = "In progress";
 
-        MutableLiveData<String> res = new MutableLiveData<>();
         final boolean curActive = isLiked.getValue();
+        MutableLiveData<String> res = clickAction.activeAction(curActive);
         res.observe(lifecycleOwner, new Observer<String>() {
             @Override
             public void onChanged(String s) {
@@ -92,11 +68,20 @@ public class LikeButton extends PostButton {
             }
         });
 
-        if (curActive) {
-            ServiceApi.likePost(post.getId(), res);
-        } else {
-            ServiceApi.unlikePost(post.getId(), res);
-        }
+    }
+
+    public void setClickAction(Action clickAction) {
+        this.clickAction = clickAction;
+
+        setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                isLiked.setValue(!isLiked.getValue());
+                if (actionState.equals("Idle")) {
+                    performAction();
+                }
+            }
+        });
     }
 
     public LikeButton(@NonNull Context context) {
@@ -109,5 +94,9 @@ public class LikeButton extends PostButton {
 
     public LikeButton(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+    }
+
+    public interface Action {
+        MutableLiveData<String> activeAction(boolean isActive);
     }
 }

@@ -26,8 +26,8 @@ import com.example.socialmediaapp.activitiy.HomePage;
 import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
-import com.example.socialmediaapp.viewmodels.RegistrationViewModel;
-import com.example.socialmediaapp.viewmodels.factory.ViewModelFactory;
+import com.example.socialmediaapp.viewmodel.RegistrationViewModel;
+import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
 
 import java.util.Objects;
 import java.util.regex.Matcher;

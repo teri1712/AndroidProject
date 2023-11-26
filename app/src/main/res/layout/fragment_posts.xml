@@ -7,9 +7,10 @@
     tools:context=".home.fragment.main.PostFragment">
 
     <com.example.socialmediaapp.customview.container.SpinningFrame
+        android:id="@+id/spinning_frame"
         android:layout_width="match_parent"
-        app:scrollview_id = "@id/home_scroll_pane"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:scrollview_id="@id/home_scroll_pane">
 
         <ScrollView
             android:id="@+id/home_scroll_pane"
@@ -86,8 +87,8 @@
                 <LinearLayout
                     android:id="@+id/posts_panel"
                     android:layout_width="match_parent"
-                    android:orientation="vertical"
-                    android:layout_height="match_parent"></LinearLayout>
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"></LinearLayout>
 
             </LinearLayout>
         </ScrollView>

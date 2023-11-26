@@ -1,6 +1,5 @@
 package com.example.socialmediaapp.services;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -9,34 +8,24 @@ import android.net.Uri;
 
 import androidx.lifecycle.MutableLiveData;
 
-import com.example.socialmediaapp.activitiy.HomePage;
 import com.example.socialmediaapp.apis.AuthenApi;
 import com.example.socialmediaapp.apis.MediaApi;
 import com.example.socialmediaapp.apis.PostApi;
 import com.example.socialmediaapp.apis.UserApi;
-import com.example.socialmediaapp.apis.entities.CommentBody;
 import com.example.socialmediaapp.apis.entities.HomeEntranceBody;
 import com.example.socialmediaapp.apis.entities.PostBody;
 import com.example.socialmediaapp.apis.entities.UserBasicInfoBody;
 import com.example.socialmediaapp.apis.entities.UserProfileBody;
-import com.example.socialmediaapp.apis.entities.requests.UpdateUserRequestBody;
 import com.example.socialmediaapp.container.ApplicationContainer;
-import com.example.socialmediaapp.home.fragment.main.PostFragment;
-import com.example.socialmediaapp.viewmodels.models.HomePageContent;
-import com.example.socialmediaapp.viewmodels.models.post.Comment;
-import com.example.socialmediaapp.viewmodels.models.post.ImagePost;
-import com.example.socialmediaapp.viewmodels.models.post.MediaPost;
-import com.example.socialmediaapp.viewmodels.models.post.base.Post;
-import com.example.socialmediaapp.viewmodels.models.user.UserBasicInfo;
-import com.example.socialmediaapp.viewmodels.models.user.UserInformation;
-import com.example.socialmediaapp.viewmodels.models.user.profile.NotMeProfile;
-import com.example.socialmediaapp.viewmodels.models.user.profile.base.UserProfile;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import com.example.socialmediaapp.viewmodel.models.HomePageContent;
+import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
+import com.example.socialmediaapp.viewmodel.models.post.MediaPost;
+import com.example.socialmediaapp.viewmodel.models.post.base.Post;
+import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
+import com.example.socialmediaapp.viewmodel.models.user.profile.NotMeProfile;
+import com.example.socialmediaapp.viewmodel.models.user.profile.base.UserProfile;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +33,6 @@ import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import okio.BufferedSink;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -139,86 +127,6 @@ public class ServiceApi {
         });
     }
 
-    static private RequestBody mediaStreamBody(ContentResolver resolver, Uri uri) {
-        RequestBody body = null;
-        try {
-            InputStream is = resolver.openInputStream(uri);
-            body = new RequestBody() {
-                @Nullable
-                public MediaType contentType() {
-                    return MediaType.parse(resolver.getType(uri));
-                }
-
-                public long contentLength() {
-                    try {
-                        return is.available();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    return 0;
-                }
-
-                public void writeTo(@NotNull BufferedSink sink) {
-                    byte[] buffer = new byte[2048];
-                    long bread = 0;
-                    try {
-                        long total_length = is.available();
-                        while (bread != total_length) {
-                            try {
-                                int cnt = is.read(buffer, 0, Math.min(2048, (int) (total_length - bread)));
-                                sink.write(buffer, 0, cnt);
-                                sink.flush();
-                                bread += cnt;
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        is.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            };
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return body;
-    }
-
-    static public void updateAvatar(Context context, final Uri uri, String status, MutableLiveData<String> postSubmitState) {
-        RequestBody statusPart = null;
-        MultipartBody.Part mediaStreamPart = null;
-        if (status != null) {
-            statusPart = RequestBody.create(status, MediaType.parse("text/plain"));
-        }
-        mediaStreamPart = MultipartBody.Part.createFormData("avatar", "", mediaStreamBody(context.getContentResolver(), uri));
-        Call<PostBody> p = retrofit.create(UserApi.class).changeAvatar(statusPart, mediaStreamPart);
-        p.enqueue(new Callback<PostBody>() {
-            @Override
-            public void onResponse(Call<PostBody> call, Response<PostBody> response) {
-                final String res = (response.code() == 200) ? "Success" : "Failed";
-
-                if (response.code() == 200) {
-                    HomePage callingActivity = (HomePage) context;
-                    ImagePost newAvatarPost = new ImagePost(response.body(), context);
-                    MutableLiveData<ImagePost> avatarPost = callingActivity.getViewModel().getAvatarPost();
-                    avatarPost.postValue(newAvatarPost);
-                }
-                if (postSubmitState != null) {
-                    postSubmitState.postValue(res);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<PostBody> call, Throwable t) {
-                t.printStackTrace();
-                if (postSubmitState != null) {
-                    postSubmitState.postValue("Failed");
-                }
-            }
-        });
-    }
-
     static public void setUpInformation(Context context, String fullname, String alias, String gender, String birthday, Uri avatar, MutableLiveData<String> postSubmitState) {
         RequestBody fullnamePart = RequestBody.create(fullname, MediaType.parse("text/plain"));
         RequestBody aliasPart = RequestBody.create(alias, MediaType.parse("text/plain"));
@@ -245,74 +153,6 @@ public class ServiceApi {
         });
 
     }
-
-    static public void updateBackground(Context context, final Uri uri, String status, MutableLiveData<String> postSubmitState) {
-        RequestBody statusPart = null;
-        MultipartBody.Part mediaStreamPart = null;
-        if (status != null) {
-            statusPart = RequestBody.create(status, MediaType.parse("text/plain"));
-        }
-        mediaStreamPart = MultipartBody.Part.createFormData("background", "", mediaStreamBody(context.getContentResolver(), uri));
-        Call<PostBody> p = retrofit.create(UserApi.class).changeBackground(statusPart, mediaStreamPart);
-        p.enqueue(new Callback<PostBody>() {
-            @Override
-            public void onResponse(Call<PostBody> call, Response<PostBody> response) {
-                final String res = (response.code() == 200) ? "Success" : "Failed";
-
-                if (response.code() == 200) {
-                    HomePage callingActivity = (HomePage) context;
-                    ImagePost newBackgroundPost = new ImagePost(response.body(), context);
-                    MutableLiveData<ImagePost> backgroundPost = callingActivity.getViewModel().getBackgroundPost();
-                    backgroundPost.postValue(newBackgroundPost);
-                }
-                postSubmitState.postValue(res);
-            }
-
-            @Override
-            public void onFailure(Call<PostBody> call, Throwable t) {
-                t.printStackTrace();
-                postSubmitState.postValue("Failed");
-            }
-        });
-    }
-
-    static public void changeInformation(Context context, MutableLiveData<String> postSubmitState, String fullname, String alias, String gender, String birthday) {
-        UpdateUserRequestBody body = new UpdateUserRequestBody();
-        body.setFullname(fullname);
-        body.setAlias(alias);
-        body.setGender(gender);
-        body.setBirthday(birthday);
-        Call<ResponseBody> req = retrofit.create(UserApi.class).changeInfo(body);
-        req.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                final String res = (response.code() == 200) ? "Success" : "Failed";
-                if (response.code() == 200) {
-                    HomePage callingActivity = (HomePage) context;
-                    callingActivity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            MutableLiveData<UserInformation> userInformationMutableLiveData = callingActivity.getViewModel().getUserInfo();
-                            UserInformation user = userInformationMutableLiveData.getValue();
-                            user.setFullname(fullname);
-                            user.setAlias(alias);
-                            user.setGender(gender);
-                            user.setBirthday(birthday);
-                            userInformationMutableLiveData.setValue(user);
-                        }
-                    });
-                }
-                postSubmitState.postValue(res);
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                t.printStackTrace();
-                postSubmitState.postValue("Failed");
-            }
-        });
-    }
-
     static public void performAuthentication(String username, String password, MutableLiveData<String> authenticationState) {
         AuthenApi request = retrofit.create(AuthenApi.class);
         Call<ResponseBody> c = request.login(username, password);

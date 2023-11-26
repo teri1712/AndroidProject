@@ -3,8 +3,6 @@ package com.example.socialmediaapp.container.session.helper;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -15,7 +13,6 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.example.socialmediaapp.apis.MediaApi;
 import com.example.socialmediaapp.apis.PostApi;
 import com.example.socialmediaapp.apis.entities.PostBody;
 import com.example.socialmediaapp.container.ApplicationContainer;
@@ -27,20 +24,11 @@ import com.example.socialmediaapp.container.database.AppDatabase;
 import com.example.socialmediaapp.container.entity.ImagePost;
 import com.example.socialmediaapp.container.entity.Post;
 import com.example.socialmediaapp.container.entity.UserBasicInfo;
-import com.example.socialmediaapp.services.ServiceApi;
-import com.example.socialmediaapp.viewmodels.models.post.Comment;
-import com.example.socialmediaapp.viewmodels.models.post.MediaPost;
+import com.example.socialmediaapp.viewmodel.models.post.MediaPost;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import org.w3c.dom.ls.LSException;
-
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PushbackReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,20 +36,17 @@ import java.util.Objects;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-public class PostAccessHelper extends DataAccessHelper<com.example.socialmediaapp.viewmodels.models.post.base.Post> {
+public class PostAccessHelper extends DataAccessHelper<com.example.socialmediaapp.viewmodel.models.post.base.Post> {
     private PostDao postDao;
     private UserBasicInfoDao userBasicInfoDao;
-    private Context context;
     private WorkManager workManager;
 
-    public PostAccessHelper(Context context) {
+    public PostAccessHelper() {
         super();
-        this.context = context;
         AppDatabase db = ApplicationContainer.getInstance().database;
         postDao = db.getPostDao();
         userBasicInfoDao = db.getUserBasicInfoDao();
@@ -69,35 +54,31 @@ public class PostAccessHelper extends DataAccessHelper<com.example.socialmediaap
 
     }
 
-
-    private Drawable loadImage(String uriPath) {
-        return new BitmapDrawable(context.getResources(), BitmapFactory.decodeFile(uriPath));
-    }
-
     @Override
-    public List<com.example.socialmediaapp.viewmodels.models.post.base.Post> tryToFetchFromLocalStorage(Data query) {
-        List<Post> posts = postDao.getPosts();
-        List<com.example.socialmediaapp.viewmodels.models.post.base.Post> res = new ArrayList<>();
+    public List<com.example.socialmediaapp.viewmodel.models.post.base.Post> tryToFetchFromLocalStorage(Data query) {
+        int countLoaded = query.getInt("count loaded", 0);
+        List<Post> posts = postDao.getPosts(countLoaded);
+        List<com.example.socialmediaapp.viewmodel.models.post.base.Post> res = new ArrayList<>();
         for (Post p : posts) {
-            com.example.socialmediaapp.viewmodels.models.post.base.Post post = null;
+            com.example.socialmediaapp.viewmodel.models.post.base.Post post = null;
             if (Objects.equals("image", p.getType())) {
-                com.example.socialmediaapp.viewmodels.models.post.ImagePost imagePost = new com.example.socialmediaapp.viewmodels.models.post.ImagePost();
+                com.example.socialmediaapp.viewmodel.models.post.ImagePost imagePost = new com.example.socialmediaapp.viewmodel.models.post.ImagePost();
                 post = imagePost;
 
-                imagePost.setImage(loadImage(postDao.findImagePostByPost(p.getId()).getImageUri()));
+                imagePost.setImage(BitmapFactory.decodeFile(postDao.findImagePostByPost(p.getId()).getImageUri()));
 
             } else if (Objects.equals("media", p.getType())) {
-                MediaPost mediaPost = new com.example.socialmediaapp.viewmodels.models.post.MediaPost();
+                MediaPost mediaPost = new com.example.socialmediaapp.viewmodel.models.post.MediaPost();
                 mediaPost.setMediaId(postDao.findMediaPostByPost(p.getId()).getMediaId());
                 post = mediaPost;
             } else {
-                post = new com.example.socialmediaapp.viewmodels.models.post.base.Post();
+                post = new com.example.socialmediaapp.viewmodel.models.post.base.Post();
             }
             UserBasicInfo u = userBasicInfoDao.findUserBasicInfoById(p.getAuthorId());
-            com.example.socialmediaapp.viewmodels.models.user.UserBasicInfo userBasicInfo = new com.example.socialmediaapp.viewmodels.models.user.UserBasicInfo();
+            com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo userBasicInfo = new com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo();
             userBasicInfo.setFullname(u.getFullname());
             userBasicInfo.setAlias(u.getAlias());
-            userBasicInfo.setAvatar(loadImage(u.getAvatarUri()));
+            userBasicInfo.setAvatar(BitmapFactory.decodeFile(u.getAvatarUri()));
 
             post.setAuthor(userBasicInfo);
             post.setId(p.getId());
@@ -147,8 +128,9 @@ public class PostAccessHelper extends DataAccessHelper<com.example.socialmediaap
         @NonNull
         @Override
         public Result doWork() {
-            Data query = getInputData();
-            Call<List<PostBody>> req = retrofit.create(PostApi.class).fetchPost();
+            Data input = getInputData();
+            int countRead = input.getInt("read", 0);
+            Call<List<PostBody>> req = retrofit.create(PostApi.class).fetchPost(countRead);
             try {
                 Response<List<PostBody>> res = req.execute();
                 List<PostBody> postBodies = res.body();
@@ -160,7 +142,6 @@ public class PostAccessHelper extends DataAccessHelper<com.example.socialmediaap
                 db.runInTransaction(new Runnable() {
                     @Override
                     public void run() {
-
                         for (HashMap<String, Object> m : posts) {
                             Post post = (Post) m.get("post");
                             ImagePost imagePost = (ImagePost) m.get("image post");
@@ -180,11 +161,11 @@ public class PostAccessHelper extends DataAccessHelper<com.example.socialmediaap
                         }
                     }
                 });
+                return Result.success(new Data.Builder().putInt("count loaded", postBodies.size()).build());
             } catch (IOException e) {
                 e.printStackTrace();
-                return Result.failure();
             }
-            return Result.success();
+            return Result.failure();
         }
     }
 

@@ -1,11 +1,13 @@
 package com.example.socialmediaapp.layoutviews.items;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,17 +22,20 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
 import com.example.socialmediaapp.R;
+import com.example.socialmediaapp.container.session.CommentSessionHandler;
+import com.example.socialmediaapp.container.session.SessionHandler;
 import com.example.socialmediaapp.customview.button.CircleButton;
 import com.example.socialmediaapp.customview.container.ClickablePanel;
 import com.example.socialmediaapp.customview.textview.LikeTextView;
 import com.example.socialmediaapp.services.ServiceApi;
-import com.example.socialmediaapp.viewmodels.items.CommentItemViewModel;
-import com.example.socialmediaapp.viewmodels.models.repo.ItemRepository;
-import com.example.socialmediaapp.viewmodels.models.post.Comment;
+import com.example.socialmediaapp.viewmodel.items.CommentItemViewModel;
+import com.example.socialmediaapp.viewmodel.models.repo.ItemRepository;
+import com.example.socialmediaapp.viewmodel.models.post.Comment;
+import com.example.socialmediaapp.viewmodel.refactor.CommentDataViewModel;
 
 public class CommentItemView extends ClickablePanel {
 
-    private CommentItemViewModel viewModel;
+    private CommentDataViewModel viewModel;
 
     protected ViewGroup root;
     private CircleButton avatarButton;
@@ -39,24 +44,17 @@ public class CommentItemView extends ClickablePanel {
     private TextView replyTextView, cntTime, cntLike;
     private LikeTextView likeTextView;
     private FrameLayout backgroundPanel;
-    private ItemRepository<Comment> repo;
     private LifecycleOwner lifecycleOwner;
     private ViewGroup replyPanel, infoPanel, mainContentPanel;
+    private MutableLiveData<String> sessionState;
+    private SessionHandler.SessionRegistry sessionRegistry;
+    private CommentSessionHandler commentSessionHandler;
 
-    public CommentItemView(Context context, AttributeSet attributeSet) {
-        super(context, attributeSet);
-        LayoutInflater inflater = LayoutInflater.from(context);
-        root = (ViewGroup) inflater.inflate(R.layout.comment_item, this, false);
-        setWillNotDraw(false);
-        addView(root);
-
-    }
-
-    public CommentItemView(Fragment owner, ItemRepository<Comment> repo, int id) {
+    public CommentItemView(Fragment owner, CommentDataViewModel commentDataViewModel) {
         super(owner.getContext());
-        this.repo = repo;
         lifecycleOwner = owner.getViewLifecycleOwner();
-        viewModel = new CommentItemViewModel(repo.getItem(id));
+        viewModel = commentDataViewModel;
+        commentSessionHandler = viewModel.getCommentSessionHandler();
         setFocusable(false);
         setFocusableInTouchMode(false);
         LayoutInflater inflater = LayoutInflater.from(owner.getContext());
@@ -77,23 +75,37 @@ public class CommentItemView extends ClickablePanel {
         backgroundPanel = root.findViewById(R.id.background_panel);
         infoPanel = root.findViewById(R.id.information_panel);
         initContent();
-        initOnClick();
+
+        sessionRegistry = viewModel.getSessionRegistry();
+        sessionState = viewModel.getSessionState();
+        sessionState.observe(lifecycleOwner, new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                if (s.equals("success")) {
+                    initOnClick();
+                }
+            }
+        });
     }
 
     private void initContent() {
-        Comment comment = viewModel.getComment();
-
-        avatarButton.setBackgroundContent(comment.getAuthor().getAvatar(), 0);
-        fullname.setText(comment.getAuthor().getFullname());
-        if (comment.getContent() != null && !comment.getContent().isEmpty()) {
-            content.setText(comment.getContent());
-            content.setVisibility(VISIBLE);
-            backgroundPanel.setWillNotDraw(false);
-        }
-        if (comment.getImage() != null) {
-            imageContent.setImageDrawable(comment.getImage());
-            imageContent.setVisibility(VISIBLE);
-        }
+        viewModel.getLiveData().observe(lifecycleOwner, new Observer<Comment>() {
+            @Override
+            public void onChanged(Comment comment) {
+                Bitmap avatar = comment.getAuthor().getAvatar();
+                avatarButton.setBackgroundContent(avatar == null ? null : new BitmapDrawable(getResources(), avatar), 0);
+                fullname.setText(comment.getAuthor().getFullname());
+                if (comment.getContent() != null && !comment.getContent().isEmpty()) {
+                    content.setText(comment.getContent());
+                    content.setVisibility(VISIBLE);
+                    backgroundPanel.setWillNotDraw(false);
+                }
+                if (comment.getImage() != null) {
+                    imageContent.setImageDrawable(comment.getImage());
+                    imageContent.setVisibility(VISIBLE);
+                }
+            }
+        });
 
         viewModel.getTime().observe(lifecycleOwner, new Observer<String>() {
             @Override
@@ -114,21 +126,13 @@ public class CommentItemView extends ClickablePanel {
             }
         });
         likeTextView.initLikeView(lifecycleOwner, viewModel.getIsLiked());
-
     }
 
     private void initOnClick() {
-        Comment comment = viewModel.getComment();
         likeTextView.setClickAction(new LikeTextView.Action() {
             @Override
             public MutableLiveData<String> activeAction(boolean isActive) {
-                MutableLiveData<String> res = new MutableLiveData<>();
-                if (isActive) {
-                    ServiceApi.likeComment(comment.getId(), res);
-                } else {
-                    ServiceApi.unlikeComment(comment.getId(), res);
-                }
-                return res;
+                return isActive ? commentSessionHandler.doLike() : commentSessionHandler.doUnLike();
             }
         });
     }

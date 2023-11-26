@@ -2,6 +2,8 @@ package com.example.socialmediaapp.container.session;
 
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
@@ -14,39 +16,30 @@ import androidx.work.WorkerParameters;
 
 import com.example.socialmediaapp.apis.PostApi;
 import com.example.socialmediaapp.apis.entities.CommentDataSyncBody;
-import com.example.socialmediaapp.apis.entities.PostDataSyncBody;
 import com.example.socialmediaapp.container.ApplicationContainer;
+import com.example.socialmediaapp.viewmodel.models.post.Comment;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.util.concurrent.Executor;
 
-import io.reactivex.rxjava3.subjects.PublishSubject;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class CommentSessionHandler extends SessionHandler {
-    public class CommentDataSync {
-        public Integer likeCount, commentCount;
-    }
-
     private Integer commnentId;
-    private PublishSubject<Data> networkDataEmitter;
-    private MutableLiveData<CommentDataSync> dataSyncEmitter;
-    protected Executor dummyExecutor = ApplicationContainer.getInstance().dummyExecutor;
+    private MutableLiveData<Comment> dataSyncEmitter;
     private WorkManager workManager = ApplicationContainer.getInstance().workManager;
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public CommentSessionHandler(Integer commnentId) {
         super();
         this.commnentId = commnentId;
-        networkDataEmitter = PublishSubject.create();
         dataSyncEmitter = new MutableLiveData<>();
     }
 
-    public MutableLiveData<CommentDataSync> getDataSyncEmitter() {
+    public MutableLiveData<Comment> getDataSyncEmitter() {
         return dataSyncEmitter;
     }
 
@@ -124,9 +117,17 @@ public class CommentSessionHandler extends SessionHandler {
                         try {
                             workInfo = future.get();
                             Data out = workInfo.getOutputData();
-                            Gson gson = new Gson();
-                            CommentDataSync commentDataSync = gson.fromJson(out.getString("result"), CommentDataSync.class);
-                            dataSyncEmitter.postValue(commentDataSync);
+                            Integer countLike = out.getInt("count like", -1);
+                            Integer countComment = out.getInt("count comment", -1);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Comment comment = dataSyncEmitter.getValue();
+                                    comment.setCountLike(countLike);
+                                    comment.setCountComment(countComment);
+                                    dataSyncEmitter.setValue(comment);
+                                }
+                            });
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -138,7 +139,6 @@ public class CommentSessionHandler extends SessionHandler {
 
     @Override
     protected void clean() {
-        networkDataEmitter = PublishSubject.create();
         super.clean();
     }
 
@@ -197,13 +197,7 @@ public class CommentSessionHandler extends SessionHandler {
 
                 CommentDataSyncBody body = res.body();
 
-                CommentDataSync postDataSync = new CommentDataSync();
-                postDataSync.commentCount = body.commentCount;
-                postDataSync.likeCount = body.likeCount;
-
-                String json = new Gson().toJson(postDataSync);
-
-                return Result.success(new Data.Builder().putString("result", json).build());
+                return Result.success(new Data.Builder().putInt("like count", body.likeCount).putInt("comment count", body.commentCount).build());
             } catch (IOException e) {
                 e.printStackTrace();
             }

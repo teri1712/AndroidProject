@@ -12,7 +12,6 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -37,24 +36,21 @@ import com.example.socialmediaapp.customview.container.ClickablePanel;
 import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
-import com.example.socialmediaapp.viewmodels.CreatePostViewModel;
-import com.example.socialmediaapp.viewmodels.HomePageViewModel;
-import com.example.socialmediaapp.viewmodels.factory.ViewModelFactory;
-import com.example.socialmediaapp.viewmodels.models.UserSession;
-import com.example.socialmediaapp.viewmodels.models.post.ImagePost;
-import com.example.socialmediaapp.viewmodels.models.user.UserInformation;
+import com.example.socialmediaapp.home.fragment.main.PostFragment;
+import com.example.socialmediaapp.viewmodel.CreatePostViewModel;
+import com.example.socialmediaapp.viewmodel.HomePageViewModel;
+import com.example.socialmediaapp.viewmodel.LoginFormViewModel;
+import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
+import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
+import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
+import com.example.socialmediaapp.viewmodel.refactor.PostFragmentViewModel;
+import com.example.socialmediaapp.viewmodel.refactor.UserSessionViewModel;
 
-import java.util.List;
+import java.util.Objects;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link CreatePostFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class CreatePostFragment extends Fragment implements FragmentAnimation {
 
     public CreatePostFragment() {
-        // Required empty public constructor
     }
 
     public static CreatePostFragment newInstance() {
@@ -66,29 +62,136 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
     private ImageView media_content;
     private CreatePostViewModel viewModel;
     private View root;
-
     private View back_button;
     private View select_picture_button;
     private View select_video_buton;
     private CircleButton avatar_button;
     private TextView fullname_textview;
-
     private ViewGroup media_container;
     private CircleButton remove_media_button;
     private ClickablePanel play_selected_video;
     private RoundedButton post_button;
     private EditText post_status_edit_text;
     private ActivityResultLauncher<String> pick_media_content;
-    private CustomSpinningView spinner;
     private HomePage homePage;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        viewModel = new ViewModelProvider(this, new ViewModelFactory(this, null)).get(CreatePostViewModel.class);
+
         pick_media_content = registerForActivityResult(new ActivityResultContracts.GetContent(), new ActivityResultCallback<Uri>() {
             @Override
             public void onActivityResult(Uri uri) {
                 if (uri == null) return;
+                viewModel.getMediaContent().setValue(uri);
+            }
+        });
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        root = inflater.inflate(R.layout.fragment_create_post, container, false);
+        avatar_button = root.findViewById(R.id.avatar_button);
+        post_status_edit_text = root.findViewById(R.id.post_edit_text);
+        media_content = root.findViewById(R.id.media_content);
+        media_container = root.findViewById(R.id.media_container);
+        remove_media_button = root.findViewById(R.id.remove_media_button);
+        play_selected_video = root.findViewById(R.id.play_selected_video);
+        media_picker_panel = root.findViewById(R.id.media_picker_panel);
+        post_button = root.findViewById(R.id.post_button);
+        fullname_textview = root.findViewById(R.id.fullname);
+
+        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                ViewGroup edit_panel = (ViewGroup) root.findViewById(R.id.edit_panel);
+                View pad = new View(getContext());
+                int w = ViewGroup.LayoutParams.MATCH_PARENT;
+                int h = media_picker_panel.getHeight();
+                ViewGroup.LayoutParams params = new LinearLayout.LayoutParams(w, h);
+                pad.setLayoutParams(params);
+                edit_panel.addView(pad);
+                root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+        });
+        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                performStart();
+                root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+        });
+        homePage = (HomePage) getActivity();
+        initViewModel();
+        homePage.getViewModel().getSessionState().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                if (s.equals("started")) {
+                    initOnClick(root);
+                }
+            }
+        });
+        return root;
+
+    }
+
+    private void initViewModel() {
+        UserSessionViewModel userSessionViewModel = homePage.getViewModel();
+        userSessionViewModel.getUserInfo().observe(getViewLifecycleOwner(), new Observer<UserInformation>() {
+            @Override
+            public void onChanged(UserInformation userSession) {
+                fullname_textview.setText(userSession.getFullname());
+            }
+        });
+        userSessionViewModel.getAvatar().observe(getViewLifecycleOwner(), new Observer<Bitmap>() {
+            @Override
+            public void onChanged(Bitmap bitmap) {
+                if (bitmap != null) {
+                    avatar_button.setBackgroundContent(new BitmapDrawable(getResources(), bitmap), 0);
+                }
+            }
+        });
+        viewModel.getCntEditedContent().observe(getViewLifecycleOwner(), new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer integer) {
+                if (integer == 0) {
+                    post_button.setTextContentColor(Color.parseColor("#adb5bd"));
+                    post_button.setBackgroundColor(Color.argb(15, 0, 0, 0));
+                    post_button.setClickedEnable(false);
+                } else {
+                    post_button.setTextContentColor(Color.parseColor("#757575"));
+                    post_button.setBackgroundColor(Color.argb(30, 0, 0, 0));
+                    post_button.setClickedEnable(true);
+                }
+                post_button.invalidate();
+            }
+        });
+        post_status_edit_text.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                viewModel.getPostStatusContent().setValue(editable.toString());
+            }
+        });
+        viewModel.getPostStatusContent().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                if (!Objects.equals(s, post_status_edit_text.getText().toString())) {
+                    post_status_edit_text.setText(s);
+                }
+            }
+        });
+        viewModel.getMediaContent().observe(getViewLifecycleOwner(), new Observer<Uri>() {
+            @Override
+            public void onChanged(Uri uri) {
                 try {
                     String type = getContext().getContentResolver().getType(uri).split("/")[0];
                     media_content.getLayoutParams().height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 600, getContext().getResources().getDisplayMetrics());
@@ -120,119 +223,6 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
-        });
-
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        root = inflater.inflate(R.layout.fragment_create_post, container, false);
-        avatar_button = root.findViewById(R.id.avatar_button);
-        post_status_edit_text = root.findViewById(R.id.post_edit_text);
-        media_content = root.findViewById(R.id.media_content);
-        media_container = root.findViewById(R.id.media_container);
-        remove_media_button = root.findViewById(R.id.remove_media_button);
-        play_selected_video = root.findViewById(R.id.play_selected_video);
-        media_picker_panel = root.findViewById(R.id.media_picker_panel);
-        post_button = root.findViewById(R.id.post_button);
-        fullname_textview = root.findViewById(R.id.fullname);
-        spinner = root.findViewById(R.id.load_spinner);
-
-        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                ViewGroup edit_panel = (ViewGroup) root.findViewById(R.id.edit_panel);
-                View pad = new View(getContext());
-                int w = ViewGroup.LayoutParams.MATCH_PARENT;
-                int h = media_picker_panel.getHeight();
-                ViewGroup.LayoutParams params = new LinearLayout.LayoutParams(w, h);
-                pad.setLayoutParams(params);
-                edit_panel.addView(pad);
-                root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-            }
-        });
-        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                performStart();
-                root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-            }
-        });
-        homePage = (HomePage) getActivity();
-        initViewModel();
-        initOnClick(root);
-        return root;
-
-    }
-
-    private void initViewModel() {
-        HomePageViewModel homePageViewModel = homePage.getViewModel();
-        homePageViewModel.getUserInfo().observe(getViewLifecycleOwner(), new Observer<UserInformation>() {
-            @Override
-            public void onChanged(UserInformation userSession) {
-                fullname_textview.setText(userSession.getFullname());
-            }
-        });
-        homePageViewModel.getAvatarPost().observe(getViewLifecycleOwner(), new Observer<ImagePost>() {
-            @Override
-            public void onChanged(ImagePost imagePost) {
-                if (imagePost == null) return;
-                avatar_button.setBackgroundContent(imagePost.getImage(), 0);
-            }
-        });
-        viewModel = new ViewModelProvider(this, new ViewModelFactory(this, null)).get(CreatePostViewModel.class);
-        viewModel.getCntEditedContent().observe(getViewLifecycleOwner(), new Observer<Integer>() {
-            @Override
-            public void onChanged(Integer integer) {
-                if (integer == 0) {
-                    post_button.setTextContentColor(Color.parseColor("#adb5bd"));
-                    post_button.setBackgroundColor(Color.argb(15, 0, 0, 0));
-                    post_button.setClickedEnable(false);
-                } else {
-                    post_button.setTextContentColor(Color.parseColor("#757575"));
-                    post_button.setBackgroundColor(Color.argb(30, 0, 0, 0));
-                    post_button.setClickedEnable(true);
-                }
-                post_button.invalidate();
-            }
-        });
-        viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (s.equals("In progress")) {
-                    spinner.setVisibility(View.VISIBLE);
-                } else {
-                    if (spinner.getVisibility() == View.VISIBLE) {
-                        spinner.setVisibility(View.GONE);
-                    }
-                }
-            }
-        });
-        viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (s.equals("Idle") || s.equals("In progress")) return;
-                if (s.equals("Success")) {
-                    homePage.finishFragment("create post");
-                } else {
-                    viewModel.getPostSubmitState().setValue("Idle");
-                }
-                Toast.makeText(homePage, s, Toast.LENGTH_SHORT).show();
-            }
-        });
-        post_status_edit_text.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-                viewModel.getPostStatusContent().setValue(editable.toString());
             }
         });
     }
@@ -283,11 +273,11 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
         post_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                viewModel.postMyPost(getActivity());
+                viewModel.postMyPost(homePage);
+                homePage.finishFragment("create post");
             }
         });
     }
-
 
     @Override
     public void performEnd(Runnable endAction) {
@@ -302,8 +292,7 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
     @Override
     public void performStart() {
         View p = (View) getView().getParent();
-
-        root.setTranslationY(p.getHeight() /2);
+        root.setTranslationY(p.getHeight() / 2);
         root.animate().translationY(0).setDuration(300).setInterpolator(new DecelerateInterpolator()).start();
     }
 }

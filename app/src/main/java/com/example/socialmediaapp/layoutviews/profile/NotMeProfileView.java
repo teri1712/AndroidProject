@@ -12,7 +12,7 @@ import com.example.socialmediaapp.R;
 import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.layoutviews.profile.base.ProfileView;
 import com.example.socialmediaapp.layoutviews.profile.model.Configurer;
-import com.example.socialmediaapp.viewmodels.models.user.profile.NotMeProfile;
+import com.example.socialmediaapp.viewmodel.models.user.profile.NotMeProfile;
 
 public class NotMeProfileView extends ProfileView {
     private RoundedButton blueButton, greyButton;

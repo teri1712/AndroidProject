@@ -24,11 +24,10 @@ import com.example.socialmediaapp.customview.button.CircleButton;
 import com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView;
 import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
-import com.example.socialmediaapp.viewmodels.UpdateBackgroundViewModel;
-import com.example.socialmediaapp.viewmodels.factory.ViewModelFactory;
-import com.example.socialmediaapp.viewmodels.models.UserSession;
-import com.example.socialmediaapp.viewmodels.models.post.ImagePost;
-import com.example.socialmediaapp.viewmodels.models.user.UserInformation;
+import com.example.socialmediaapp.viewmodel.UpdateBackgroundViewModel;
+import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
+import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
+import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
 
 /**
  * A simple {@link Fragment} subclass.

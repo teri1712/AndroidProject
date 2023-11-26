@@ -1,5 +1,7 @@
 package com.example.socialmediaapp.home.fragment.main;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -16,42 +18,40 @@ import android.widget.ScrollView;
 
 import com.example.socialmediaapp.activitiy.HomePage;
 import com.example.socialmediaapp.R;
+import com.example.socialmediaapp.container.session.DataAccessHandler;
+import com.example.socialmediaapp.container.session.PostSessionHandler;
+import com.example.socialmediaapp.container.session.SessionHandler;
 import com.example.socialmediaapp.customview.button.CircleButton;
+import com.example.socialmediaapp.customview.container.SpinningFrame;
 import com.example.socialmediaapp.customview.progress.PostLoading;
 import com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView;
 import com.example.socialmediaapp.layoutviews.items.PostItemView;
-import com.example.socialmediaapp.viewmodels.HomePageViewModel;
-import com.example.socialmediaapp.viewmodels.PostFragmentViewModel;
-import com.example.socialmediaapp.viewmodels.factory.ViewModelFactory;
-import com.example.socialmediaapp.viewmodels.models.HomePageContent;
-import com.example.socialmediaapp.viewmodels.models.post.ImagePost;
-import com.example.socialmediaapp.viewmodels.models.post.base.Post;
-import com.example.socialmediaapp.viewmodels.models.repo.Update;
-import com.example.socialmediaapp.viewmodels.models.user.UserBasicInfo;
-import com.example.socialmediaapp.viewmodels.models.user.UserInformation;
+import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
+import com.example.socialmediaapp.viewmodel.models.HomePageContent;
+import com.example.socialmediaapp.viewmodel.models.UserSession;
+import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
+import com.example.socialmediaapp.viewmodel.models.post.base.Post;
+import com.example.socialmediaapp.viewmodel.models.repo.Repository;
+import com.example.socialmediaapp.viewmodel.models.repo.Update;
+import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
+import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
+import com.example.socialmediaapp.viewmodel.refactor.DataViewModel;
+import com.example.socialmediaapp.viewmodel.refactor.PostDataViewModel;
+import com.example.socialmediaapp.viewmodel.refactor.PostFragmentViewModel;
+import com.example.socialmediaapp.viewmodel.refactor.UserSessionViewModel;
 
+import java.net.Inet4Address;
 import java.util.List;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link PostFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class PostFragment extends Fragment {
 
-
-    public PostFragment() {
-    }
-
-    public static PostFragment newInstance() {
-        PostFragment fragment = new PostFragment();
-        return fragment;
+    public PostFragment(DataAccessHandler<Post> dataAccessHandler) {
+        viewModel = new PostFragmentViewModel(dataAccessHandler);
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     private View header_panel, header_frame;
@@ -61,12 +61,12 @@ public class PostFragment extends Fragment {
     private PostFragmentViewModel viewModel;
     private CircleButton avatarButton, searchButton;
     private CustomSpinningView loadSpinner;
-
     private PostLoading postLoading;
-
-    public PostFragmentViewModel getViewModel() {
-        return viewModel;
-    }
+    private Repository<Post> postRepository;
+    private SessionHandler.SessionRegistry sessionRegistry;
+    private boolean loadInProgress;
+    private HomePage homePage;
+    private SpinningFrame spinningFrame;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -78,6 +78,8 @@ public class PostFragment extends Fragment {
         avatarButton = view.findViewById(R.id.avatar_button);
         home_page_scroll = view.findViewById(R.id.home_scroll_pane);
         loadSpinner = view.findViewById(R.id.load_spinner);
+        spinningFrame = view.findViewById(R.id.spinning_frame);
+
         HomePage activity = (HomePage) getActivity();
 
         command_panel = activity.getCommandPanel();
@@ -86,10 +88,30 @@ public class PostFragment extends Fragment {
         searchButton = view.findViewById(R.id.search_button);
         postLoading = new PostLoading(getContext());
 
-        loadSpinner.setVisibility(View.VISIBLE);
 
-        HomePageViewModel vm = activity.getViewModel();
-        vm.getUserInfo().observe(getViewLifecycleOwner(), new Observer<UserInformation>() {
+        loadSpinner.setVisibility(View.VISIBLE);
+        postRepository = viewModel.getPostRepository();
+        sessionRegistry = viewModel.getSessionRegistry();
+        UserSessionViewModel userSessionViewModel = activity.getViewModel();
+        MutableLiveData<String> sessionState = viewModel.getSessionState();
+        loadInProgress = false;
+        sessionState.observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                if (s.equals("started")) {
+                    if (loadSpinner != null) {
+                        loadSpinner.setVisibility(View.GONE);
+                        ViewGroup vg = (ViewGroup) loadSpinner.getParent();
+                        vg.removeView(loadSpinner);
+                        loadSpinner = null;
+                    }
+                    loadInProgress = true;
+                    loadPosts();
+                    sessionState.removeObserver(this);
+                }
+            }
+        });
+        userSessionViewModel.getUserInfo().observe(getViewLifecycleOwner(), new Observer<UserInformation>() {
             @Override
             public void onChanged(UserInformation userSession) {
                 avatarButton.setOnClickListener(new View.OnClickListener() {
@@ -98,60 +120,28 @@ public class PostFragment extends Fragment {
                         UserBasicInfo self = new UserBasicInfo();
                         self.setAlias(userSession.getAlias());
                         self.setFullname(userSession.getFullname());
-                        if (vm.getAvatarPost().getValue() != null) {
-                            self.setAvatar(vm.getAvatarPost().getValue().getImage());
-                        }
-                        activity.openViewProfileFragment(self);
+                        self.setAvatar(userSessionViewModel.getAvatar().getValue());
                     }
                 });
             }
         });
-        vm.getHomePageContent().observe(getViewLifecycleOwner(), new Observer<HomePageContent>() {
+        userSessionViewModel.getAvatar().observe(getViewLifecycleOwner(), new Observer<Bitmap>() {
             @Override
-            public void onChanged(HomePageContent homePageContent) {
-                if (loadSpinner != null) {
-                    loadSpinner.setVisibility(View.GONE);
-                    ViewGroup vg = (ViewGroup) loadSpinner.getParent();
-                    vg.removeView(loadSpinner);
-                    loadSpinner = null;
-                }
-                performLoading();
-                viewModel.loadPosts(getContext()).observe(getViewLifecycleOwner(), new Observer<String>() {
-                    @Override
-                    public void onChanged(String s) {
-                        if (s.equals("Success")) {
-                        } else {
-                        }
-                        finishLoading();
-                    }
-                });
-            }
-        });
-        vm.getAvatarPost().observe(getViewLifecycleOwner(), new Observer<ImagePost>() {
-            @Override
-            public void onChanged(ImagePost imagePost) {
-                if (imagePost == null) return;
-                avatarButton.setBackgroundContent(imagePost.getImage(), 0);
-            }
-        });
-
-        viewModel = new ViewModelProvider(this, new ViewModelFactory(this, null)).get(PostFragmentViewModel.class);
-
-        viewModel.getListPost().getUpdateOnRepo().observe(getViewLifecycleOwner(), new Observer<Update<Post>>() {
-            @Override
-            public void onChanged(Update<Post> p) {
-                if (p == null) return;
-                if (p.getOp() == Update.Op.ADD) {
-                    PostItemView newPostItem = new PostItemView(PostFragment.this, viewModel.getListPost(), p.getPos());
-                    postPanel.addView(newPostItem, p.getPos());
-                } else {
-                    postPanel.removeViewAt(p.getPos());
-                }
+            public void onChanged(Bitmap bitmap) {
+                avatarButton.setBackgroundContent(new BitmapDrawable(getResources(), bitmap), 0);
             }
         });
         initOnclick(view);
+        spinningFrame.setAction(new Runnable() {
+            @Override
+            public void run() {
+                recycle();
+            }
+        });
+        homePage = (HomePage) getActivity();
         return view;
     }
+
 
     private void performLoading() {
         postLoading.start();
@@ -163,11 +153,65 @@ public class PostFragment extends Fragment {
         postPanel.removeView(postLoading);
     }
 
+    private void showPosts(List<Post> posts) {
+        for (Post post : posts) {
+            PostSessionHandler postSessionHandler = new PostSessionHandler(post.getId());
+            PostDataViewModel postDataViewModel = new PostDataViewModel(postSessionHandler, post);
+            sessionRegistry.register(postSessionHandler);
+            PostItemView postItemView = new PostItemView(PostFragment.this, postDataViewModel);
+            postPanel.addView(postItemView);
+        }
+    }
+
+    private void loadPosts() {
+        performLoading();
+        Bundle query = new Bundle();
+        query.putInt("count loaded", postPanel.getChildCount());
+        MutableLiveData<List<Post>> liveData = postRepository.fetchNewItems(query);
+        liveData.observe(getViewLifecycleOwner(), new Observer<List<Post>>() {
+            @Override
+            public void onChanged(List<Post> posts) {
+                showPosts(posts);
+                finishLoading();
+                loadInProgress = false;
+            }
+        });
+    }
+
+    public void uploadPost(Bundle data) {
+        if (!viewModel.getSessionState().equals("started")) return;
+        MutableLiveData<Integer> id = postRepository.uploadNewItem(data);
+        id.observe(getViewLifecycleOwner(), new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer integer) {
+                Bundle query = new Bundle();
+                postRepository.fetchNewItems(query).observe(getViewLifecycleOwner(), new Observer<List<Post>>() {
+                    @Override
+                    public void onChanged(List<Post> posts) {
+                        showPosts(posts);
+                    }
+                });
+            }
+        });
+    }
+
+    private void recycle() {
+        viewModel.getSessionHandler().delete();
+        viewModel.getSessionState().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                if (s.equals("invalidated")) {
+                    homePage.recyclePostFragment();
+                    spinningFrame.endLoading();
+                }
+            }
+        });
+    }
+
     private void initOnclick(View root) {
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                HomePage homePage = (HomePage) getActivity();
                 homePage.openSearchFragment();
             }
         });
@@ -202,6 +246,14 @@ public class PostFragment extends Fragment {
                     header_frame.animate().translationY(0).setDuration(100).start();
                     command_panel.animate().alpha(1f).setDuration(100).start();
                     command_frame.animate().translationY(0).setDuration(100).start();
+                }
+                int h = postPanel.getHeight();
+                int y = home_page_scroll.getScrollY();
+                if (y + 2 * home_page_scroll.getHeight() > h) {
+                    if (!loadInProgress) {
+                        loadPosts();
+                        loadInProgress = true;
+                    }
                 }
             }
         });
@@ -324,4 +376,10 @@ public class PostFragment extends Fragment {
             }
         });
     }
+
+    public void onDestroyView() {
+        super.onDestroyView();
+        postLoading.cancel();
+    }
+
 }

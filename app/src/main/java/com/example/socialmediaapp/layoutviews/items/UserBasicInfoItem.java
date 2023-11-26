@@ -6,17 +6,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-
 import com.example.socialmediaapp.R;
 import com.example.socialmediaapp.activitiy.HomePage;
 import com.example.socialmediaapp.customview.AvatarView;
 import com.example.socialmediaapp.customview.button.CircleButton;
 import com.example.socialmediaapp.customview.container.ClickablePanel;
-import com.example.socialmediaapp.home.fragment.SearchFragment;
-import com.example.socialmediaapp.viewmodels.HomePageViewModel;
-import com.example.socialmediaapp.viewmodels.models.user.UserBasicInfo;
+import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
 
 public class UserBasicInfoItem extends ClickablePanel {
     private UserBasicInfo userBasicInfo;

@@ -6,11 +6,15 @@ import com.example.socialmediaapp.apis.MediaApi;
 import com.example.socialmediaapp.apis.entities.CommentBody;
 import com.example.socialmediaapp.apis.entities.PostBody;
 import com.example.socialmediaapp.apis.entities.UserBasicInfoBody;
+import com.example.socialmediaapp.apis.entities.UserInformationBody;
+import com.example.socialmediaapp.apis.entities.UserSessionBody;
 import com.example.socialmediaapp.container.ApplicationContainer;
 import com.example.socialmediaapp.container.entity.Comment;
 import com.example.socialmediaapp.container.entity.ImagePost;
 import com.example.socialmediaapp.container.entity.Post;
 import com.example.socialmediaapp.container.entity.UserBasicInfo;
+import com.example.socialmediaapp.container.entity.UserInformation;
+import com.example.socialmediaapp.viewmodel.models.UserSession;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -85,10 +89,22 @@ public class DtoConverter {
         return m;
     }
 
+    public UserInformation convertToUserInformation(UserSessionBody userSessionBody) throws IOException {
+        UserInformation userInformation = new UserInformation();
+        userInformation.setFullname(userSessionBody.getUserInfo().getFullname());
+        userInformation.setAlias(userSessionBody.getUserInfo().getAlias());
+        userInformation.setGender(userSessionBody.getUserInfo().getGender());
+        userInformation.setBirthday(userSessionBody.getUserInfo().getBirthday());
+        userInformation.setAvatarUri(httpExtraResolver.getImageFile(userSessionBody.getAvatarId()));
+        userInformation.setBackgroundUri(httpExtraResolver.getImageFile(userSessionBody.getBackgroundId()));
+        return userInformation;
+    }
+
     private class HttpExtraResolver {
 
         //return the location of cached file
         private String getImageFile(Integer mediaId) throws IOException {
+            if (mediaId == null) return null;
             File cacheDir = context.getCacheDir();
             File cache = new File(cacheDir, Integer.toString(mediaId));
             cache.createNewFile();

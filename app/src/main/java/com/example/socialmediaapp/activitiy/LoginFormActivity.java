@@ -9,7 +9,6 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Paint;
 import android.os.Bundle;
@@ -21,7 +20,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -31,8 +29,8 @@ import android.widget.Toast;
 import com.example.socialmediaapp.R;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
 import com.example.socialmediaapp.home.fragment.RegistrationFragment;
-import com.example.socialmediaapp.viewmodels.LoginFormViewModel;
-import com.example.socialmediaapp.viewmodels.factory.ViewModelFactory;
+import com.example.socialmediaapp.viewmodel.LoginFormViewModel;
+import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
 
 import java.util.Objects;
 import java.util.regex.Matcher;

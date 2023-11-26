@@ -21,16 +21,23 @@ public class SpinningFrame extends FrameLayout {
     private SpinningLoadPageView load_spinner;
     private float prey, prex;
     private int scrollId;
+    private boolean loading;
+    private Runnable action;
 
     private void init(AttributeSet attrs) {
         TypedArray a = getContext().obtainStyledAttributes(
                 attrs,
                 R.styleable.my_container);
+        loading = false;
         try {
             scrollId = a.getResourceId(R.styleable.my_container_scrollview_id, -1);
         } finally {
             a.recycle();
         }
+    }
+
+    public void setAction(Runnable action) {
+        this.action = action;
     }
 
     @Override
@@ -69,6 +76,7 @@ public class SpinningFrame extends FrameLayout {
         init(attrs);
     }
 
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (childScroll == null) return false;
@@ -90,26 +98,12 @@ public class SpinningFrame extends FrameLayout {
             case MotionEvent.ACTION_UP:
                 float progress = 100 * load_spinner.getTranslationY() / 400;
                 if (progress >= 70) {
+                    loading = true;
                     load_spinner.animate().translationY(300).setDuration(100).withEndAction(new Runnable() {
                         @Override
                         public void run() {
                             load_spinner.perfromLoadingAnimation();
-                        }
-                    }).start();
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                Thread.sleep(3000);
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                            }
-                            load_spinner.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    load_spinner.performEndLoadingAnimation();
-                                }
-                            });
+                            action.run();
                         }
                     }).start();
                 } else {
@@ -129,10 +123,21 @@ public class SpinningFrame extends FrameLayout {
         return true;
     }
 
+    public void endLoading() {
+        loading = false;
+        load_spinner.performEndLoadingAnimation();
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
         float y = event.getY();
         float x = event.getX();
+        if (loading) {
+            prey = y;
+            prex = x;
+            return false;
+        }
+
         boolean willIntercept = false;
         switch (event.getAction()) {
             case MotionEvent.ACTION_MOVE:

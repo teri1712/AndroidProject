@@ -2,9 +2,13 @@ package com.example.socialmediaapp.container.session;
 
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.socialmediaapp.container.ApplicationContainer;
+import com.example.socialmediaapp.viewmodel.models.UserSession;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -16,15 +20,23 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 
 public class SessionHandler {
-    private Executor sessionExecutor = Executors.newSingleThreadExecutor();
-    private boolean isInvalidated;
+    private Executor sessionExecutor = ApplicationContainer.getInstance().dataLayerExecutor;
+    protected boolean isInvalidated;
+    protected boolean isInterrupted;
     private SessionHandler.SessionRegistry sessionRegistry;
     private MutableLiveData<String> sessionState;
+    private String state;
+    private Integer id;
+    private boolean isActive;
+    private SessionRegistry parentSessionRegistry;
 
     public SessionHandler() {
         sessionRegistry = new SessionRegistry();
         sessionState = new MutableLiveData<>();
         isInvalidated = false;
+        isInterrupted = false;
+        isActive = false;
+        state = "null";
     }
 
     public MutableLiveData<String> getSessionState() {
@@ -39,21 +51,70 @@ public class SessionHandler {
         isInvalidated = true;
         sessionRegistry.clear();
         sessionExecutor = null;
-        sessionState.postValue("Invalidated");
+        setState("invalidated");
     }
 
-    public void interrupt() {
-    }
-
-    protected Future<String> invalidate() {
-        return ((ExecutorService) sessionExecutor).submit(new Callable<String>() {
+    protected void interrupt() {
+        sessionExecutor.execute(new Runnable() {
             @Override
-            public String call() {
-                if (isInvalidated) return "Invalidated";
-                clean();
-                return "Finished";
+            public void run() {
+                sessionState.postValue("interrupted");
+                for (Map.Entry<Integer, SessionHandler> e : sessionRegistry.branches.entrySet()) {
+                    e.getValue().interrupt();
+                }
             }
         });
+    }
+
+    protected void resume() {
+        sessionExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                sessionState.postValue("resume");
+                state = "resume";
+                for (Map.Entry<Integer, SessionHandler> e : sessionRegistry.branches.entrySet()) {
+                    e.getValue().resume();
+                }
+            }
+        });
+    }
+
+    protected void invalidate() {
+        clean();
+    }
+
+    public void setActive() {
+        post(new Runnable() {
+            @Override
+            public void run() {
+                if (!isActive) {
+                    isActive = true;
+                }
+            }
+        });
+    }
+
+    public void setInActive() {
+        post(new Runnable() {
+            @Override
+            public void run() {
+                if (isActive) {
+                    isActive = false;
+                    if (state == "detached") clean();
+                }
+            }
+        });
+    }
+
+    private void setState(String state) {
+        this.state = state;
+        sessionState.postValue(state);
+    }
+
+    public void delete() {
+        if (parentSessionRegistry != null) {
+            parentSessionRegistry.unRegister(id);
+        }
     }
 
     protected void post(Runnable action) {
@@ -62,7 +123,7 @@ public class SessionHandler {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                if (isInvalidated) return;
+                if (isInvalidated || isInterrupted) return;
                 action.run();
             }
         });
@@ -79,56 +140,53 @@ public class SessionHandler {
     }
 
     public class SessionRegistry {
-        private HashSet<SessionHandler> branches;
+        private HashMap<Integer, SessionHandler> branches;
 
         private SessionRegistry() {
-            branches = new HashSet<>();
+            branches = new HashMap<>();
         }
 
-        public <T extends SessionHandler> MutableLiveData<T> register(T t) {
-            MutableLiveData<T> callBack = new MutableLiveData<>();
+        public <T extends SessionHandler> MutableLiveData<Integer> register(T t) {
+            MutableLiveData<Integer> callBack = new MutableLiveData<>();
             sessionExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
                     SessionHandler s = t;
-                    s.sessionExecutor = sessionExecutor;
-                    callBack.postValue(t);
+                    s.parentSessionRegistry = SessionRegistry.this;
+                    s.setState("started");
+                    OnlineSessionHandler onlineSessionHandler = ApplicationContainer.getInstance().onlineSessionHandler;
+                    Integer sessionId = onlineSessionHandler.createSession(s);
+                    callBack.postValue(sessionId);
+                    s.id = sessionId;
+                    branches.put(sessionId, s);
                 }
             });
             return callBack;
         }
 
-        public MutableLiveData<String> unregister(SessionHandler t) {
-            MutableLiveData<String> callBack = new MutableLiveData<>();
+        public void unRegister(Integer sessionId) {
             sessionExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    if (!branches.contains(t)) {
-                        callBack.postValue("Session does not exist");
-                        return;
-                    }
-                    String status = "error";
-                    try {
-                        status = t.invalidate().get();
-                    } catch (ExecutionException e) {
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    callBack.postValue(status);
+                    OnlineSessionHandler onlineSessionHandler = ApplicationContainer.getInstance().onlineSessionHandler;
+                    branches.remove(sessionId);
+                    onlineSessionHandler.removeSessionId(sessionId);
+                    SessionHandler t = onlineSessionHandler.removeSessionId(sessionId);
+                    t.invalidate();
                 }
             });
-            return callBack;
         }
 
         private void clear() {
-            for (SessionHandler e : branches) {
-                try {
-                    String status = e.invalidate().get();
-                } catch (ExecutionException ex) {
-                    ex.printStackTrace();
-                } catch (InterruptedException ex) {
-                    ex.printStackTrace();
+            OnlineSessionHandler onlineSessionHandler = ApplicationContainer.getInstance().onlineSessionHandler;
+            for (Map.Entry<Integer, SessionHandler> e : branches.entrySet()) {
+                SessionHandler t = e.getValue();
+                if (t.state != "active") {
+                    t.state = "detached";
+                    t.sessionState.postValue("detached");
+                } else {
+                    onlineSessionHandler.removeSessionId(e.getKey());
+                    t.invalidate();
                 }
             }
             branches.clear();

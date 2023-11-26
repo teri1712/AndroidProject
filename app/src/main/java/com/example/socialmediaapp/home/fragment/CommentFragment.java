@@ -1,5 +1,7 @@
 package com.example.socialmediaapp.home.fragment;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,44 +23,63 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.socialmediaapp.R;
+import com.example.socialmediaapp.activitiy.HomePage;
+import com.example.socialmediaapp.container.ApplicationContainer;
+import com.example.socialmediaapp.container.session.CommentSessionHandler;
+import com.example.socialmediaapp.container.session.DataAccessHandler;
+import com.example.socialmediaapp.container.session.OnlineSessionHandler;
+import com.example.socialmediaapp.container.session.SessionHandler;
 import com.example.socialmediaapp.customview.button.CircleButton;
 import com.example.socialmediaapp.customview.container.DragPanel;
 import com.example.socialmediaapp.customview.progress.CommentLoading;
 import com.example.socialmediaapp.customview.progress.SendCommentloading;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
 import com.example.socialmediaapp.layoutviews.items.CommentItemView;
-import com.example.socialmediaapp.viewmodels.CommentFragmentViewModel;
-import com.example.socialmediaapp.viewmodels.items.PostItemViewModel;
-import com.example.socialmediaapp.viewmodels.models.post.Comment;
-import com.example.socialmediaapp.viewmodels.models.repo.Update;
+import com.example.socialmediaapp.viewmodel.CommentFragmentViewModel;
+import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
+import com.example.socialmediaapp.viewmodel.models.post.Comment;
+import com.example.socialmediaapp.viewmodel.models.repo.Repository;
+import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
+import com.example.socialmediaapp.viewmodel.refactor.CommentDataViewModel;
+import com.example.socialmediaapp.viewmodel.refactor.UserSessionViewModel;
 
 import java.util.List;
 import java.util.Objects;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link CommentFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class CommentFragment extends Fragment implements FragmentAnimation {
 
-
-    public CommentFragment(PostItemViewModel postViewModel) {
-        this.postViewModel = postViewModel;
+    public CommentFragment() {
     }
 
+    static public CommentFragment newInstance(Bundle args) {
+        CommentFragment commentFragment = new CommentFragment();
+        commentFragment.setArguments(args);
+        return commentFragment;
+    }
+
+    private Integer countLike;
+    private CommentFragmentViewModel viewModel;
     private ActivityResultLauncher<String> pickImage;
-
-    public static CommentFragment newInstance(PostItemViewModel post) {
-        CommentFragment fragment = new CommentFragment(post);
-        return fragment;
-    }
+    private MutableLiveData<SessionHandler> sessionHandlerMutableLiveData;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Bundle args = getArguments();
+        assert args != null;
+
+        countLike = args.getInt("count like");
+        Integer sessionId = args.getInt("session id");
+
+        viewModel = new ViewModelProvider(this, new ViewModelFactory(this, null)).get(CommentFragmentViewModel.class);
+        OnlineSessionHandler onlineSessionHandler = ApplicationContainer.getInstance().onlineSessionHandler;
+
+        sessionHandlerMutableLiveData = onlineSessionHandler.getSessionById(sessionId);
+
+
         pickImage = registerForActivityResult(new ActivityResultContracts.GetContent(), new ActivityResultCallback<Uri>() {
             @Override
             public void onActivityResult(Uri uri) {
@@ -66,7 +87,6 @@ public class CommentFragment extends Fragment implements FragmentAnimation {
                 viewModel.getImage().setValue(uri);
             }
         });
-        viewModel = new CommentFragmentViewModel();
     }
 
     private TextView cntLikeTextView;
@@ -74,8 +94,6 @@ public class CommentFragment extends Fragment implements FragmentAnimation {
     private EditText commentEditText;
     private CircleButton selectImage, selectIcon, selectGif, sendButton;
     private View root;
-    private CommentFragmentViewModel viewModel;
-    private PostItemViewModel postViewModel;
     private CircleButton eraseImageButton;
     private View imageContainer;
     private ImageView imageView;
@@ -84,8 +102,12 @@ public class CommentFragment extends Fragment implements FragmentAnimation {
     private ViewGroup mainPanel;
     private View commandPanel;
     private View padding;
-
     private DragPanel dragPanel;
+    private SessionHandler.SessionRegistry sessionRegistry;
+    private MutableLiveData<String> sessionState;
+    private Repository<Comment> commentRepository;
+
+    private HomePage homePage;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -107,6 +129,7 @@ public class CommentFragment extends Fragment implements FragmentAnimation {
         commandPanel = root.findViewById(R.id.command_panel);
         dragPanel = root.findViewById(R.id.drag_panel);
 
+        homePage = (HomePage) getActivity();
         commandPanel.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -123,27 +146,70 @@ public class CommentFragment extends Fragment implements FragmentAnimation {
             }
         });
         initViewModel();
-        initOnclick();
+
+        sessionHandlerMutableLiveData.observe(getViewLifecycleOwner(), new Observer<SessionHandler>() {
+            @Override
+            public void onChanged(SessionHandler sessionHandler) {
+                viewModel.setDataAccessHandler((DataAccessHandler<Comment>) sessionHandler);
+
+                commentRepository = viewModel.getCommentRepository();
+                sessionRegistry = viewModel.getSessionRegistry();
+                sessionState = viewModel.getSessionState();
+                sessionState.observe(getViewLifecycleOwner(), new Observer<String>() {
+                    @Override
+                    public void onChanged(String s) {
+                        if (s.equals("started")) {
+                            sessionHandler.setActive();
+                            Bundle query = new Bundle();
+                            performLoading();
+                            commentRepository.fetchNewItems(query).observe(getViewLifecycleOwner(), new Observer<List<Comment>>() {
+                                @Override
+                                public void onChanged(List<Comment> comments) {
+                                    showComments(comments);
+                                    finishLoading();
+                                }
+                            });
+                            initOnclick();
+                        }
+                    }
+                });
+            }
+        });
+
         root.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         dragPanel.setFinishAction(new Runnable() {
             @Override
             public void run() {
+                viewModel.getSessionHandler().setInActive();
                 getActivity().getSupportFragmentManager().popBackStackImmediate(getTag(), FragmentManager.POP_BACK_STACK_INCLUSIVE);
             }
         });
         commentLoadingAnimator = new CommentLoading(getContext());
         sendCommentloading = new SendCommentloading(getContext());
+
+        UserSessionViewModel userSessionViewModel = homePage.getViewModel();
+
+        userSessionViewModel.getAvatar().observe(getViewLifecycleOwner(), new Observer<Bitmap>() {
+            @Override
+            public void onChanged(Bitmap bitmap) {
+                Drawable avatar = bitmap == null ? null : new BitmapDrawable(getResources(), bitmap);
+                sendCommentloading.setAvatar(avatar);
+            }
+        });
+        userSessionViewModel.getUserInfo().observe(getViewLifecycleOwner(), new Observer<UserInformation>() {
+            @Override
+            public void onChanged(UserInformation userInformation) {
+                String fn = userInformation.getFullname();
+                sendCommentloading.setFullname(fn);
+            }
+        });
+
         return root;
     }
 
     private void initViewModel() {
-        postViewModel.getCountLikeContent().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                cntLikeTextView.setText(s);
-            }
-        });
+        cntLikeTextView.setText(Integer.toString(countLike));
         commentEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -191,18 +257,6 @@ public class CommentFragment extends Fragment implements FragmentAnimation {
                 }
             }
         });
-        postViewModel.getCommentRepo().getUpdateOnRepo().observe(getViewLifecycleOwner(), new Observer<Update<Comment>>() {
-            @Override
-            public void onChanged(Update<Comment> commentUpdate) {
-                if (commentUpdate == null) return;
-                int pos = commentUpdate.getPos();
-                if (commentUpdate.getOp() == Update.Op.ADD) {
-                    commentPanel.addView(new CommentItemView(CommentFragment.this, postViewModel.getCommentRepo(), pos), pos);
-                } else {
-                    commentPanel.removeViewAt(pos);
-                }
-            }
-        });
     }
 
     private void initOnclick() {
@@ -225,19 +279,37 @@ public class CommentFragment extends Fragment implements FragmentAnimation {
                     return;
                 }
                 performSending();
-                postViewModel.sendComment(getContext(), viewModel.getCommentContent().getValue(), viewModel.getImage().getValue()).observe(getViewLifecycleOwner(), new Observer<String>() {
+                Bundle data = new Bundle();
+                data.putString("content", viewModel.getCommentContent().getValue());
+                Uri uri = viewModel.getImage().getValue();
+                data.putString("image", uri == null ? null : uri.toString());
+
+                commentRepository.uploadNewItem(data).observe(getViewLifecycleOwner(), new Observer<Integer>() {
                     @Override
-                    public void onChanged(String s) {
-                        if (s.equals("Success")) {
-                        }
-                        finishSending();
+                    public void onChanged(Integer integer) {
+                        Bundle query = new Bundle();
+                        commentRepository.fetchNewItems(query).observe(getViewLifecycleOwner(), new Observer<List<Comment>>() {
+                            @Override
+                            public void onChanged(List<Comment> comments) {
+                                showComments(comments);
+                                finishSending();
+                            }
+                        });
                     }
                 });
                 viewModel.getCommentContent().setValue("");
                 viewModel.getImage().setValue(null);
             }
         });
+    }
 
+    private void showComments(List<Comment> comments) {
+        for (Comment comment : comments) {
+            CommentSessionHandler commentSessionHandler = new CommentSessionHandler(comment.getId());
+            sessionRegistry.register(commentSessionHandler);
+            CommentDataViewModel commentDataViewModel = new CommentDataViewModel(commentSessionHandler, comment);
+            CommentItemView commentItemView = new CommentItemView(CommentFragment.this, commentDataViewModel);
+        }
     }
 
     @Override
@@ -253,20 +325,7 @@ public class CommentFragment extends Fragment implements FragmentAnimation {
     @Override
     public void performStart() {
         View p = (View) getView().getParent();
-        List<Comment> l = postViewModel.getCommentRepo().findAllItem();
-        if (l.isEmpty()) {
-            performLoading();
-            postViewModel.loadComments(getContext()).observe(getViewLifecycleOwner(), new Observer<String>() {
-                @Override
-                public void onChanged(String s) {
-                    finishLoading();
-                }
-            });
-        } else {
-            for (int pos = 0; pos < l.size(); pos++) {
-                commentPanel.addView(new CommentItemView(CommentFragment.this, postViewModel.getCommentRepo(), pos));
-            }
-        }
+
         root.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         root.setTranslationY(p.getHeight() * 45 / 100);
         root.animate().translationY(0).setDuration(200).setInterpolator(new DecelerateInterpolator()).withEndAction(new Runnable() {
@@ -289,11 +348,9 @@ public class CommentFragment extends Fragment implements FragmentAnimation {
     }
 
     private void performSending() {
-        String fn = postViewModel.getPost().getAuthor().getFullname();
-        Drawable avatar = postViewModel.getPost().getAuthor().getAvatar();
         String c = viewModel.getCommentContent().getValue();
         Uri image = viewModel.getImage().getValue();
-        sendCommentloading.setLoadingContent(fn, avatar, c, image);
+        sendCommentloading.setLoadingContent(c, image);
         mainPanel.addView(sendCommentloading, 0);
     }
 

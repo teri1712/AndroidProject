@@ -13,9 +13,8 @@ import androidx.fragment.app.Fragment;
 import com.example.socialmediaapp.activitiy.HomePage;
 import com.example.socialmediaapp.R;
 import com.example.socialmediaapp.customview.button.CircleButton;
-import com.example.socialmediaapp.home.fragment.ViewProfileFragment;
-import com.example.socialmediaapp.viewmodels.models.post.ImagePost;
-import com.example.socialmediaapp.viewmodels.models.user.profile.base.UserProfile;
+import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
+import com.example.socialmediaapp.viewmodel.models.user.profile.base.UserProfile;
 
 public class ProfileView extends FrameLayout {
     protected View root;

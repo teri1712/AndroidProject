@@ -17,9 +17,9 @@ import com.example.socialmediaapp.customview.button.CircleButton;
 import com.example.socialmediaapp.customview.container.ClickablePanel;
 import com.example.socialmediaapp.customview.textview.LikeTextView;
 import com.example.socialmediaapp.services.ServiceApi;
-import com.example.socialmediaapp.viewmodels.items.ReplyCommentItemViewModel;
-import com.example.socialmediaapp.viewmodels.models.post.ReplyComment;
-import com.example.socialmediaapp.viewmodels.models.repo.ItemRepository;
+import com.example.socialmediaapp.viewmodel.items.ReplyCommentItemViewModel;
+import com.example.socialmediaapp.viewmodel.models.post.ReplyComment;
+import com.example.socialmediaapp.viewmodel.models.repo.ItemRepository;
 
 public class ReplyCommentItemView extends ClickablePanel {
 
