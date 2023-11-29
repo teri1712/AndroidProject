@@ -1,6 +1,8 @@
 package com.example.socialmediaapp.home.fragment;
 
 import android.app.DatePickerDialog;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
@@ -18,7 +20,7 @@ import android.widget.Toast;
 
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -31,7 +33,6 @@ import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
 import com.example.socialmediaapp.viewmodel.EditInformationViewModel;
 import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
-import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
 import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
 
 import java.text.SimpleDateFormat;
@@ -112,7 +113,7 @@ public class EditInformationFragment extends Fragment implements FragmentAnimati
                 root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
             }
         });
-        MutableLiveData<UserInformation> userInfo = activity.getViewModel().getUserInfo();
+        LiveData<UserInformation> userInfo = activity.getViewModel().getUserInfo();
         userInfo.observe(getViewLifecycleOwner(), new Observer<UserInformation>() {
             @Override
             public void onChanged(UserInformation information) {
@@ -156,25 +157,18 @@ public class EditInformationFragment extends Fragment implements FragmentAnimati
                 }
             }
         });
-
-        MutableLiveData<ImagePost> avatarPost = activity.getViewModel().getAvatarPost();
-        MutableLiveData<ImagePost> backgroundPost = activity.getViewModel().getBackgroundPost();
-
-        avatarPost.observe(getViewLifecycleOwner(), new Observer<ImagePost>() {
+        activity.getViewModel().getAvatar().observe(getViewLifecycleOwner(), new Observer<Bitmap>() {
             @Override
-            public void onChanged(ImagePost imagePost) {
-                if (imagePost == null) return;
-                avatarButton.setBackgroundContent(imagePost.getImage(), 0);
+            public void onChanged(Bitmap bitmap) {
+                avatarButton.setBackgroundContent(new BitmapDrawable(getResources(), bitmap), 0);
             }
         });
-        backgroundPost.observe(getViewLifecycleOwner(), new Observer<ImagePost>() {
+        activity.getViewModel().getBackground().observe(getViewLifecycleOwner(), new Observer<Bitmap>() {
             @Override
-            public void onChanged(ImagePost imagePost) {
-                if (imagePost == null) return;
-                background.setImageDrawable(imagePost.getImage());
+            public void onChanged(Bitmap bitmap) {
+                background.setImageDrawable(new BitmapDrawable(getResources(), bitmap));
             }
         });
-
 
         viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
@@ -423,19 +417,19 @@ public class EditInformationFragment extends Fragment implements FragmentAnimati
         submit_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                viewModel.postMyPost(getActivity());
+                viewModel.send(activity, activity.getViewModel().getUserSessionHandler());
             }
         });
         selectAvatarButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                activity.requestUpdateAvatar();
+                activity.openUpdateAvatarFragment();
             }
         });
         selectBackgroundButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                activity.requestUpdateBackground();
+                activity.openUpdateBackgroundFragment();
             }
         });
 

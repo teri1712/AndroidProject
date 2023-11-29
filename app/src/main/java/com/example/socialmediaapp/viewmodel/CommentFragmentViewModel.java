@@ -1,96 +1,109 @@
 package com.example.socialmediaapp.viewmodel;
 
-import android.net.Uri;
+import android.os.Bundle;
 
+import androidx.arch.core.util.Function;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.SavedStateHandle;
+import androidx.lifecycle.Transformations;
 import androidx.lifecycle.ViewModel;
 
-import com.example.socialmediaapp.container.session.DataAccessHandler;
-import com.example.socialmediaapp.container.session.SessionHandler;
-import com.example.socialmediaapp.home.fragment.CommentFragment;
+import com.example.socialmediaapp.application.ApplicationContainer;
+import com.example.socialmediaapp.application.session.CommentSessionHandler;
+import com.example.socialmediaapp.application.session.DataAccessHandler;
+import com.example.socialmediaapp.application.session.SessionHandler;
 import com.example.socialmediaapp.viewmodel.models.post.Comment;
+import com.example.socialmediaapp.viewmodel.models.post.base.Post;
 import com.example.socialmediaapp.viewmodel.models.repo.Repository;
+import com.example.socialmediaapp.viewmodel.models.repo.suck.Update;
+
+import java.util.HashMap;
+import java.util.List;
 
 public class CommentFragmentViewModel extends ViewModel {
-    private SavedStateHandle savedStateHandle;
-    private MutableLiveData<Uri> image;
-    private MutableLiveData<String> commentContent;
-    private MediatorLiveData<Integer> cntEditedContent;
-    private SessionHandler.SessionRegistry sessionRegistry;
-    private SessionHandler sessionHandler;
-    private MutableLiveData<String> sessionState;
+
     private Repository<Comment> commentRepository;
+    private SessionHandler.SessionRegistry sessionRegistry;
+    private MutableLiveData<String> sessionState;
+    private MediatorLiveData<Update<Comment>> commentUpdate;
+    private MutableLiveData<Boolean> loadCommentState;
 
-    public CommentFragmentViewModel(SavedStateHandle savedStateHandle) {
+    public CommentFragmentViewModel(DataAccessHandler<Comment> dataAccessHandler) {
         super();
-        commentContent = savedStateHandle.getLiveData("comment content");
-        image = savedStateHandle.getLiveData("image content");
-        cntEditedContent = new MediatorLiveData<>();
-        cntEditedContent.setValue(0);
-        cntEditedContent.addSource(commentContent, new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                int cur = cntEditedContent.getValue();
-                if (s.isEmpty()) {
-                    cur ^= cntEditedContent.getValue() & 1;
-                } else {
-                    cur |= 1;
-                }
-                cntEditedContent.setValue(cur);
-            }
-        });
-        cntEditedContent.addSource(image, new Observer<Uri>() {
-            @Override
-            public void onChanged(Uri uri) {
-                int cur = cntEditedContent.getValue();
-                if (uri == null) {
-                    cur ^= cntEditedContent.getValue() & 2;
-                } else {
-                    cur |= 2;
-                }
-                cntEditedContent.setValue(cur);
-            }
-        });
-    }
-
-
-    public void setDataAccessHandler(DataAccessHandler<Comment> dataAccessHandler) {
-        this.sessionHandler = dataAccessHandler;
         commentRepository = new Repository<>(dataAccessHandler);
         sessionRegistry = dataAccessHandler.getSessionRegistry();
         sessionState = dataAccessHandler.getSessionState();
-    }
-
-    public SessionHandler getSessionHandler() {
-        return sessionHandler;
-    }
-
-    public SessionHandler.SessionRegistry getSessionRegistry() {
-        return sessionRegistry;
+        commentUpdate = new MediatorLiveData<>();
+        loadCommentState = new MutableLiveData<>();
     }
 
     public MutableLiveData<String> getSessionState() {
         return sessionState;
     }
 
-    public Repository<Comment> getCommentRepository() {
-        return commentRepository;
+    public LiveData<SessionHandler> createCommentSession(Comment comment) {
+        CommentSessionHandler commentSessionHandler = new CommentSessionHandler(comment);
+        MutableLiveData<Integer> commentSessionId = sessionRegistry.bindSession(commentSessionHandler);
+        return Transformations.switchMap(commentSessionId, new Function<Integer, LiveData<SessionHandler>>() {
+            @Override
+            public LiveData<SessionHandler> apply(Integer input) {
+                return ApplicationContainer.getInstance().sessionRepository.getSessionById(input);
+            }
+        });
     }
 
-    public MutableLiveData<Uri> getImage() {
-        return image;
+    public void deleteCommentSession(int commentSessionId, int posInParent) {
+        sessionRegistry.unBindSession(commentSessionId);
+        commentUpdate.postValue(new Update<>(Update.Op.REMOVE, null, posInParent));
     }
 
-    public MutableLiveData<String> getCommentContent() {
-        return commentContent;
+    public LiveData<String> uploadComment(Bundle data) {
+        LiveData<HashMap<String, Object>> result = commentRepository.uploadNewItem(data);
+        LiveData<String> callBack = Transformations.map(result, new Function<HashMap<String, Object>, String>() {
+            @Override
+            public String apply(HashMap<String, Object> input) {
+                return (String) input.get("status");
+            }
+        });
+        commentUpdate.addSource(result, new Observer<HashMap<String, Object>>() {
+            @Override
+            public void onChanged(HashMap<String, Object> hashMap) {
+                String status = (String) hashMap.get("status");
+                Comment item = (Comment) hashMap.get("item");
+
+                if (status.equals("Success")) {
+                    commentUpdate.setValue(new Update<>(Update.Op.ADD, item, 0));
+                }
+                commentUpdate.removeSource(result);
+            }
+        });
+
+        return callBack;
     }
 
-    public MediatorLiveData<Integer> getCntEditedContent() {
-        return cntEditedContent;
+    public void loadComments() {
+        loadCommentState.setValue(true);
+        Bundle query = new Bundle();
+        MutableLiveData<List<Comment>> callBack = commentRepository.fetchNewItems(query);
+        commentUpdate.addSource(callBack, new Observer<List<Comment>>() {
+            @Override
+            public void onChanged(List<Comment> comments) {
+                for (Comment c : comments) {
+                    commentUpdate.setValue(new Update<>(Update.Op.ADD, c, -1));
+                }
+                commentUpdate.removeSource(callBack);
+                loadCommentState.setValue(false);
+            }
+        });
     }
 
+    public MutableLiveData<Boolean> getLoadCommentState() {
+        return loadCommentState;
+    }
 
+    public MediatorLiveData<Update<Comment>> getCommentUpdate() {
+        return commentUpdate;
+    }
 }

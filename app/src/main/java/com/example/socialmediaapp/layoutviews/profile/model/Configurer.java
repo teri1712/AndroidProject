@@ -3,14 +3,17 @@ package com.example.socialmediaapp.layoutviews.profile.model;
 import android.content.Context;
 import android.widget.Toast;
 
+import com.example.socialmediaapp.application.session.ViewProfileSessionHandler;
+
 public abstract class Configurer {
 
     private boolean actionLeftAllowed, actionRightAllowed;
-
     private Context context;
+    protected ViewProfileSessionHandler handler;
 
-    public Configurer(Context context) {
+    public Configurer(Context context, ViewProfileSessionHandler handler) {
         this.context = context;
+        this.handler = handler;
         actionLeftAllowed = false;
         actionRightAllowed = false;
     }

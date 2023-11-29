@@ -14,23 +14,22 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.example.socialmediaapp.R;
-import com.example.socialmediaapp.activitiy.HomePage;
+import com.example.socialmediaapp.application.session.DataAccessHandler;
+import com.example.socialmediaapp.application.session.RecentSearchAccessHandler;
+import com.example.socialmediaapp.application.session.SessionHandler;
 import com.example.socialmediaapp.customview.button.CircleButton;
 import com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
-import com.example.socialmediaapp.layoutviews.items.UserBasicInfoItem;
-import com.example.socialmediaapp.viewmodel.HomePageViewModel;
+import com.example.socialmediaapp.home.fragment.main.RecentSearchFragment;
+import com.example.socialmediaapp.layoutviews.items.UserBasicInfoItemView;
 import com.example.socialmediaapp.viewmodel.SearchFragmentViewModel;
-import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
-import com.example.socialmediaapp.viewmodel.models.repo.Update;
 import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
 
 import java.util.List;
@@ -42,14 +41,18 @@ import java.util.List;
  */
 public class SearchFragment extends Fragment implements FragmentAnimation {
 
-
     public SearchFragment() {
         // Required empty public constructor
     }
 
-    public static SearchFragment newInstance() {
+    public static SearchFragment newInstance(Bundle args) {
         SearchFragment fragment = new SearchFragment();
+        fragment.setArguments(args);
         return fragment;
+    }
+
+    public SearchFragmentViewModel getViewModel() {
+        return viewModel;
     }
 
     private SearchFragmentViewModel viewModel;
@@ -57,19 +60,17 @@ public class SearchFragment extends Fragment implements FragmentAnimation {
     private View back_button;
     private EditText searchEditText;
     private CircleButton eraseTextButton;
-    private ImageView imageView;
     private CustomSpinningView resultSpin;
-    private ViewGroup recentSearchContainer;
     private ViewGroup searchResultContainer;
     private View searchResultView, recenSearchView;
     private TextView lookupTextView;
-    private HomePageViewModel vm;
     private TextView emptyTextView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        viewModel = new ViewModelProvider(this, new ViewModelFactory(this, null)).get(SearchFragmentViewModel.class);
+        Integer sessionId = getArguments().getInt("session id");
+        viewModel = new SearchFragmentViewModel(sessionId);
     }
 
     @Override
@@ -79,7 +80,6 @@ public class SearchFragment extends Fragment implements FragmentAnimation {
         eraseTextButton = root.findViewById(R.id.erase_text_button);
         searchEditText = root.findViewById(R.id.search_edit_text);
         resultSpin = root.findViewById(R.id.result_spin);
-        recentSearchContainer = root.findViewById(R.id.recent_search_container);
         searchResultContainer = root.findViewById(R.id.search_result_container);
         lookupTextView = root.findViewById(R.id.lookup_textview);
         searchResultView = root.findViewById(R.id.search_result_view);
@@ -93,9 +93,41 @@ public class SearchFragment extends Fragment implements FragmentAnimation {
                 root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
             }
         });
-        vm = ((HomePage) getActivity()).getViewModel();
 
+        initOnClick(root);
+        initViewModel();
+        return root;
 
+    }
+
+    public void initViewModel() {
+        viewModel.getSearchResult().observe(getViewLifecycleOwner(), new Observer<List<UserBasicInfo>>() {
+            @Override
+            public void onChanged(List<UserBasicInfo> userBasicInfos) {
+                if (userBasicInfos == null) return;
+                searchResultContainer.removeAllViews();
+                for (UserBasicInfo userBasicInfo : userBasicInfos) {
+                    searchResultContainer.addView(new UserBasicInfoItemView(SearchFragment.this, userBasicInfo));
+                }
+            }
+        });
+        viewModel.getSearchSessionHandler().observe(getViewLifecycleOwner(), new Observer<SessionHandler>() {
+            @Override
+            public void onChanged(SessionHandler sessionHandler) {
+                initPostConstruct();
+            }
+        });
+        viewModel.getRecentSearchSessionHandler().observe(getViewLifecycleOwner(), new Observer<SessionHandler>() {
+            @Override
+            public void onChanged(SessionHandler sessionHandler) {
+                FragmentTransaction fragmentTransaction = getChildFragmentManager().beginTransaction();
+                fragmentTransaction.replace(R.id.recent_search_container, new RecentSearchFragment((RecentSearchAccessHandler) sessionHandler), "recent search");
+                fragmentTransaction.commit();
+            }
+        });
+    }
+
+    private void initPostConstruct() {
         searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -129,50 +161,7 @@ public class SearchFragment extends Fragment implements FragmentAnimation {
                     span.setSpan(new StyleSpan(Typeface.BOLD), lookup.length(), lookup.length() + editable.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     lookupTextView.setText(span);
 
-                    viewModel.loadSearchResult(getContext(), editable.toString());
-                }
-            }
-        });
-
-        initOnClick(root);
-        initViewModel();
-        return root;
-
-    }
-
-    public void initViewModel() {
-        for (UserBasicInfo u : vm.getRecentSearchList().findAllItem()) {
-            recentSearchContainer.addView(new UserBasicInfoItem(getContext(), u, "recent"));
-        }
-        vm.getRecentSearchList().getUpdateOnRepo().observe(getViewLifecycleOwner(), new Observer<Update<UserBasicInfo>>() {
-            @Override
-            public void onChanged(Update<UserBasicInfo> userBasicInfoUpdate) {
-                if (userBasicInfoUpdate == null) return;
-                Update.Op op = userBasicInfoUpdate.getOp();
-                int pos = userBasicInfoUpdate.getPos();
-                switch (op) {
-                    case ADD:
-                        UserBasicInfo u = vm.getRecentSearchList().getItem(pos);
-                        recentSearchContainer.addView(new UserBasicInfoItem(getContext(), u, "recent"), recentSearchContainer.getChildCount() - pos);
-                        break;
-                    case REMOVE:
-                        recentSearchContainer.removeViewAt(recentSearchContainer.getChildCount() - 1 - pos);
-                        break;
-                }
-            }
-        });
-        viewModel.getSearchResult().observe(getViewLifecycleOwner(), new Observer<List<UserBasicInfo>>() {
-            @Override
-            public void onChanged(List<UserBasicInfo> userBasicInfos) {
-                lookupTextView.setVisibility(View.GONE);
-                resultSpin.setVisibility(View.GONE);
-                if (searchResultView.getVisibility() == View.VISIBLE) {
-                    if (userBasicInfos.isEmpty()) {
-                        emptyTextView.setVisibility(View.VISIBLE);
-                    }
-                    for (UserBasicInfo user : userBasicInfos) {
-                        searchResultContainer.addView(new UserBasicInfoItem(getContext(), user, "search"));
-                    }
+                    viewModel.searchForUser(editable.toString());
                 }
             }
         });

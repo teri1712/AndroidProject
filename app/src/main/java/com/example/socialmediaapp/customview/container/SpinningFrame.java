@@ -124,6 +124,7 @@ public class SpinningFrame extends FrameLayout {
     }
 
     public void endLoading() {
+        if (!loading) return;
         loading = false;
         load_spinner.performEndLoadingAnimation();
     }

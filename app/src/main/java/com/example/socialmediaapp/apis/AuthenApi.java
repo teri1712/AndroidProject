@@ -13,6 +13,9 @@ public interface AuthenApi {
     @POST("/login")
     @FormUrlEncoded
     Call<ResponseBody> login(@Field("username") String username, @Field("password") String password);
+    @POST("/logout")
+    @FormUrlEncoded
+    Call<ResponseBody> logout();
     @POST("/signup")
     @FormUrlEncoded
     Call<ResponseBody> signup(@Field("username") String username, @Field("password") String password);

@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -21,8 +22,14 @@ import com.example.socialmediaapp.R;
 import com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView;
 import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
+import com.example.socialmediaapp.home.fragment.main.MainPostFragment;
+import com.example.socialmediaapp.home.fragment.main.PostFragment;
+import com.example.socialmediaapp.viewmodel.PostFragmentViewModel;
 import com.example.socialmediaapp.viewmodel.UpdateAvatarViewModel;
 import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
+import com.google.android.material.internal.ManufacturerUtils;
+
+import java.util.Objects;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -31,9 +38,7 @@ import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
  */
 public class UpdateAvatarFragment extends Fragment implements FragmentAnimation {
 
-
     public UpdateAvatarFragment() {
-        // Required empty public constructor
     }
 
     public static UpdateAvatarFragment newInstance(Uri uri) {
@@ -46,21 +51,21 @@ public class UpdateAvatarFragment extends Fragment implements FragmentAnimation 
 
     private UpdateAvatarViewModel viewModel;
     private View root;
-
     private View back_button;
     private RoundedButton save_button;
     private EditText post_status_edit_text;
     private ImageView imageView;
-
-    private CustomSpinningView spin;
+    private HomePage homePage;
+    private CustomSpinningView spinner;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        viewModel = new ViewModelProvider(this, new ViewModelFactory(this, null)).get(UpdateAvatarViewModel.class);
+
         Bundle args = getArguments();
         if (args != null) {
             Uri imageUri = args.getParcelable("image uri");
-            viewModel = new ViewModelProvider(this, new ViewModelFactory(this, null)).get(UpdateAvatarViewModel.class);
             viewModel.getImageUri().setValue(imageUri);
         }
     }
@@ -68,12 +73,12 @@ public class UpdateAvatarFragment extends Fragment implements FragmentAnimation 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         root = inflater.inflate(R.layout.fragment_update_avatar, container, false);
-        post_status_edit_text = (EditText) root.findViewById(R.id.status_edit_text);
-        save_button = (RoundedButton) root.findViewById(R.id.save_button);
+        post_status_edit_text = root.findViewById(R.id.status_edit_text);
+        save_button = root.findViewById(R.id.save_button);
         back_button = root.findViewById(R.id.back_button);
         imageView = root.findViewById(R.id.iamge_view);
-        spin = root.findViewById(R.id.spinner);
-        HomePage homePage = (HomePage) getActivity();
+        spinner = root.findViewById(R.id.spinner);
+        homePage = (HomePage) getActivity();
 
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
@@ -99,33 +104,25 @@ public class UpdateAvatarFragment extends Fragment implements FragmentAnimation 
         viewModel.getPostStatusContent().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
-            }
-        });
-        viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (s.equals("In progress")) {
-                    spin.setVisibility(View.VISIBLE);
-                } else {
-                    spin.setVisibility(View.GONE);
+                if (!Objects.equals(s, post_status_edit_text.getText().toString())) {
+                    post_status_edit_text.setText(s);
                 }
+                viewModel.getPostStatusContent().removeObserver(this);
             }
         });
         viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
-                if (s.equals("Idle") || s.equals("In progress"))
-                    return;
-                Toast.makeText(homePage, s, Toast.LENGTH_SHORT).show();
-            }
-        });
-        viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (s.equals("Success")) {
-                    System.out.println("yess");
-                    homePage.finishFragment("update avatar");
-                } else if (s.equals("Failed")) {
+                if (s.equals("Idle")) {
+                    if (spinner.getVisibility() == View.VISIBLE) {
+                        spinner.setVisibility(View.GONE);
+                    }
+                } else if (s.equals("In progress")) {
+                    if (spinner.getVisibility() == View.GONE) {
+                        spinner.setVisibility(View.VISIBLE);
+                    }
+                } else {
+                    Toast.makeText(getContext(), s, Toast.LENGTH_SHORT).show();
                     viewModel.getPostSubmitState().setValue("Idle");
                 }
             }
@@ -163,7 +160,30 @@ public class UpdateAvatarFragment extends Fragment implements FragmentAnimation 
         save_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                viewModel.postMyPost(getActivity());
+                MutableLiveData<String> postSubmitState = viewModel.getPostSubmitState();
+                if (postSubmitState.getValue().equals("In progress")) {
+                    Toast.makeText(getContext(), "Please wait", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                postSubmitState.setValue("In progress");
+
+                Uri uri = viewModel.getImageUri().getValue();
+                Bundle data = new Bundle();
+                data.putString("status", viewModel.getPostStatusContent().getValue());
+                data.putString("type", "avatar");
+                data.putString("media content", (uri == null) ? null : uri.toString());
+                MainPostFragment mainPostFragment = (MainPostFragment) (getActivity().getSupportFragmentManager().findFragmentByTag("post fragment"));
+                PostFragment postFragment = (PostFragment) mainPostFragment.getChildFragmentManager().findFragmentByTag("posts");
+                PostFragmentViewModel postFragmentViewModel = postFragment.getViewModel();
+                postFragmentViewModel.uploadPost(data).observe(getViewLifecycleOwner(), new Observer<String>() {
+                    @Override
+                    public void onChanged(String s) {
+                        postSubmitState.setValue(s);
+                        if (s.equals("Success")) {
+                            homePage.finishFragment("update avatar");
+                        }
+                    }
+                });
             }
         });
     }

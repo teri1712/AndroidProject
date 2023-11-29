@@ -2,20 +2,19 @@ package com.example.socialmediaapp.layoutviews.profile.model;
 
 import android.graphics.Color;
 
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
 import com.example.socialmediaapp.R;
+import com.example.socialmediaapp.application.session.ViewProfileSessionHandler;
 import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.layoutviews.profile.NotMeProfileView;
-import com.example.socialmediaapp.services.ServiceApi;
 
 public class StrangerProfileConfigurer extends Configurer {
     private NotMeProfileView profileView;
     private RoundedButton left, right;
 
-    public StrangerProfileConfigurer(NotMeProfileView profileView) {
-        super(profileView.getContext());
+    public StrangerProfileConfigurer(NotMeProfileView profileView, ViewProfileSessionHandler handler) {
+        super(profileView.getContext(), handler);
         this.profileView = profileView;
         right = profileView.getBlueButton();
         left = profileView.getGreyButton();
@@ -36,10 +35,9 @@ public class StrangerProfileConfigurer extends Configurer {
 
     @Override
     public void leftAction() {
-        Configurer newCommand = new RequestFriendProfileConfigurer(profileView);
+        Configurer newCommand = new RequestFriendProfileConfigurer(profileView,handler);
         profileView.changeConfiguration(newCommand);
-        MutableLiveData<String> res = new MutableLiveData<>();
-        res.observe(profileView.getOwner().getViewLifecycleOwner(), new Observer<String>() {
+        handler.sendFriendRequest().observe(profileView.getLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
                 if (s.equals("Success")) {
@@ -50,7 +48,6 @@ public class StrangerProfileConfigurer extends Configurer {
                 }
             }
         });
-        ServiceApi.sendFriendRequest(profileView.getProfile().getAlias(), res);
     }
 
     @Override

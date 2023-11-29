@@ -19,7 +19,6 @@ import com.example.socialmediaapp.customview.textview.LikeTextView;
 import com.example.socialmediaapp.services.ServiceApi;
 import com.example.socialmediaapp.viewmodel.items.ReplyCommentItemViewModel;
 import com.example.socialmediaapp.viewmodel.models.post.ReplyComment;
-import com.example.socialmediaapp.viewmodel.models.repo.ItemRepository;
 
 public class ReplyCommentItemView extends ClickablePanel {
 
@@ -33,14 +32,14 @@ public class ReplyCommentItemView extends ClickablePanel {
     private LikeTextView likeTextView;
     protected View mainContentPanel;
     private FrameLayout backgroundPanel;
-    private ItemRepository<ReplyComment> repo;
+//    private ItemRepository<ReplyComment> repo;
     private LifecycleOwner lifecycleOwner;
 
-    public ReplyCommentItemView(Fragment owner, ItemRepository<ReplyComment> repo, int id) {
+    public ReplyCommentItemView(Fragment owner, int id) {
         super(owner.getContext());
-        this.repo = repo;
+//        this.repo = repo;
         lifecycleOwner = owner.getViewLifecycleOwner();
-        viewModel = new ReplyCommentItemViewModel(repo.getItem(id));
+//        viewModel = new ReplyCommentItemViewModel(repo.getItem(id));
         setFocusable(false);
         setFocusableInTouchMode(false);
         LayoutInflater inflater = LayoutInflater.from(owner.getContext());
@@ -64,7 +63,7 @@ public class ReplyCommentItemView extends ClickablePanel {
     private void initContent() {
         ReplyComment replyComment = viewModel.getReplyComment();
 
-        avatarButton.setBackgroundContent(replyComment.getSender().getAvatar(), 0);
+        avatarButton.setBackgroundContent(null, 0);
         fullname.setText(replyComment.getSender().getFullname());
         if (replyComment.getContent() != null && !replyComment.getContent().isEmpty()) {
             content.setText(replyComment.getContent());
@@ -99,11 +98,11 @@ public class ReplyCommentItemView extends ClickablePanel {
             @Override
             public MutableLiveData<String> activeAction(boolean isActive) {
                 MutableLiveData<String> res = new MutableLiveData<>();
-                if (isActive) {
-                    ServiceApi.likeReplyComment(replyComment.getId(), res);
-                } else {
-                    ServiceApi.unlikeReplyComment(replyComment.getId(), res);
-                }
+//                if (isActive) {
+//                    ServiceApi.likeReplyComment(replyComment.getId(), res);
+//                } else {
+//                    ServiceApi.unlikeReplyComment(replyComment.getId(), res);
+//                }
                 return res;
             }
         });

@@ -1,6 +1,5 @@
 package com.example.socialmediaapp.layoutviews.items;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -8,7 +7,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
-import android.util.AttributeSet;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,20 +17,23 @@ import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
 import com.example.socialmediaapp.R;
-import com.example.socialmediaapp.container.session.CommentSessionHandler;
-import com.example.socialmediaapp.container.session.SessionHandler;
+import com.example.socialmediaapp.activitiy.HomePage;
+import com.example.socialmediaapp.application.session.CommentSessionHandler;
+import com.example.socialmediaapp.application.session.SessionHandler;
 import com.example.socialmediaapp.customview.button.CircleButton;
 import com.example.socialmediaapp.customview.container.ClickablePanel;
 import com.example.socialmediaapp.customview.textview.LikeTextView;
-import com.example.socialmediaapp.services.ServiceApi;
-import com.example.socialmediaapp.viewmodel.items.CommentItemViewModel;
-import com.example.socialmediaapp.viewmodel.models.repo.ItemRepository;
+import com.example.socialmediaapp.home.fragment.MainCommentFragment;
+import com.example.socialmediaapp.home.fragment.main.CommentFragment;
+import com.example.socialmediaapp.viewmodel.CommentFragmentViewModel;
+import com.example.socialmediaapp.viewmodel.MainCommentFragmentViewModel;
+import com.example.socialmediaapp.viewmodel.CommentDataViewModel;
 import com.example.socialmediaapp.viewmodel.models.post.Comment;
-import com.example.socialmediaapp.viewmodel.refactor.CommentDataViewModel;
 
 public class CommentItemView extends ClickablePanel {
 
@@ -46,15 +48,11 @@ public class CommentItemView extends ClickablePanel {
     private FrameLayout backgroundPanel;
     private LifecycleOwner lifecycleOwner;
     private ViewGroup replyPanel, infoPanel, mainContentPanel;
-    private MutableLiveData<String> sessionState;
-    private SessionHandler.SessionRegistry sessionRegistry;
-    private CommentSessionHandler commentSessionHandler;
 
-    public CommentItemView(Fragment owner, CommentDataViewModel commentDataViewModel) {
+    public CommentItemView(Fragment owner, LiveData<SessionHandler> commentSessionHandler, Comment comment) {
         super(owner.getContext());
         lifecycleOwner = owner.getViewLifecycleOwner();
-        viewModel = commentDataViewModel;
-        commentSessionHandler = viewModel.getCommentSessionHandler();
+        viewModel = new CommentDataViewModel(commentSessionHandler, comment);
         setFocusable(false);
         setFocusableInTouchMode(false);
         LayoutInflater inflater = LayoutInflater.from(owner.getContext());
@@ -74,65 +72,56 @@ public class CommentItemView extends ClickablePanel {
         mainContentPanel = root.findViewById(R.id.main_content_panel);
         backgroundPanel = root.findViewById(R.id.background_panel);
         infoPanel = root.findViewById(R.id.information_panel);
-        initContent();
+        initContent(comment);
+        initViewModel();
+        initOnClick();
 
-        sessionRegistry = viewModel.getSessionRegistry();
-        sessionState = viewModel.getSessionState();
-        sessionState.observe(lifecycleOwner, new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (s.equals("success")) {
-                    initOnClick();
-                }
-            }
-        });
     }
 
-    private void initContent() {
-        viewModel.getLiveData().observe(lifecycleOwner, new Observer<Comment>() {
-            @Override
-            public void onChanged(Comment comment) {
-                Bitmap avatar = comment.getAuthor().getAvatar();
-                avatarButton.setBackgroundContent(avatar == null ? null : new BitmapDrawable(getResources(), avatar), 0);
-                fullname.setText(comment.getAuthor().getFullname());
-                if (comment.getContent() != null && !comment.getContent().isEmpty()) {
-                    content.setText(comment.getContent());
-                    content.setVisibility(VISIBLE);
-                    backgroundPanel.setWillNotDraw(false);
-                }
-                if (comment.getImage() != null) {
-                    imageContent.setImageDrawable(comment.getImage());
-                    imageContent.setVisibility(VISIBLE);
-                }
-            }
-        });
+    private void initContent(Comment comment) {
+        Bitmap avatar = comment.getAuthor().getAvatar();
+        avatarButton.setBackgroundContent(avatar == null ? null : new BitmapDrawable(getResources(), avatar), 0);
+        fullname.setText(comment.getAuthor().getFullname());
+        if (comment.getContent() != null && !comment.getContent().isEmpty()) {
+            content.setText(comment.getContent());
+            content.setVisibility(VISIBLE);
+            backgroundPanel.setWillNotDraw(false);
+        }
+        if (comment.getImage() != null) {
+            imageContent.setImageDrawable(new BitmapDrawable(getResources(), comment.getImage()));
+            imageContent.setVisibility(VISIBLE);
+        }
+    }
 
-        viewModel.getTime().observe(lifecycleOwner, new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                cntTime.setText(s);
-            }
-        });
-
-        viewModel.getCountLike().observe(lifecycleOwner, new Observer<Integer>() {
-            @Override
-            public void onChanged(Integer integer) {
-                if (integer == 0) {
-                    cntLike.setVisibility(GONE);
-                } else {
-                    if (cntLike.getVisibility() == GONE) cntLike.setVisibility(VISIBLE);
-                    cntLike.setText(Integer.toString(integer));
-                }
+    private void initViewModel() {
+        viewModel.getTime().observe(lifecycleOwner, s -> cntTime.setText(s));
+        viewModel.getCountLike().observe(lifecycleOwner, integer -> {
+            if (integer == 0) {
+                cntLike.setVisibility(GONE);
+            } else {
+                if (cntLike.getVisibility() == GONE) cntLike.setVisibility(VISIBLE);
+                cntLike.setText(Integer.toString(integer));
             }
         });
         likeTextView.initLikeView(lifecycleOwner, viewModel.getIsLiked());
     }
 
     private void initOnClick() {
-        likeTextView.setClickAction(new LikeTextView.Action() {
+
+        viewModel.getCommentSessionHandler().observe(lifecycleOwner, sessionHandler -> {
+            CommentSessionHandler commentSessionHandler = (CommentSessionHandler) sessionHandler;
+            likeTextView.setClickAction(isActive -> isActive ? commentSessionHandler.doLike() : commentSessionHandler.doUnLike());
+        });
+        viewModel.getLiveData().observe(lifecycleOwner, new Observer<Comment>() {
             @Override
-            public MutableLiveData<String> activeAction(boolean isActive) {
-                return isActive ? commentSessionHandler.doLike() : commentSessionHandler.doUnLike();
+            public void onChanged(Comment comment) {
+                avatarButton.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        HomePage activity = (HomePage) getContext();
+                        activity.openViewProfileFragment(comment.getAuthor());
+                    }
+                });
             }
         });
     }

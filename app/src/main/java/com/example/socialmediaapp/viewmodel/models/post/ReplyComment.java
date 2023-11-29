@@ -41,14 +41,7 @@ public class ReplyComment {
         this.countLike = countLike;
     }
 
-    public ReplyComment(ReplyCommentBody replyCommentBody, Context context) {
-        sender = new UserBasicInfo(replyCommentBody.getSender(), context);
-        id = replyCommentBody.getId();
-        content = replyCommentBody.getContent();
-        image = ServiceApi.loadImage(context, replyCommentBody.getMediaId());
-        liked = replyCommentBody.isLiked();
-        time = replyCommentBody.getTime();
-        countLike = replyCommentBody.getCountLike();
+    public ReplyComment() {
     }
 
     public UserBasicInfo getSender() {

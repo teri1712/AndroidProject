@@ -1,5 +1,7 @@
 package com.example.socialmediaapp.home.fragment;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,14 +10,20 @@ import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.example.socialmediaapp.activitiy.HomePage;
 import com.example.socialmediaapp.R;
+import com.example.socialmediaapp.application.session.DataAccessHandler;
+import com.example.socialmediaapp.application.session.SessionHandler;
+import com.example.socialmediaapp.application.session.ViewProfileSessionHandler;
 import com.example.socialmediaapp.customview.button.CircleButton;
+import com.example.socialmediaapp.customview.progress.PostLoading;
 import com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
+import com.example.socialmediaapp.home.fragment.main.PostFragment;
 import com.example.socialmediaapp.layoutviews.items.PostItemView;
 import com.example.socialmediaapp.layoutviews.profile.SelfProfileView;
 import com.example.socialmediaapp.layoutviews.profile.NotMeProfileView;
@@ -24,34 +32,40 @@ import com.example.socialmediaapp.layoutviews.profile.model.FriendProfileConfigu
 import com.example.socialmediaapp.layoutviews.profile.model.FriendRequestProfileConfigurer;
 import com.example.socialmediaapp.layoutviews.profile.model.RequestFriendProfileConfigurer;
 import com.example.socialmediaapp.layoutviews.profile.model.StrangerProfileConfigurer;
-import com.example.socialmediaapp.viewmodel.HomePageViewModel;
 import com.example.socialmediaapp.viewmodel.ViewProfileViewModel;
-import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
 import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
 import com.example.socialmediaapp.viewmodel.models.post.base.Post;
-import com.example.socialmediaapp.viewmodel.models.repo.Update;
-import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
+import com.example.socialmediaapp.viewmodel.models.repo.Repository;
 import com.example.socialmediaapp.viewmodel.models.user.profile.SelfProfile;
 import com.example.socialmediaapp.viewmodel.models.user.profile.NotMeProfile;
 import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
 import com.example.socialmediaapp.viewmodel.models.user.profile.base.UserProfile;
 
-import java.util.Objects;
+import java.util.List;
 
 public class ViewProfileFragment extends Fragment implements FragmentAnimation {
 
     private UserBasicInfo userBasicInfo;
 
+    public ViewProfileFragment() {
+    }
+
     public ViewProfileFragment(UserBasicInfo userBasicInfo) {
         this.userBasicInfo = userBasicInfo;
     }
 
+    public static ViewProfileFragment newInstance(Bundle args, UserBasicInfo userBasicInfo) {
+        ViewProfileFragment fragment = new ViewProfileFragment(userBasicInfo);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
-    //i store the this fragment state in activity saved state
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(null);
-        viewModel = new ViewModelProvider(this, new ViewModelFactory(this, null)).get(ViewProfileViewModel.class);
+        super.onCreate(savedInstanceState);
+        Bundle args = getArguments();
+        viewModel = new ViewProfileViewModel(args.getInt("session id"));
     }
 
     private CircleButton avatarButton;
@@ -61,26 +75,23 @@ public class ViewProfileFragment extends Fragment implements FragmentAnimation {
     private View infoView;
     private ViewGroup root;
     private CustomSpinningView spinnerLoading;
-    private ViewGroup postPanel;
 
     public ViewProfileViewModel getViewModel() {
         return viewModel;
     }
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        if (savedInstanceState != null) {
-            return null;
-        }
         root = (ViewGroup) inflater.inflate(R.layout.fragment_view_profile, container, false);
-        avatarButton = (CircleButton) root.findViewById(R.id.avatar_button);
-        fullnameTextView = (TextView) root.findViewById(R.id.fullname);
+        avatarButton = root.findViewById(R.id.avatar_button);
+        fullnameTextView = root.findViewById(R.id.fullname);
         contentPanel = root.findViewById(R.id.content_panel);
         infoView = root.findViewById(R.id.information_panel);
-        postPanel = root.findViewById(R.id.post_panel);
-        spinnerLoading = (CustomSpinningView) root.findViewById(R.id.load_spinner);
+        spinnerLoading = root.findViewById(R.id.load_spinner);
+
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -88,89 +99,62 @@ public class ViewProfileFragment extends Fragment implements FragmentAnimation {
                 root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
             }
         });
-        viewModel.getUserProfileInfo().observe(getViewLifecycleOwner(), new Observer<UserProfile>() {
-            @Override
-            public void onChanged(UserProfile userProfileInfo) {
-                onLoadedUserInformation(userProfileInfo);
-                viewModel.getListPost().getUpdateOnRepo().observe(getViewLifecycleOwner(), new Observer<Update<Post>>() {
-                    @Override
-                    public void onChanged(Update<Post> mutableLiveDataUpdate) {
-                        if (mutableLiveDataUpdate == null) return;
-                        if (mutableLiveDataUpdate.getOp() == Update.Op.ADD) {
-                            PostItemView post = new PostItemView(ViewProfileFragment.this, viewModel.getListPost(), mutableLiveDataUpdate.getPos());
-                            postPanel.addView(post, mutableLiveDataUpdate.getPos());
-                        } else {
-                            postPanel.removeViewAt(mutableLiveDataUpdate.getPos());
-                        }
-                    }
-                });
-                viewModel.loadPosts(getContext()).observe(getViewLifecycleOwner(), new Observer<String>() {
-                    @Override
-                    public void onChanged(String s) {
-                        spinnerLoading.setVisibility(View.GONE);
-                        contentPanel.removeView(spinnerLoading);
-                        spinnerLoading = null;
-                    }
-                });
-            }
-        });
-        initOnClick();
         initValues();
-
         return root;
     }
 
+
     private void startLoadProfile() {
         spinnerLoading.setVisibility(View.VISIBLE);
-        HomePageViewModel vm = ((HomePage) getActivity()).getViewModel();
-        String myAlias = vm.getUserInfo().getValue().getAlias();
-        if (Objects.equals(userBasicInfo.getAlias(), myAlias)) {
-            SelfProfile selfProfile = new SelfProfile(this, vm);
-            viewModel.getUserProfileInfo().setValue(selfProfile);
-            vm.getUserInfo().observe(getViewLifecycleOwner(), new Observer<UserInformation>() {
-                @Override
-                public void onChanged(UserInformation info) {
-                    fullnameTextView.setText(info.getFullname());
-                }
-            });
-            vm.getAvatarPost().observe(getViewLifecycleOwner(), new Observer<ImagePost>() {
-                @Override
-                public void onChanged(ImagePost imagePost) {
-                    if (imagePost == null) return;
-                    avatarButton.setBackgroundContent(imagePost.getImage(), 0);
-                }
-            });
-            return;
-        }
-        viewModel.loadProfile(getContext(), userBasicInfo.getAlias());
+        viewModel.getLiveData().observe(getViewLifecycleOwner(), new Observer<UserProfile>() {
+            @Override
+            public void onChanged(UserProfile userProfile) {
+                ImagePost avatarPost = userProfile.getAvatarPost();
+                ImagePost backgroundPost = userProfile.getBackgroundPost();
+                avatarButton.setBackgroundContent(avatarPost == null ? null : new BitmapDrawable(getResources(), avatarPost.getImage()), 0);
+                onLoadedUserInformation(userProfile, (ViewProfileSessionHandler) viewModel.getViewProfileSessionHandler().getValue());
+            }
+        });
+        viewModel.getUserPostsSession().observe(getViewLifecycleOwner(), new Observer<SessionHandler>() {
+            @Override
+            public void onChanged(SessionHandler sessionHandler) {
+                spinnerLoading.setVisibility(View.GONE);
+                PostFragment postFragment = new PostFragment((DataAccessHandler<Post>) sessionHandler);
+                FragmentTransaction fragmentTransaction = getChildFragmentManager().beginTransaction();
+                fragmentTransaction.add(R.id.post_fragment_container, postFragment);
+                fragmentTransaction.commit();
+            }
+        });
     }
 
     private void initValues() {
-        avatarButton.setBackgroundContent(userBasicInfo.getAvatar(), 0);
+        if (userBasicInfo == null) return;
+        Bitmap avt = userBasicInfo.getAvatar();
+        avatarButton.setBackgroundContent(avt == null ? null : new BitmapDrawable(getResources(), avt), 0);
         fullnameTextView.setText(userBasicInfo.getFullname());
     }
 
-    private void onLoadedUserInformation(UserProfile user) {
+    private void onLoadedUserInformation(UserProfile user, ViewProfileSessionHandler handler) {
         contentPanel.removeView(infoView);
 
         if (user instanceof SelfProfile) {
-            infoView = new SelfProfileView(getContext(), (SelfProfile) user, this);
+            infoView = new SelfProfileView(this);
         } else {
             NotMeProfile notMeProfile = (NotMeProfile) user;
-            NotMeProfileView notMeProfileView = new NotMeProfileView(getContext(), notMeProfile, this);
+            NotMeProfileView notMeProfileView = new NotMeProfileView(this);
             Configurer configurer = null;
             switch (notMeProfile.getType()) {
                 case "stranger":
-                    configurer = new StrangerProfileConfigurer(notMeProfileView);
+                    configurer = new StrangerProfileConfigurer(notMeProfileView, handler);
                     break;
                 case "friend request":
-                    configurer = new FriendRequestProfileConfigurer(notMeProfileView);
+                    configurer = new FriendRequestProfileConfigurer(notMeProfileView, handler);
                     break;
                 case "request friend":
-                    configurer = new RequestFriendProfileConfigurer(notMeProfileView);
+                    configurer = new RequestFriendProfileConfigurer(notMeProfileView, handler);
                     break;
                 case "friend":
-                    configurer = new FriendProfileConfigurer(notMeProfileView);
+                    configurer = new FriendProfileConfigurer(notMeProfileView, handler);
                     break;
             }
             configurer.allowActionLeft();
@@ -180,10 +164,6 @@ public class ViewProfileFragment extends Fragment implements FragmentAnimation {
             infoView = notMeProfileView;
         }
         contentPanel.addView(infoView, 0);
-    }
-
-    private void initOnClick() {
-
     }
 
     @Override

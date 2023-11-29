@@ -1,9 +1,12 @@
 package com.example.socialmediaapp.home.fragment;
 
+import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,22 +21,36 @@ import com.example.socialmediaapp.customview.container.ClickablePanel;
 import com.example.socialmediaapp.customview.textview.PostContentTextVIew;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
 import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
+import com.example.socialmediaapp.viewmodel.models.post.base.Post;
+import com.example.socialmediaapp.viewmodel.ImagePostViewModel;
 
 public class ViewImageFragment extends Fragment implements FragmentAnimation {
 
-    private ImagePost postItem;
     private Rect bound;
+    private Bitmap image;
     private ViewGroup commandContent;
 
-    public ViewImageFragment(Rect bound, ImagePost postItem) {
-        this.postItem = postItem;
+    public ViewImageFragment(Rect bound, Bitmap image) {
         this.bound = bound;
+        this.image = image;
+    }
+
+    public ViewImageFragment() {
+    }
+
+    public static ViewImageFragment newInstance(Bundle args, Rect bound, Bitmap image) {
+        ViewImageFragment fragment = new ViewImageFragment(bound, image);
+        fragment.setArguments(args);
+        return fragment;
     }
 
     //i store the this fragment state in activity saved state
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(null);
+        Bundle args = getArguments();
+        Integer postSessionId = args.getInt("session id");
+        viewModel = new ImagePostViewModel(postSessionId);
     }
 
     private ImageView zoom_out_image;
@@ -44,6 +61,7 @@ public class ViewImageFragment extends Fragment implements FragmentAnimation {
     private PostContentTextVIew statusTextView;
     private TextView fullnameTextView;
     private View backgroundPanel;
+    private ImagePostViewModel viewModel;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -68,16 +86,6 @@ public class ViewImageFragment extends Fragment implements FragmentAnimation {
             }
         });
 
-        zoom_out_image.setImageDrawable(postItem.getImage());
-        fullnameTextView.setText(postItem.getAuthor().getFullname());
-        statusTextView.setStatusContent(postItem.getStatus());
-        if (postItem.getStatus() == null) {
-            commandContent.removeView(statusTextView);
-            statusTextView = null;
-        } else {
-            statusTextView.setStatusContent(postItem.getStatus());
-        }
-        initOnClick();
         return root;
     }
 
@@ -107,27 +115,57 @@ public class ViewImageFragment extends Fragment implements FragmentAnimation {
         endAction.run();
     }
 
+    public void afterAnimation() {
+        viewModel.getLiveData().observe(getViewLifecycleOwner(), new Observer<Post>() {
+            @Override
+            public void onChanged(Post post) {
+                ImagePost postItem = (ImagePost) post;
+                zoom_out_image.setImageDrawable(new BitmapDrawable(getResources(), postItem.getImage()));
+                fullnameTextView.setText(postItem.getAuthor().getFullname());
+                statusTextView.setStatusContent(postItem.getStatus());
+                if (postItem.getStatus() == null) {
+                    commandContent.removeView(statusTextView);
+                    statusTextView = null;
+                } else {
+                    statusTextView.setStatusContent(postItem.getStatus());
+                }
+
+            }
+        });
+
+        initOnClick();
+    }
+
     @Override
     public void performStart() {
-        // i don't know why when my imageview lost focus it resize the image somehow, i better option is firstly focus on another view
+        if (image == null) return;
+
         view_image_frame.requestFocus();
+        zoom_out_image.setImageDrawable(new BitmapDrawable(getResources(), image));
         ViewGroup.LayoutParams params = zoom_out_image.getLayoutParams();
         if (bound == null) {
+            //click on avatar
             params.width = ViewGroup.LayoutParams.MATCH_PARENT;
             params.height = ViewGroup.LayoutParams.MATCH_PARENT;
-            command_panel.setVisibility(View.VISIBLE);
             zoom_out_image.setAlpha(0.5f);
-            command_panel.animate().alpha(1).setDuration(150).start();
             backgroundPanel.animate().alpha(1).setDuration(100).start();
             zoom_out_image.post(new Runnable() {
                 @Override
                 public void run() {
-                    zoom_out_image.animate().alpha(1).setDuration(200).start();
+                    zoom_out_image.animate().alpha(1).setDuration(200).withEndAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            afterAnimation();
+                            command_panel.setVisibility(View.VISIBLE);
+                            command_panel.animate().alpha(1).setDuration(150).start();
+                        }
+                    }).start();
                 }
             });
             zoom_out_image.requestLayout();
             return;
         }
+
         int h = root.getHeight(), w = root.getWidth();
         params.width = (bound.right - bound.left);
         params.height = (bound.bottom - bound.top);
@@ -141,11 +179,12 @@ public class ViewImageFragment extends Fragment implements FragmentAnimation {
             @Override
             public void run() {
                 zoom_out_image.requestLayout();
+                afterAnimation();
                 command_panel.setVisibility(View.VISIBLE);
                 command_panel.animate().alpha(1).setDuration(150).start();
             }
         }).start();
-        root.setLayerType(View.LAYER_TYPE_HARDWARE,null);
+        root.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         Thread animator = new Thread(new Runnable() {
             double curHeight = params.height;
             double unitHeight = 1;
@@ -172,7 +211,7 @@ public class ViewImageFragment extends Fragment implements FragmentAnimation {
                 zoom_out_image.post(new Runnable() {
                     @Override
                     public void run() {
-                        root.setLayerType(View.LAYER_TYPE_NONE  ,null);
+                        root.setLayerType(View.LAYER_TYPE_NONE, null);
                         params.width = ViewGroup.LayoutParams.MATCH_PARENT;
                         params.height = ViewGroup.LayoutParams.MATCH_PARENT;
                         zoom_out_image.requestLayout();

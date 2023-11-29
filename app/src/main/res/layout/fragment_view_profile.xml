@@ -95,11 +95,10 @@
                 android:layout_marginTop="5dp"
                 app:button_background_color="#757575" />
 
-            <LinearLayout
-                android:id="@+id/post_panel"
+            <FrameLayout
+                android:id="@+id/post_fragment_container"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical" />
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
 

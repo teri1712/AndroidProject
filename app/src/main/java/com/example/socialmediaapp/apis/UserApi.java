@@ -25,9 +25,7 @@ import retrofit2.http.Query;
 public interface UserApi {
 
     @GET("/user/profile/{alias}")
-    Call<UserProfileBody> getUserProfile(@Path("alias") String alias);
-    @GET("/user/avatar/{alias}")
-    Call<ResponseBody> getAvatar(@Path("alias") String alias);
+    Call<UserProfileBody> loadUserProfile(@Path("alias") String alias);
     @Multipart
     @PUT("/user/avatar")
     Call<PostBody> changeAvatar(@Part("status") RequestBody status, @Part MultipartBody.Part avatar);
@@ -42,18 +40,18 @@ public interface UserApi {
     Call<UserSessionBody> loadUserSession();
     @Multipart
     @POST("/user/new")
-    Call<ResponseBody> setUpInfo(@Part("fullname") RequestBody status, @Part("alias") RequestBody type,
+    Call<UserSessionBody> setUpInfo(@Part("fullname") RequestBody status, @Part("alias") RequestBody type,
                                  @Part("gender") RequestBody gender,
                                  @Part("birthday") RequestBody birthday,
                                  @Part MultipartBody.Part avatar);
-
     @GET("/user/search")
     Call<List<UserBasicInfoBody>> searchForUser(@Query("query") String query);
-
+    @GET("/user/search/recent")
+    Call<List<UserBasicInfoBody>> fetchRecentSearch();
     @PUT("/user/search/{alias}")
-    Call<ResponseBody> onSearchOnUser(@Path("alias") String alias);
+    Call<UserBasicInfoBody> addToRecentSearch(@Path("alias") String alias);
     @PUT("/user/search/remove/{alias}")
-    Call<ResponseBody> removeProfileRecent(@Path("alias") String alias);
+    Call<ResponseBody> deleteRecentSearch(@Path("alias") String alias);
 
     @PUT("/user/friend/add/{alias}")
     Call<ResponseBody> sendFriendRequest(@Path("alias") String alias);

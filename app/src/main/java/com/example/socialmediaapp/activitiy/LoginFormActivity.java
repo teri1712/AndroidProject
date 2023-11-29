@@ -59,6 +59,7 @@ public class LoginFormActivity extends AppCompatActivity {
         }
         return null;
     }
+
     private String performValidationOnUsername(String s) {
         if (s.length() < 8 || s.length() > 16) {
             return "Username must have length from 8-16";
@@ -177,16 +178,13 @@ public class LoginFormActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-                FrameLayout container = new FrameLayout(LoginFormActivity.this);
-                container.setId(View.generateViewId());
-                root.addView(container);
-                String tag = "sign up" + Integer.toString(container.getId());
-                fragmentTransaction.add(container.getId(), RegistrationFragment.newInstance(), tag);
-                fragmentTransaction.addToBackStack(tag);
+                fragmentTransaction.add(R.id.registration_fragment_container, RegistrationFragment.newInstance());
+                fragmentTransaction.addToBackStack(null);
                 fragmentTransaction.commit();
             }
         });
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -298,7 +296,7 @@ public class LoginFormActivity extends AppCompatActivity {
         authenState.observe(this, new Observer<String>() {
             @Override
             public void onChanged(String s) {
-                if (s.equals("Login success")) {
+                if (s.equals("Success")) {
                     Intent intent = new Intent(LoginFormActivity.this, HomePage.class);
                     startActivity(intent);
                     finish();

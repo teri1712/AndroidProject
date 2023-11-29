@@ -8,18 +8,14 @@ import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.ViewModel;
 import androidx.savedstate.SavedStateRegistryOwner;
 
-import com.example.socialmediaapp.viewmodel.CommentFragmentViewModel;
+import com.example.socialmediaapp.viewmodel.MainCommentFragmentViewModel;
 import com.example.socialmediaapp.viewmodel.CreatePostViewModel;
 import com.example.socialmediaapp.viewmodel.EditInformationViewModel;
-import com.example.socialmediaapp.viewmodel.HomePageViewModel;
 import com.example.socialmediaapp.viewmodel.LoginFormViewModel;
 import com.example.socialmediaapp.viewmodel.RegistrationViewModel;
-import com.example.socialmediaapp.viewmodel.SearchFragmentViewModel;
 import com.example.socialmediaapp.viewmodel.SetupInformationViewModel;
 import com.example.socialmediaapp.viewmodel.UpdateAvatarViewModel;
 import com.example.socialmediaapp.viewmodel.UpdateBackgroundViewModel;
-import com.example.socialmediaapp.viewmodel.ViewProfileViewModel;
-import com.example.socialmediaapp.viewmodel.refactor.PostFragmentViewModel;
 
 public class ViewModelFactory extends AbstractSavedStateViewModelFactory {
 
@@ -35,10 +31,8 @@ public class ViewModelFactory extends AbstractSavedStateViewModelFactory {
             return (T) new LoginFormViewModel(handle);
         } else if (modelClass.isAssignableFrom(CreatePostViewModel.class)) {
             return (T) new CreatePostViewModel(handle);
-        } else if (modelClass.isAssignableFrom(CommentFragmentViewModel.class)) {
-            return (T) new CommentFragmentViewModel(handle);
-        } else if (modelClass.isAssignableFrom(ViewProfileViewModel.class)) {
-            return (T) new ViewProfileViewModel(handle);
+        } else if (modelClass.isAssignableFrom(MainCommentFragmentViewModel.class)) {
+            return (T) new MainCommentFragmentViewModel(handle);
         } else if (modelClass.isAssignableFrom(UpdateAvatarViewModel.class)) {
             return (T) new UpdateAvatarViewModel(handle);
         } else if (modelClass.isAssignableFrom(UpdateBackgroundViewModel.class)) {
@@ -49,10 +43,8 @@ public class ViewModelFactory extends AbstractSavedStateViewModelFactory {
             return (T) new SetupInformationViewModel(handle);
         } else if (modelClass.isAssignableFrom(RegistrationViewModel.class)) {
             return (T) new RegistrationViewModel(handle);
-        } else if (modelClass.isAssignableFrom(SearchFragmentViewModel.class)) {
-            return (T) new SearchFragmentViewModel(handle);
         }
 
-        return (T) new HomePageViewModel(handle);
+        return null;
     }
 }

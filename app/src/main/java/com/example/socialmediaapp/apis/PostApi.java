@@ -33,7 +33,7 @@ public interface PostApi {
     Call<List<PostBody>> fetchPost(@Path("countRead") int countRead);
 
     @GET("/post/load/{alias}")
-    Call<List<PostBody>> loadPostOfUser(@Path("alias") String alias);
+    Call<List<PostBody>> fetchPostFromUser(@Path("alias") String alias);
 
     @GET("/post/comment/{postId}")
     Call<List<CommentBody>> fetchComments(@Path("postId") int id);

@@ -12,6 +12,8 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -36,15 +38,15 @@ import com.example.socialmediaapp.customview.container.ClickablePanel;
 import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
+import com.example.socialmediaapp.home.fragment.main.MainPostFragment;
 import com.example.socialmediaapp.home.fragment.main.PostFragment;
 import com.example.socialmediaapp.viewmodel.CreatePostViewModel;
-import com.example.socialmediaapp.viewmodel.HomePageViewModel;
-import com.example.socialmediaapp.viewmodel.LoginFormViewModel;
+import com.example.socialmediaapp.viewmodel.PostFragmentViewModel;
 import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
-import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
+import com.example.socialmediaapp.viewmodel.models.MainPostFragmentViewModel;
 import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
-import com.example.socialmediaapp.viewmodel.refactor.PostFragmentViewModel;
-import com.example.socialmediaapp.viewmodel.refactor.UserSessionViewModel;
+import com.example.socialmediaapp.viewmodel.UserSessionViewModel;
+import com.google.android.material.internal.ManufacturerUtils;
 
 import java.util.Objects;
 
@@ -75,11 +77,12 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
     private ActivityResultLauncher<String> pick_media_content;
     private HomePage homePage;
 
+    private CustomSpinningView spinner;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = new ViewModelProvider(this, new ViewModelFactory(this, null)).get(CreatePostViewModel.class);
-
         pick_media_content = registerForActivityResult(new ActivityResultContracts.GetContent(), new ActivityResultCallback<Uri>() {
             @Override
             public void onActivityResult(Uri uri) {
@@ -101,7 +104,7 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
         media_picker_panel = root.findViewById(R.id.media_picker_panel);
         post_button = root.findViewById(R.id.post_button);
         fullname_textview = root.findViewById(R.id.fullname);
-
+        spinner = root.findViewById(R.id.spinner);
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -187,6 +190,7 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
                 if (!Objects.equals(s, post_status_edit_text.getText().toString())) {
                     post_status_edit_text.setText(s);
                 }
+                viewModel.getPostStatusContent().removeObserver(this);
             }
         });
         viewModel.getMediaContent().observe(getViewLifecycleOwner(), new Observer<Uri>() {
@@ -199,25 +203,8 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
                         media_content.setImageURI(uri);
                         play_selected_video.setVisibility(View.GONE);
                     } else {
-                        media_content.setImageDrawable(null);
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                MediaMetadataRetriever r = new MediaMetadataRetriever();
-                                r.setDataSource(getContext(), uri);
-                                Bitmap thumbnail = r.getFrameAtTime(3000000);
-                                BitmapDrawable drawable = new BitmapDrawable(getResources(), thumbnail);
-                                getActivity().runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        media_content.setImageDrawable(drawable);
-                                    }
-                                });
-                            }
-                        }).start();
-                        play_selected_video.setVisibility(View.VISIBLE);
+                        displayVideoThumbnail(uri);
                     }
-                    viewModel.setMediaType(type);
                     media_container.setVisibility(View.VISIBLE);
                     viewModel.getMediaContent().setValue(uri);
                 } catch (Exception e) {
@@ -225,6 +212,44 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
                 }
             }
         });
+
+        viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                if (s.equals("Idle")) {
+                    if (spinner.getVisibility() == View.VISIBLE) {
+                        spinner.setVisibility(View.GONE);
+                    }
+                } else if (s.equals("In progress")) {
+                    if (spinner.getVisibility() == View.GONE) {
+                        spinner.setVisibility(View.VISIBLE);
+                    }
+                } else {
+                    Toast.makeText(getContext(), s, Toast.LENGTH_SHORT).show();
+                    viewModel.getPostSubmitState().setValue("Idle");
+                }
+            }
+        });
+    }
+
+    private void displayVideoThumbnail(Uri uri) {
+        media_content.setImageDrawable(null);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                MediaMetadataRetriever r = new MediaMetadataRetriever();
+                r.setDataSource(getContext(), uri);
+                Bitmap thumbnail = r.getFrameAtTime(3000000);
+                BitmapDrawable drawable = new BitmapDrawable(getResources(), thumbnail);
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        media_content.setImageDrawable(drawable);
+                    }
+                });
+            }
+        }).start();
+        play_selected_video.setVisibility(View.VISIBLE);
     }
 
     private void initOnClick(View root) {
@@ -233,7 +258,6 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
             public void onClick(View view) {
                 viewModel.getMediaContent().setValue(null);
                 media_container.setVisibility(View.GONE);
-                viewModel.setMediaType(null);
             }
         });
 
@@ -273,8 +297,33 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
         post_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                viewModel.postMyPost(homePage);
-                homePage.finishFragment("create post");
+                MutableLiveData<String> postSubmitState = viewModel.getPostSubmitState();
+                if (postSubmitState.equals("In progress")) {
+                    Toast.makeText(getContext(), "Please wait", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                postSubmitState.setValue("In progress");
+
+                Uri uri = viewModel.getMediaContent().getValue();
+
+                Bundle data = new Bundle();
+                data.putString("status", viewModel.getPostStatusContent().getValue());
+                data.putString("type", "post");
+                data.putString("media content", (uri == null) ? null : uri.toString());
+                MainPostFragment mainPostFragment = (MainPostFragment) getActivity().getSupportFragmentManager().findFragmentByTag("post fragment");
+                PostFragment postFragment = (PostFragment) (mainPostFragment.getChildFragmentManager().findFragmentByTag("posts"));
+                PostFragmentViewModel postFragmentViewModel = postFragment.getViewModel();
+                LiveData<String> callBack = postFragmentViewModel.uploadPost(data);
+                callBack.observe(getViewLifecycleOwner(), new Observer<String>() {
+                    @Override
+                    public void onChanged(String s) {
+                        postSubmitState.setValue(s);
+
+                        if (s.equals("Success")) {
+                            homePage.finishFragment("create post");
+                        }
+                    }
+                });
             }
         });
     }

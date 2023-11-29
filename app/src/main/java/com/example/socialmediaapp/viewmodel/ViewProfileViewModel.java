@@ -1,65 +1,93 @@
 package com.example.socialmediaapp.viewmodel;
 
-import android.content.Context;
-
+import androidx.arch.core.util.Function;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.SavedStateHandle;
-import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.Transformations;
 
-import com.example.socialmediaapp.services.ServiceApi;
-import com.example.socialmediaapp.viewmodel.models.repo.ItemRepository;
+import com.example.socialmediaapp.application.ApplicationContainer;
+import com.example.socialmediaapp.application.session.DataAccessHandler;
+import com.example.socialmediaapp.application.session.PostSessionHandler;
+import com.example.socialmediaapp.application.session.SessionHandler;
+import com.example.socialmediaapp.application.session.ViewProfileSessionHandler;
 import com.example.socialmediaapp.viewmodel.models.post.base.Post;
+import com.example.socialmediaapp.viewmodel.models.repo.Repository;
 import com.example.socialmediaapp.viewmodel.models.user.profile.base.UserProfile;
 
-import java.util.List;
+public class ViewProfileViewModel extends DataViewModel<UserProfile> {
+    private LiveData<String> sessionState;
+    private SessionHandler.SessionRegistry sessionRegistry;
+    private MutableLiveData<SessionHandler> viewProfileSessionHandler;
+    private Integer sessionId;
+    private SessionHandler.SessionRepository sessionRepository = ApplicationContainer.getInstance().sessionRepository;
+    private LiveData<Integer> viewAvatarSessionId, viewBackgroundSessionId;
+    private LiveData<SessionHandler> userPostsSession;
 
-public class ViewProfileViewModel extends ViewModel {
-    private MutableLiveData<UserProfile> userProfileInfo;
-
-    private ItemRepository<Post> listPost;
-    private SavedStateHandle savedStateHandle;
-
-    public ViewProfileViewModel(SavedStateHandle savedStateHandle) {
+    public ViewProfileViewModel(Integer sessionId) {
         super();
-        this.savedStateHandle = savedStateHandle;
-        userProfileInfo = new MutableLiveData<>();
-        listPost = new ItemRepository<>();
-    }
-
-    public ItemRepository<Post> getListPost() {
-        return listPost;
-    }
-
-    public MutableLiveData<UserProfile> getUserProfileInfo() {
-        return userProfileInfo;
-    }
-
-    public void loadProfile(Context context, String alias) {
-        ServiceApi.loadProfile(context, alias, userProfileInfo);
-    }
-
-    public MutableLiveData<String> loadPosts(Context context) {
-        MutableLiveData<String> callBack = new MutableLiveData<>();
-        MutableLiveData<List<Post>> batchLoad = new MutableLiveData<>();
-        listPost.getUpdateOnRepo().addSource(batchLoad, new Observer<List<Post>>() {
+        this.sessionId = sessionId;
+        this.viewProfileSessionHandler = sessionRepository.getSessionById(sessionId);
+        sessionState = Transformations.switchMap(viewProfileSessionHandler, new Function<SessionHandler, LiveData<String>>() {
             @Override
-            public void onChanged(List<Post> mutableLiveData) {
-                if (mutableLiveData == null) {
-                    callBack.setValue("Failed");
-                    return;
-                }
-                if (mutableLiveData.isEmpty()) {
-                    callBack.setValue("No profile post loaded");
-                    return;
-                }
-                for (Post p : mutableLiveData) {
-                    listPost.addToEnd(p);
-                }
-                callBack.setValue(Integer.toString(mutableLiveData.size()) + " posts loaded");
+            public LiveData<String> apply(SessionHandler input) {
+                return input.getSessionState();
             }
         });
-        ServiceApi.loadPostsOfUser(context, userProfileInfo.getValue().getAlias(), batchLoad);
-        return callBack;
+        liveData = (MutableLiveData<UserProfile>) Transformations.switchMap(viewProfileSessionHandler, new Function<SessionHandler, LiveData<UserProfile>>() {
+            @Override
+            public LiveData<UserProfile> apply(SessionHandler input) {
+                sessionRegistry = input.getSessionRegistry();
+                return ((ViewProfileSessionHandler) input).getDataSyncEmitter();
+            }
+        });
+        LiveData<SessionHandler> postDataAccess = Transformations.switchMap(viewProfileSessionHandler, new Function<SessionHandler, LiveData<SessionHandler>>() {
+            @Override
+            public LiveData<SessionHandler> apply(SessionHandler input) {
+                return sessionRepository.getSessionById(((ViewProfileSessionHandler) input).getPostRepositorySessionId());
+            }
+        });
+        viewAvatarSessionId = Transformations.switchMap(postDataAccess, new Function<SessionHandler, LiveData<Integer>>() {
+            @Override
+            public LiveData<Integer> apply(SessionHandler input) {
+                ViewProfileSessionHandler vpsh = (ViewProfileSessionHandler) input;
+                return vpsh.getAvatarPostSessionId();
+            }
+        });
+        viewBackgroundSessionId = Transformations.switchMap(postDataAccess, new Function<SessionHandler, LiveData<Integer>>() {
+            @Override
+            public LiveData<Integer> apply(SessionHandler input) {
+                ViewProfileSessionHandler vpsh = (ViewProfileSessionHandler) input;
+                return vpsh.getBackgroundPostSessionId();
+            }
+        });
+        userPostsSession = Transformations.switchMap(postDataAccess, new Function<SessionHandler, LiveData<SessionHandler>>() {
+            @Override
+            public LiveData<SessionHandler> apply(SessionHandler input) {
+                ViewProfileSessionHandler vpsh = (ViewProfileSessionHandler) input;
+                return sessionRepository.getSessionById(vpsh.getPostRepositorySessionId());
+            }
+        });
     }
+
+
+    public MutableLiveData<SessionHandler> getViewProfileSessionHandler() {
+        return viewProfileSessionHandler;
+    }
+
+    public LiveData<String> getSessionState() {
+        return sessionState;
+    }
+
+    public LiveData<Integer> getViewAvatarSessionId() {
+        return viewAvatarSessionId;
+    }
+
+    public LiveData<SessionHandler> getUserPostsSession() {
+        return userPostsSession;
+    }
+
+    public LiveData<Integer> getViewBackgroundSessionId() {
+        return viewBackgroundSessionId;
+    }
+
 }

@@ -5,11 +5,9 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 
-import com.example.socialmediaapp.container.session.CommentSessionHandler;
-import com.example.socialmediaapp.container.session.SessionHandler;
+import com.example.socialmediaapp.application.session.CommentSessionHandler;
+import com.example.socialmediaapp.application.session.SessionHandler;
 import com.example.socialmediaapp.viewmodel.models.post.Comment;
-import com.example.socialmediaapp.viewmodel.models.post.ReplyComment;
-import com.example.socialmediaapp.viewmodel.models.repo.ItemRepository;
 
 public class CommentItemViewModel extends ViewModel {
     private Comment comment;

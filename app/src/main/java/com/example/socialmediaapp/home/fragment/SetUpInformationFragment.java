@@ -253,7 +253,6 @@ public class SetUpInformationFragment extends Fragment implements FragmentAnimat
                             fragmentTransaction.commit();
                             ViewGroup pContainer = (ViewGroup) container.getParent();
                             pContainer.removeView(container);
-                            activity.getViewModel().loadHomePageContent(activity);
                         }
                     });
                 } else {
@@ -510,7 +509,7 @@ public class SetUpInformationFragment extends Fragment implements FragmentAnimat
                     dotProgress.nextPage();
                     ObjectAnimator.ofInt(scroll, "scrollX", scroll.getWidth() + scroll.getScrollX()).setDuration(200).start();
                 } else {
-                    viewModel.postMyPost(getContext());
+                    viewModel.send(activity, activity.getViewModel().getUserSessionHandler());
                     return;
                 }
 

@@ -11,7 +11,15 @@ public class CommentBody {
 
     private boolean liked;
     private String time;
-    private Integer countLike;
+    private Integer countLike,countComment;
+
+    public Integer getCountComment() {
+        return countComment;
+    }
+
+    public void setCountComment(Integer countComment) {
+        this.countComment = countComment;
+    }
 
     public boolean isLiked() {
         return liked;

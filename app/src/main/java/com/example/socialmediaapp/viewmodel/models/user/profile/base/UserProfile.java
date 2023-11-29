@@ -6,7 +6,9 @@ import com.example.socialmediaapp.apis.entities.UserProfileBody;
 import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
 
 public class UserProfile {
+
     protected String fullname;
+
     protected String alias;
     protected ImagePost avatarPost;
     protected ImagePost backgroundPost;
@@ -29,20 +31,6 @@ public class UserProfile {
 
     public void setAlias(String alias) {
         this.alias = alias;
-    }
-
-
-    public UserProfile(Context context, UserProfileBody profile) {
-        fullname = profile.getFullname();
-        alias = profile.getAlias();
-        birthday = profile.getBirthday();
-        gender = profile.getGender();
-        if (profile.getAvatarPost() != null) {
-            avatarPost = new ImagePost(profile.getAvatarPost(), context);
-        }
-        if (profile.getBackgroundPost() != null) {
-            backgroundPost = new ImagePost(profile.getBackgroundPost(), context);
-        }
     }
 
     public UserProfile() {

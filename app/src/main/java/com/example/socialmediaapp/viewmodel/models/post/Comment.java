@@ -1,5 +1,6 @@
 package com.example.socialmediaapp.viewmodel.models.post;
 
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
 import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
@@ -8,10 +9,10 @@ public class Comment {
     private UserBasicInfo author;
     private Integer id;
     private String content;
-    private Drawable image;
+    private Bitmap image;
     private boolean liked;
     private String time;
-    private Integer countLike,countComment;
+    private Integer countLike, countComment;
 
     public boolean isLiked() {
         return liked;
@@ -56,11 +57,11 @@ public class Comment {
         this.author = author;
     }
 
-    public Drawable getImage() {
+    public Bitmap getImage() {
         return image;
     }
 
-    public void setImage(Drawable image) {
+    public void setImage(Bitmap image) {
         this.image = image;
     }
 
@@ -80,16 +81,5 @@ public class Comment {
         this.content = content;
     }
 
-
-    @Override
-    public int hashCode() {
-        return id;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        Comment c = (Comment) obj;
-        return id == c.getId();
-    }
 
 }

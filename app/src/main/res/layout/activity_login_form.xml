@@ -70,13 +70,13 @@
             android:layout_marginTop="15dp"
             android:drawableRight="@drawable/hide"
             android:gravity="center_vertical"
+            android:imeOptions="actionDone"
             android:inputType="textPassword"
             android:paddingStart="20dp"
             android:paddingTop="0dp"
             android:paddingEnd="15dp"
             android:paddingBottom="0dp"
             android:text="password"
-            android:imeOptions="actionDone"
 
             android:textCursorDrawable="@null"
             app:custom_corner_ratio="10"
@@ -192,4 +192,8 @@
         </LinearLayout>
 
     </LinearLayout>
+    <FrameLayout
+        android:id="@+id/registration_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 </FrameLayout>

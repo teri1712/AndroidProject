@@ -1,5 +1,7 @@
 package com.example.socialmediaapp.home.fragment;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
@@ -24,10 +26,16 @@ import com.example.socialmediaapp.customview.button.CircleButton;
 import com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView;
 import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
+import com.example.socialmediaapp.home.fragment.main.MainPostFragment;
+import com.example.socialmediaapp.home.fragment.main.PostFragment;
+import com.example.socialmediaapp.viewmodel.PostFragmentViewModel;
 import com.example.socialmediaapp.viewmodel.UpdateBackgroundViewModel;
 import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
-import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
 import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
+import com.google.android.material.internal.ManufacturerUtils;
+
+import java.io.ObjectStreamClass;
+import java.util.Objects;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -51,23 +59,22 @@ public class UpdateBackgroundFragment extends Fragment implements FragmentAnimat
 
     private UpdateBackgroundViewModel viewModel;
     private View root;
-
     private View back_button;
     private RoundedButton save_button;
     private CircleButton avatarButton;
-
+    private HomePage homePage;
     private EditText post_status_edit_text;
     private ImageView imageView, simulate;
     private TextView fullname;
-    private CustomSpinningView spin;
+    private CustomSpinningView spinner;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        viewModel = new ViewModelProvider(this, new ViewModelFactory(this, null)).get(UpdateBackgroundViewModel.class);
         Bundle args = getArguments();
         if (args != null) {
             Uri imageUri = args.getParcelable("image uri");
-            viewModel = new ViewModelProvider(this, new ViewModelFactory(this, null)).get(UpdateBackgroundViewModel.class);
             viewModel.getImageUri().setValue(imageUri);
         }
     }
@@ -75,29 +82,33 @@ public class UpdateBackgroundFragment extends Fragment implements FragmentAnimat
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         root = inflater.inflate(R.layout.fragment_update_background, container, false);
-        post_status_edit_text = (EditText) root.findViewById(R.id.status_edit_text);
-        save_button = (RoundedButton) root.findViewById(R.id.save_button);
+        post_status_edit_text = root.findViewById(R.id.status_edit_text);
+        save_button = root.findViewById(R.id.save_button);
         back_button = root.findViewById(R.id.back_button);
         imageView = root.findViewById(R.id.image_view);
-        spin = root.findViewById(R.id.spinner);
+        spinner = root.findViewById(R.id.spinner);
         fullname = root.findViewById(R.id.fullname);
         simulate = root.findViewById(R.id.simulate_image_view);
         avatarButton = root.findViewById(R.id.avatar_button);
-        HomePage homePage = (HomePage) getActivity();
+        homePage = (HomePage) getActivity();
 
-        MutableLiveData<UserInformation> userInfo = homePage.getViewModel().getUserInfo();
-        userInfo.observe(getViewLifecycleOwner(), new Observer<UserInformation>() {
+        homePage.getViewModel().getUserInfo().observe(getViewLifecycleOwner(), new Observer<UserInformation>() {
             @Override
             public void onChanged(UserInformation info) {
                 fullname.setText(info.getFullname());
             }
         });
 
-        MutableLiveData<ImagePost> avatarPost = homePage.getViewModel().getAvatarPost();
-        avatarPost.observe(getViewLifecycleOwner(), new Observer<ImagePost>() {
+        homePage.getViewModel().getAvatar().observe(getViewLifecycleOwner(), new Observer<Bitmap>() {
             @Override
-            public void onChanged(ImagePost imagePost) {
-                avatarButton.setBackgroundContent(imagePost.getImage(), 0);
+            public void onChanged(Bitmap bitmap) {
+                avatarButton.setBackgroundContent(new BitmapDrawable(getResources(), bitmap), 0);
+            }
+        });
+        homePage.getViewModel().getBackground().observe(getViewLifecycleOwner(), new Observer<Bitmap>() {
+            @Override
+            public void onChanged(Bitmap bitmap) {
+
             }
         });
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -128,32 +139,25 @@ public class UpdateBackgroundFragment extends Fragment implements FragmentAnimat
         viewModel.getPostStatusContent().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
-            }
-        });
-        viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (s.equals("In progress")) {
-                    spin.setVisibility(View.VISIBLE);
-                } else {
-                    spin.setVisibility(View.GONE);
+                if (!Objects.equals(s, post_status_edit_text.getText().toString())) {
+                    post_status_edit_text.setText(s);
                 }
+                viewModel.getPostStatusContent().removeObserver(this);
             }
         });
         viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
-                if (s.equals("Idle") || s.equals("In progress"))
-                    return;
-                Toast.makeText(homePage, s, Toast.LENGTH_SHORT).show();
-            }
-        });
-        viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (s.equals("Success")) {
-                    homePage.finishFragment("update background");
-                } else if (s.equals("Failed")) {
+                if (s.equals("Idle")) {
+                    if (spinner.getVisibility() == View.VISIBLE) {
+                        spinner.setVisibility(View.GONE);
+                    }
+                } else if (s.equals("In progress")) {
+                    if (spinner.getVisibility() == View.GONE) {
+                        spinner.setVisibility(View.VISIBLE);
+                    }
+                } else {
+                    Toast.makeText(getContext(), s, Toast.LENGTH_SHORT).show();
                     viewModel.getPostSubmitState().setValue("Idle");
                 }
             }
@@ -190,7 +194,30 @@ public class UpdateBackgroundFragment extends Fragment implements FragmentAnimat
         save_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                viewModel.postMyPost(getActivity());
+                MutableLiveData<String> postSubmitState = viewModel.getPostSubmitState();
+                if (postSubmitState.getValue().equals("In progress")) {
+                    Toast.makeText(getContext(), "please wait until progress complete", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                postSubmitState.setValue("In progress");
+                Uri uri = viewModel.getImageUri().getValue();
+
+                Bundle data = new Bundle();
+                data.putString("status", viewModel.getPostStatusContent().getValue());
+                data.putString("type", "background");
+                data.putString("media content", (uri == null) ? null : uri.toString());
+                MainPostFragment mainPostFragment = (MainPostFragment) (getActivity().getSupportFragmentManager().findFragmentByTag("post fragment"));
+                PostFragment postFragment = (PostFragment) mainPostFragment.getChildFragmentManager().findFragmentByTag("posts");
+                PostFragmentViewModel postFragmentViewModel = postFragment.getViewModel();
+                postFragmentViewModel.uploadPost(data).observe(getViewLifecycleOwner(), new Observer<String>() {
+                    @Override
+                    public void onChanged(String s) {
+                        postSubmitState.setValue(s);
+                        if (s.equals("Success")) {
+                            homePage.finishFragment("update background");
+                        }
+                    }
+                });
             }
         });
     }

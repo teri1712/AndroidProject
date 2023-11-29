@@ -3,20 +3,19 @@ package com.example.socialmediaapp.layoutviews.profile.model;
 import android.graphics.Color;
 import android.widget.LinearLayout;
 
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
 import com.example.socialmediaapp.R;
+import com.example.socialmediaapp.application.session.ViewProfileSessionHandler;
 import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.layoutviews.profile.NotMeProfileView;
-import com.example.socialmediaapp.services.ServiceApi;
 
 public class FriendRequestProfileConfigurer extends Configurer {
     private NotMeProfileView profileView;
     private RoundedButton left, right;
 
-    public FriendRequestProfileConfigurer(NotMeProfileView profileView) {
-        super(profileView.getContext());
+    public FriendRequestProfileConfigurer(NotMeProfileView profileView, ViewProfileSessionHandler handler) {
+        super(profileView.getContext(), handler);
         this.profileView = profileView;
         right = profileView.getBlueButton();
         left = profileView.getGreyButton();
@@ -24,11 +23,10 @@ public class FriendRequestProfileConfigurer extends Configurer {
 
     @Override
     protected void leftAction() {
-        final Configurer newCommand = new FriendProfileConfigurer(profileView);
+        final Configurer newCommand = new FriendProfileConfigurer(profileView, handler);
         profileView.changeConfiguration(newCommand);
 
-        MutableLiveData<String> res = new MutableLiveData<>();
-        res.observe(profileView.getOwner().getViewLifecycleOwner(), new Observer<String>() {
+        handler.acceptFriendRequest().observe(profileView.getLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
                 if (s.equals("Success")) {
@@ -39,16 +37,14 @@ public class FriendRequestProfileConfigurer extends Configurer {
                 }
             }
         });
-        ServiceApi.acceptFriendRequest(profileView.getProfile().getAlias(), res);
     }
 
     @Override
     protected void rightAction() {
-        final Configurer newCommand = new StrangerProfileConfigurer(profileView);
+        final Configurer newCommand = new StrangerProfileConfigurer(profileView, handler);
         profileView.changeConfiguration(newCommand);
 
-        MutableLiveData<String> res = new MutableLiveData<>();
-        res.observe(profileView.getOwner().getViewLifecycleOwner(), new Observer<String>() {
+        handler.rejectFriendRequest().observe(profileView.getLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
                 if (s.equals("Success")) {
@@ -59,7 +55,6 @@ public class FriendRequestProfileConfigurer extends Configurer {
                 }
             }
         });
-        ServiceApi.rejectFriendRequest(profileView.getProfile().getAlias(), res);
     }
 
     @Override

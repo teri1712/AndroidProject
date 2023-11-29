@@ -46,8 +46,8 @@ public class NotMeProfileView extends ProfileView {
         });
     }
 
-    public NotMeProfileView(@NonNull Context context, NotMeProfile profile, Fragment owner) {
-        super(context, profile, owner, R.layout.stranger_profile);
+    public NotMeProfileView(@NonNull Fragment owner) {
+        super(owner, R.layout.stranger_profile);
         configuration = new MutableLiveData<>();
         configuration.observe(owner.getViewLifecycleOwner(), new Observer<Configurer>() {
             @Override

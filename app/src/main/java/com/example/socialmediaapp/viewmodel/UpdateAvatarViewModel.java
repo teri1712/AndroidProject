@@ -1,14 +1,10 @@
 package com.example.socialmediaapp.viewmodel;
 
-import android.content.Context;
 import android.net.Uri;
-import android.widget.Toast;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.ViewModel;
-
-import com.example.socialmediaapp.services.ServiceApi;
 
 public class UpdateAvatarViewModel extends ViewModel {
     private SavedStateHandle savedStateHandle;
@@ -21,7 +17,7 @@ public class UpdateAvatarViewModel extends ViewModel {
         super();
         this.savedStateHandle = savedStateHandle;
         postSubmitState = new MutableLiveData<>("Idle");
-        postStatusContent = new MutableLiveData<>();
+        postStatusContent = savedStateHandle.getLiveData("post status");
         imageUri = new MutableLiveData<>();
     }
 
@@ -38,16 +34,4 @@ public class UpdateAvatarViewModel extends ViewModel {
         return imageUri;
     }
 
-    public void setImageUri(MutableLiveData<Uri> imageUri) {
-        this.imageUri = imageUri;
-    }
-
-    public void postMyPost(Context context) {
-        if (postSubmitState.getValue().equals("In progress")) {
-            Toast.makeText(context, "please wait until progress complete", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        postSubmitState.setValue("In progress");
-        ServiceApi.updateAvatar(context, imageUri.getValue(), postStatusContent.getValue(), postSubmitState);
-    }
 }

@@ -6,18 +6,22 @@ import android.widget.Toast;
 
 import androidx.arch.core.util.Function;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.Transformations;
 import androidx.lifecycle.ViewModel;
 
+import com.example.socialmediaapp.apis.MediaApi;
 import com.example.socialmediaapp.apis.entities.requests.UpdateUserRequestBody;
-import com.example.socialmediaapp.services.ServiceApi;
+import com.example.socialmediaapp.application.session.UserSessionHandler;
+
+import java.util.HashMap;
 
 public class SetupInformationViewModel extends ViewModel {
     private SavedStateHandle savedStateHandle;
-    private MutableLiveData<String> postSubmitState;
+    private MediatorLiveData<String> postSubmitState;
     private MutableLiveData<UpdateUserRequestBody> userInfo;
 
     private LiveData<String> fullname, alias, gender, birthday;
@@ -66,7 +70,8 @@ public class SetupInformationViewModel extends ViewModel {
     public SetupInformationViewModel(SavedStateHandle savedStateHandle) {
         super();
         this.savedStateHandle = savedStateHandle;
-        postSubmitState = new MutableLiveData<>("Idle");
+        postSubmitState = new MediatorLiveData<>();
+        postSubmitState.setValue("Idle");
         userInfo = new MutableLiveData<>();
         curSession = new MutableLiveData<>();
         avatar = new MutableLiveData<>();
@@ -97,22 +102,30 @@ public class SetupInformationViewModel extends ViewModel {
             }
         });
     }
-
-
     public MutableLiveData<UpdateUserRequestBody> getUserInfo() {
         return userInfo;
     }
-
     public MutableLiveData<Uri> getAvatar() {
         return avatar;
     }
-
-    public void postMyPost(Context context) {
+    public void send(Context context, UserSessionHandler userSessionHandler) {
         if (postSubmitState.getValue().equals("In progress")) {
             Toast.makeText(context, "please wait until progress complete", Toast.LENGTH_SHORT).show();
             return;
         }
         postSubmitState.setValue("In progress");
-        ServiceApi.setUpInformation(context, fullname.getValue(), alias.getValue(), gender.getValue(), birthday.getValue(), avatar.getValue(), postSubmitState);
+        HashMap<String, String> data = new HashMap<>();
+        data.put("fullname", fullname.getValue());
+        data.put("alias", alias.getValue());
+        data.put("gender", gender.getValue());
+        data.put("birthday", birthday.getValue());
+        Uri uri = avatar.getValue();
+        data.put("avatar", uri == null ? null : uri.toString());
+        postSubmitState.addSource(userSessionHandler.setUpInformation(data), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                postSubmitState.setValue(s);
+            }
+        });
     }
 }

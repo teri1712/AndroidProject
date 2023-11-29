@@ -8,16 +8,12 @@ import android.os.IBinder;
 import androidx.annotation.Nullable;
 
 import com.example.socialmediaapp.apis.AuthenApi;
-import com.example.socialmediaapp.container.ApplicationContainer;
+import com.example.socialmediaapp.application.ApplicationContainer;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class AuthenticationService extends Service {

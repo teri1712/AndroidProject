@@ -225,9 +225,8 @@ public class RegistrationFragment extends Fragment implements FragmentAnimation 
         authenState.observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
-                if (s.equals("Signup success")) {
+                if (s.equals("Success")) {
                     Intent intent = new Intent(activity, HomePage.class);
-                    intent.putExtra("new bie", true);
                     activity.startActivity(intent);
                     activity.finish();
                 }

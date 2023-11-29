@@ -2,14 +2,15 @@ package com.example.socialmediaapp.viewmodel.models.repo;
 
 import android.os.Bundle;
 
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.work.Data;
 
-import com.example.socialmediaapp.container.session.DataAccessHandler;
-import com.example.socialmediaapp.viewmodel.models.repo.interceptor.FetchResponseProcessor;
-import com.example.socialmediaapp.viewmodel.models.repo.interceptor.FetchResponse;
+import com.example.socialmediaapp.application.session.DataAccessHandler;
+import com.example.socialmediaapp.viewmodel.models.repo.callback.FetchResponseProcessor;
+import com.example.socialmediaapp.viewmodel.models.repo.callback.FetchResponse;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Repository<T> {
@@ -24,8 +25,8 @@ public class Repository<T> {
     }
 
     private List<FetchResponseProcessor<T>> loadProcessors;
-    private List<T> loadedItems;
-    private DataAccessHandler<T> dataAccessHandler;
+    protected List<T> loadedItems;
+    protected DataAccessHandler<T> dataAccessHandler;
 
     public Repository(DataAccessHandler<T> dataAccessHandler) {
         this.dataAccessHandler = dataAccessHandler;
@@ -41,8 +42,8 @@ public class Repository<T> {
         final MutableLiveData<List<T>> callBack = new MutableLiveData<>();
         int countLoaded = query.getInt("count loaded");
 
-        if (loadedItems.size() > countLoaded + 5) {
-            List<T> res = loadedItems.subList(countLoaded, countLoaded + 5);
+        if (loadedItems.size() >= countLoaded + 8) {
+            List<T> res = loadedItems.subList(countLoaded, countLoaded + 8);
             callBack.setValue(res);
             return callBack;
         }
@@ -53,7 +54,7 @@ public class Repository<T> {
                     callBack.postValue(new ArrayList<>());
                     return;
                 }
-                List<T> l = loadedItems.subList(countLoaded, countLoaded + 5);
+                List<T> l = loadedItems.subList(countLoaded, countLoaded + 8);
                 callBack.setValue(l);
                 loadProcessors.remove(this);
             }
@@ -61,15 +62,13 @@ public class Repository<T> {
 
         loadProcessors.add(nextPostsEventInvokeCallback);
         //convert Bundle into Data
-        Data dQuery = new Data.Builder().putInt("count loaded", loadedItems.size()).build();
+        Bundle dQuery = new Bundle();
+        dQuery.putInt("count loaded", loadedItems.size());
         dataAccessHandler.fetchNewItems(dQuery);
         return callBack;
     }
 
-    // return id of uploaded item
-    public MutableLiveData<Integer> uploadNewItem(Bundle data) {
-        //convert to Data here
-        Data dData = null;
-        return dataAccessHandler.uploadNewItem(dData);
+    public LiveData<HashMap<String, Object>> uploadNewItem(Bundle data) {
+        return dataAccessHandler.uploadNewItem(data);
     }
 }

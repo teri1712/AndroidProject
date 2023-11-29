@@ -21,7 +21,7 @@ public class UpdateBackgroundViewModel extends ViewModel {
         super();
         this.savedStateHandle = savedStateHandle;
         postSubmitState = new MutableLiveData<>("Idle");
-        postStatusContent = new MutableLiveData<>();
+        postStatusContent = savedStateHandle.getLiveData("post content");
         imageUri = new MutableLiveData<>();
     }
 
@@ -42,12 +42,4 @@ public class UpdateBackgroundViewModel extends ViewModel {
         this.imageUri = imageUri;
     }
 
-    public void postMyPost(Context context) {
-        if (postSubmitState.getValue().equals("In progress")) {
-            Toast.makeText(context, "please wait until progress complete", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        postSubmitState.setValue("In progress");
-        ServiceApi.updateBackground(context, imageUri.getValue(), postStatusContent.getValue(), postSubmitState);
-    }
 }
