@@ -2,48 +2,154 @@ package com.example.socialmediaapp.customview.container;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
-import android.widget.ScrollView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.socialmediaapp.R;
 
 public class DragPanel extends FrameLayout {
 
-    private ScrollView childScroll;
-    private int scrollId;
-    private float prey, prex;
-    private Runnable finishAction;
+    public interface DragHelper {
+        boolean isTopBoundReached();
+
+        boolean isBottomBoundReached();
+    }
+
+    public static class RecyclerViewDragHelper implements DragHelper {
+        private LinearLayoutManager layoutManager;
+        private RecyclerView.Adapter adapter;
+
+        public RecyclerViewDragHelper(RecyclerView recyclerView) {
+            layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+            adapter = recyclerView.getAdapter();
+        }
+
+        @Override
+        public boolean isTopBoundReached() {
+            return layoutManager.findFirstCompletelyVisibleItemPosition() == 0;
+        }
+
+        @Override
+        public boolean isBottomBoundReached() {
+            return layoutManager.findLastCompletelyVisibleItemPosition() == adapter.getItemCount() - 1;
+        }
+    }
+
+    public static class ChildBoundDragHelper implements DragHelper {
+        private View view;
+
+        public ChildBoundDragHelper(View v) {
+            view = v;
+        }
+
+        @Override
+        public boolean isTopBoundReached() {
+            ViewGroup parentOfView = (ViewGroup) view.getParent();
+            int p[] = new int[2];
+            view.getLocationInWindow(p);
+            int t1 = p[1];
+            parentOfView.getLocationInWindow(p);
+            int t2 = p[1];
+            return t1 == t2;
+        }
+
+        @Override
+        public boolean isBottomBoundReached() {
+            ViewGroup parentOfView = (ViewGroup) view.getParent();
+            int p[] = new int[2];
+            view.getLocationInWindow(p);
+            int t1 = p[1];
+            parentOfView.getLocationInWindow(p);
+            int t2 = p[1];
+            return t1 + view.getHeight() == t2 + parentOfView.getHeight();
+        }
+    }
+
+    public interface DragListener {
+        void onStartDrag();
+
+        void onDrag();
+
+        void onRelease();
+
+        void onFinish();
+
+        void onAboutToFinish();
+    }
+
+    public static class DragAdapter implements DragListener {
+        public DragAdapter() {
+        }
+
+        @Override
+        public void onStartDrag() {
+
+        }
+
+        @Override
+        public void onDrag() {
+
+        }
+
+        @Override
+        public void onRelease() {
+
+        }
+
+        @Override
+        public void onFinish() {
+
+        }
+
+        @Override
+        public void onAboutToFinish() {
+
+        }
+    }
+
+    private DragListener dragListener;
+
+    private DragHelper dragHelper;
+    private int dragViewId;
+    private View draggedView;
+    private float prey, lastVelo;
 
     private void init(AttributeSet attrs) {
         TypedArray a = getContext().obtainStyledAttributes(
                 attrs,
                 R.styleable.my_container);
         try {
-            scrollId = a.getResourceId(R.styleable.my_container_scrollview_id, -1);
+            dragViewId = a.getResourceId(R.styleable.my_container_dragged_view_id, -1);
         } finally {
             a.recycle();
         }
     }
 
+    public void setDragHelper(DragHelper dragHelper) {
+        this.dragHelper = dragHelper;
+    }
+
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-        if (scrollId != -1) {
-            childScroll = findViewById(scrollId);
+        if (dragViewId != -1) {
+            draggedView = findViewById(dragViewId);
         }
     }
 
-    public void setFinishAction(Runnable finishAction) {
-        this.finishAction = finishAction;
+    public void setDragListener(DragListener dragListener) {
+        this.dragListener = dragListener;
     }
+
 
     public DragPanel(@NonNull Context context) {
         super(context);
@@ -64,71 +170,71 @@ public class DragPanel extends FrameLayout {
         init(attrs);
     }
 
-
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (childScroll == null) return false;
+        if (dragHelper == null) return false;
+        float y = event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_MOVE:
-                float y = event.getY();
-                setTranslationY(getTranslationY() + y - prey);
+                if (dragListener != null) dragListener.onDrag();
+                draggedView.setTranslationY(draggedView.getTranslationY() + y - prey);
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                float curTrans = getTranslationY();
-                if (curTrans > getHeight() / 4) {
-                    animate().translationY(getHeight()).setDuration(200).setInterpolator(new DecelerateInterpolator()).withEndAction(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (finishAction != null) {
-                                finishAction.run();
-                            }
-                        }
-                    }).start();
-                } else if (curTrans < -getHeight() / 4) {
-                    animate().translationY(-getHeight()).setDuration(200).setInterpolator(new DecelerateInterpolator()).withEndAction(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (finishAction != null) {
-                                finishAction.run();
-                            }
-                        }
-                    }).start();
-                }
-                animate().translationY(0).setDuration(200).setInterpolator(new DecelerateInterpolator()).start();
+                float curTrans = draggedView.getTranslationY();
+                if (curTrans > draggedView.getHeight() / 4 || lastVelo > 50) {
+                    if (dragListener != null) dragListener.onAboutToFinish();
+                    draggedView.animate().translationY(draggedView.getHeight())
+                            .setDuration(200)
+                            .withEndAction(() -> {
+                                if (dragListener != null) dragListener.onFinish();
+                            }).start();
+                } else if (curTrans < -draggedView.getHeight() / 4 || lastVelo < -50) {
+                    if (dragListener != null) dragListener.onAboutToFinish();
+                    draggedView.animate().translationY(-draggedView.getHeight())
+                            .setDuration(200)
+                            .withEndAction(() -> {
+                                if (dragListener != null) dragListener.onFinish();
 
+                            }).start();
+
+                } else {
+                    draggedView.animate().translationY(0)
+                            .setDuration(200)
+                            .setInterpolator(new DecelerateInterpolator())
+                            .start();
+                    if (dragListener != null) dragListener.onRelease();
+                }
                 return false;
         }
-        prey = event.getY();
-        prex = event.getX();
+        lastVelo = y - prey;
+        prey = y;
         return true;
     }
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
-        if (childScroll == null) return false;
+        if (dragHelper == null) return false;
         float y = event.getY();
-        float x = event.getX();
         boolean willIntercept = false;
         switch (event.getAction()) {
             case MotionEvent.ACTION_MOVE:
-                if (y > prey && childScroll.getScrollY() == 0) {
+                if (y > prey + 10 && dragHelper.isTopBoundReached()) {
                     willIntercept = true;
                 }
-                if (y < prey && childScroll.getScrollY() == childScroll.getChildAt(0).getHeight()) {
+                if (y < prey - 10 && dragHelper.isBottomBoundReached()) {
                     willIntercept = true;
                 }
-                break;
-            case MotionEvent.ACTION_CANCEL:
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_DOWN:
                 break;
             default:
                 break;
         }
+        lastVelo = y - prey;
         prey = y;
-        prex = x;
-
+        if (willIntercept && dragListener != null) {
+            dragListener.onStartDrag();
+        }
         return willIntercept;
     }
+
 }

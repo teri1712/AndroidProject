@@ -5,8 +5,10 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.Transformations;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Intent;
@@ -27,6 +29,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.socialmediaapp.R;
+import com.example.socialmediaapp.application.ApplicationContainer;
+import com.example.socialmediaapp.application.session.DataAccessHandler;
+import com.example.socialmediaapp.application.session.OnlineSessionHandler;
+import com.example.socialmediaapp.application.session.SessionHandler;
+import com.example.socialmediaapp.application.session.UserSessionHandler;
+import com.example.socialmediaapp.application.session.helper.PostAccessHelper;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
 import com.example.socialmediaapp.home.fragment.RegistrationFragment;
 import com.example.socialmediaapp.viewmodel.LoginFormViewModel;
@@ -100,7 +108,6 @@ public class LoginFormActivity extends AppCompatActivity {
     }
 
     private void initTouchEvent() {
-
         signupButon.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -173,7 +180,6 @@ public class LoginFormActivity extends AppCompatActivity {
                 return false;
             }
         });
-
         signupButon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -191,8 +197,8 @@ public class LoginFormActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login_form);
         initViewObject();
         initViewModel();
-        usernameEditText.setText("username");
-        passwordEditText.setText("password");
+        usernameEditText.setText("username1");
+        passwordEditText.setText("password1");
         initTouchEvent();
     }
 
@@ -237,7 +243,6 @@ public class LoginFormActivity extends AppCompatActivity {
                 }
             }
         });
-
         password.observe(this, new Observer<String>() {
             @Override
             public void onChanged(String s) {
@@ -275,7 +280,6 @@ public class LoginFormActivity extends AppCompatActivity {
                 }
             }
         });
-
         authenState.observe(this, new Observer<String>() {
             @Override
             public void onChanged(String s) {
@@ -291,13 +295,10 @@ public class LoginFormActivity extends AppCompatActivity {
             public void onChanged(String s) {
                 if (s.equals("On authentication") || s.equals("Idle")) return;
                 Toast.makeText(LoginFormActivity.this, s, Toast.LENGTH_SHORT).show();
-            }
-        });
-        authenState.observe(this, new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
                 if (s.equals("Success")) {
+                    SessionHandler sessionHandler = ApplicationContainer.getInstance().onlineSessionHandler.getUserSession();
                     Intent intent = new Intent(LoginFormActivity.this, HomePage.class);
+                    intent.putExtra("session id", sessionHandler.getId());
                     startActivity(intent);
                     finish();
                 }

@@ -1,10 +1,15 @@
 package com.example.socialmediaapp.layoutviews.items;
 
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 
 import com.example.socialmediaapp.home.fragment.SearchFragment;
 import com.example.socialmediaapp.home.fragment.main.RecentSearchFragment;
 import com.example.socialmediaapp.viewmodel.RecentSearchFragmentViewModel;
+import com.example.socialmediaapp.viewmodel.models.repo.RecentSearchRepository;
 import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
 
 public class RecentSearchItemView extends UserBasicInfoItemView {
@@ -12,10 +17,17 @@ public class RecentSearchItemView extends UserBasicInfoItemView {
         super(owner, userBasicInfo);
         eraseButton.setVisibility(VISIBLE);
         eraseButton.setOnClickListener(view -> {
+            RecentSearchItemView.this.setVisibility(GONE);
             RecentSearchFragment recentSearchFragment = (RecentSearchFragment) owner.getChildFragmentManager().findFragmentByTag("recent search");
             RecentSearchFragmentViewModel recentSearchFragmentViewModel = recentSearchFragment.getViewModel();
-            ViewGroup parent = (ViewGroup) getParent();
-            recentSearchFragmentViewModel.deleteRecentSearchItem(userBasicInfo.getAlias(), parent.indexOfChild(RecentSearchItemView.this));
+            String alias = userBasicInfo.getAlias();
+
+            RecentSearchRepository repository = recentSearchFragmentViewModel.getItemRepository();
+            repository.deleteItem(alias).observe(lifecycleOwner, s -> {
+                if (!s.equals("Success")) {
+                    RecentSearchItemView.this.setVisibility(VISIBLE);
+                }
+            });
         });
     }
 
@@ -23,8 +35,14 @@ public class RecentSearchItemView extends UserBasicInfoItemView {
     protected void actionOfOnClick() {
         RecentSearchFragment recentSearchFragment = (RecentSearchFragment) owner.getChildFragmentManager().findFragmentByTag("recent search");
         RecentSearchFragmentViewModel recentSearchFragmentViewModel = recentSearchFragment.getViewModel();
-        ViewGroup parent = (ViewGroup) getParent();
-        recentSearchFragmentViewModel.deleteRecentSearchItem(userBasicInfo.getAlias(), parent.indexOfChild(RecentSearchItemView.this));
-        super.actionOfOnClick();
+        LiveData<String> callBack = recentSearchFragmentViewModel.onClickToUserProfile(userBasicInfo.getAlias());
+        callBack.observe(lifecycleOwner, s -> {
+            if (s.equals("Success")) {
+                ViewGroup parent = (ViewGroup) getParent();
+                parent.removeView(RecentSearchItemView.this);
+            } else {
+                Toast.makeText(getContext(), s, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

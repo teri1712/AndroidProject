@@ -12,6 +12,7 @@ import com.example.socialmediaapp.viewmodel.MainCommentFragmentViewModel;
 import com.example.socialmediaapp.viewmodel.CreatePostViewModel;
 import com.example.socialmediaapp.viewmodel.EditInformationViewModel;
 import com.example.socialmediaapp.viewmodel.LoginFormViewModel;
+import com.example.socialmediaapp.viewmodel.MainMessageFragmentViewModel;
 import com.example.socialmediaapp.viewmodel.RegistrationViewModel;
 import com.example.socialmediaapp.viewmodel.SetupInformationViewModel;
 import com.example.socialmediaapp.viewmodel.UpdateAvatarViewModel;
@@ -37,12 +38,12 @@ public class ViewModelFactory extends AbstractSavedStateViewModelFactory {
             return (T) new UpdateAvatarViewModel(handle);
         } else if (modelClass.isAssignableFrom(UpdateBackgroundViewModel.class)) {
             return (T) new UpdateBackgroundViewModel(handle);
-        } else if (modelClass.isAssignableFrom(EditInformationViewModel.class)) {
-            return (T) new EditInformationViewModel(handle);
         } else if (modelClass.isAssignableFrom(SetupInformationViewModel.class)) {
             return (T) new SetupInformationViewModel(handle);
         } else if (modelClass.isAssignableFrom(RegistrationViewModel.class)) {
             return (T) new RegistrationViewModel(handle);
+        } else if (modelClass.isAssignableFrom(MainMessageFragmentViewModel.class)) {
+            return (T) new MainMessageFragmentViewModel(handle);
         }
 
         return null;

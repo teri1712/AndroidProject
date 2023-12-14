@@ -34,6 +34,10 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.socialmediaapp.R;
 import com.example.socialmediaapp.activitiy.HomePage;
 import com.example.socialmediaapp.apis.entities.requests.UpdateUserRequestBody;
+import com.example.socialmediaapp.application.ApplicationContainer;
+import com.example.socialmediaapp.application.session.OnlineSessionHandler;
+import com.example.socialmediaapp.application.session.SelfProfileSessionHandler;
+import com.example.socialmediaapp.application.session.UserSessionHandler;
 import com.example.socialmediaapp.customview.button.CircleButton;
 import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.customview.progress.dot.DotBlueProgress;
@@ -76,7 +80,6 @@ public class SetUpInformationFragment extends Fragment implements FragmentAnimat
     private SetupInformationViewModel viewModel;
     private DotBlueProgress dotProgress;
     private TextView step1_text_view, step2_text_view, step3_text_view;
-
     private EditText fullname, alias, gender, birthday;
     private TextView usernameValidation, aliasValidation, genderValidation, birhtdayValidation;
     private View avatarFrame, infoFrame, recoveryFrame;
@@ -122,21 +125,16 @@ public class SetUpInformationFragment extends Fragment implements FragmentAnimat
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
+                root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
                 avatarFrame.getLayoutParams().width = scroll.getWidth();
                 infoFrame.getLayoutParams().width = scroll.getWidth();
                 recoveryFrame.getLayoutParams().width = scroll.getWidth();
                 avatarFrame.requestLayout();
                 infoFrame.requestLayout();
                 recoveryFrame.requestLayout();
-                root.setVisibility(View.GONE);
-                root.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        //ultimate delay for smooth animation
-                        performStart();
-                    }
-                });
-                root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                performStart();
+
             }
         });
 
@@ -245,15 +243,10 @@ public class SetUpInformationFragment extends Fragment implements FragmentAnimat
                 if (s.equals("Success")) {
                     spin.setVisibility(View.GONE);
                     step3_state.switchToInProgress();
-                    performEnd(new Runnable() {
-                        @Override
-                        public void run() {
-                            FragmentTransaction fragmentTransaction = activity.getSupportFragmentManager().beginTransaction();
-                            fragmentTransaction.remove(SetUpInformationFragment.this);
-                            fragmentTransaction.commit();
-                            ViewGroup pContainer = (ViewGroup) container.getParent();
-                            pContainer.removeView(container);
-                        }
+                    performEnd(() -> {
+                        FragmentTransaction fragmentTransaction = activity.getSupportFragmentManager().beginTransaction();
+                        fragmentTransaction.remove(SetUpInformationFragment.this);
+                        fragmentTransaction.commit();
                     });
                 } else {
                     viewModel.getPostSubmitState().setValue("Idle");
@@ -273,7 +266,6 @@ public class SetUpInformationFragment extends Fragment implements FragmentAnimat
         userInfo.setBirthday("");
         viewModel.getUserInfo().setValue(userInfo);
         viewModel.getCurSession().setValue("avatar");
-
 
         fullname.addTextChangedListener(new TextWatcher() {
             @Override
@@ -335,43 +327,6 @@ public class SetUpInformationFragment extends Fragment implements FragmentAnimat
                 viewModel.getUserInfo().setValue(viewModel.getUserInfo().getValue());
             }
         });
-
-
-        viewModel.getFullname().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (!Objects.equals(s, fullname.getText().toString())) {
-                    fullname.setText(s);
-                }
-            }
-        });
-        viewModel.getAlias().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (!Objects.equals(s, alias.getText().toString())) {
-                    alias.setText(s);
-                }
-            }
-        });
-        viewModel.getGender().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (!Objects.equals(s, gender.getText().toString())) {
-                    gender.setText(s);
-                }
-
-            }
-        });
-        viewModel.getBirthday().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (!Objects.equals(s, birthday.getText().toString())) {
-                    birthday.setText(s);
-                }
-            }
-        });
-
-
         viewModel.getFullname().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
@@ -428,10 +383,14 @@ public class SetUpInformationFragment extends Fragment implements FragmentAnimat
             }
         });
 
-        initOnClick(root);
         step1_state.switchToInProgress();
-
-
+        OnlineSessionHandler.UserProfileProvider userProfileProvider = ApplicationContainer.getInstance().onlineSessionHandler.getUserProfileProvider();
+        userProfileProvider.getSelfProfile().observe(getViewLifecycleOwner(), new Observer<SelfProfileSessionHandler>() {
+            @Override
+            public void onChanged(SelfProfileSessionHandler selfProfileSessionHandler) {
+                initOnClick(selfProfileSessionHandler);
+            }
+        });
         return root;
 
     }
@@ -487,7 +446,7 @@ public class SetUpInformationFragment extends Fragment implements FragmentAnimat
         return status;
     }
 
-    private void initOnClick(View root) {
+    private void initOnClick(SelfProfileSessionHandler selfProfileSessionHandler) {
         selectAvatarButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -509,7 +468,7 @@ public class SetUpInformationFragment extends Fragment implements FragmentAnimat
                     dotProgress.nextPage();
                     ObjectAnimator.ofInt(scroll, "scrollX", scroll.getWidth() + scroll.getScrollX()).setDuration(200).start();
                 } else {
-                    viewModel.send(activity, activity.getViewModel().getUserSessionHandler());
+                    viewModel.send(activity, selfProfileSessionHandler);
                     return;
                 }
 
@@ -559,7 +518,7 @@ public class SetUpInformationFragment extends Fragment implements FragmentAnimat
     public void performStart() {
         root.setVisibility(View.VISIBLE);
         View p = (View) getView().getParent();
-        root.setTranslationY(p.getHeight() * 66 / 100);
+        root.setTranslationY(p.getHeight() / 2);
         root.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         root.animate().translationY(0).setDuration(300).setInterpolator(new DecelerateInterpolator()).withEndAction(new Runnable() {

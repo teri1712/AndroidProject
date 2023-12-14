@@ -65,7 +65,7 @@
                             android:layout_height="match_parent"
                             android:layout_margin="1dp"
                             app:background_bound="0dp"
-                            app:button_background="@drawable/suzy_avatar" />
+                            app:button_background="@drawable/big_avatar" />
 
 
                         <com.example.socialmediaapp.customview.CircleStrokeView

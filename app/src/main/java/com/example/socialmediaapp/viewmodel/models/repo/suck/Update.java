@@ -1,29 +1,17 @@
 package com.example.socialmediaapp.viewmodel.models.repo.suck;
 
-public class Update<T> {
+import java.util.HashMap;
+
+public class Update {
     public enum Op {
-        REMOVE, ADD
+        REMOVE, ADD, RECYCLE, END
     }
 
-    private Op op;
-    private T item;
-    private int pos;
+    public Op op;
+    public HashMap<String, Object> data;
 
-    public Update(Op op, T item, int pos) {
+    public Update(Op op, HashMap<String, Object> data) {
         this.op = op;
-        this.item = item;
-        this.pos = pos;
-    }
-
-    public T getItem() {
-        return item;
-    }
-
-    public int getPos() {
-        return pos;
-    }
-
-    public Op getOp() {
-        return op;
+        this.data = data;
     }
 }

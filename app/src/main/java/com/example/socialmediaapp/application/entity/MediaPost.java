@@ -1,40 +1,33 @@
 package com.example.socialmediaapp.application.entity;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.PrimaryKey;
 
+
 @Entity(foreignKeys = @ForeignKey(
         entity = Post.class,
-        parentColumns = "id",
+        parentColumns = "autoId",
         childColumns = "postId",
-        onDelete = ForeignKey.SET_NULL
+        onDelete = ForeignKey.CASCADE
 ))
 public class MediaPost {
     @PrimaryKey(autoGenerate = true)
-    private Integer id;
+    private Integer autoId;
     private Integer postId;
+
+    public Integer getAutoId() {
+        return autoId;
+    }
+
+    public void setAutoId(Integer autoId) {
+        this.autoId = autoId;
+    }
+
     private Integer mediaId;
 
-    private Integer sessionId;
-
-    public Integer getSessionId() {
-        return sessionId;
-    }
-
-    public void setSessionId(Integer sessionId) {
-        this.sessionId = sessionId;
-    }
-
     public MediaPost() {
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
     }
 
     public Integer getPostId() {

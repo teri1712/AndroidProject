@@ -1,14 +1,21 @@
 package com.example.socialmediaapp.home.fragment;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -17,12 +24,21 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.socialmediaapp.R;
+import com.example.socialmediaapp.activitiy.HomePage;
+import com.example.socialmediaapp.application.ApplicationContainer;
+import com.example.socialmediaapp.application.session.PostSessionHandler;
+import com.example.socialmediaapp.application.session.SessionHandler;
+import com.example.socialmediaapp.customview.button.LikeButton;
+import com.example.socialmediaapp.customview.button.PostButton;
 import com.example.socialmediaapp.customview.container.ClickablePanel;
+import com.example.socialmediaapp.customview.container.DragPanel;
 import com.example.socialmediaapp.customview.textview.PostContentTextVIew;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
+import com.example.socialmediaapp.layoutviews.items.PostItemView;
+import com.example.socialmediaapp.viewmodel.dunno.LikeHelper;
 import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
-import com.example.socialmediaapp.viewmodel.models.post.base.Post;
 import com.example.socialmediaapp.viewmodel.ImagePostViewModel;
+import com.example.socialmediaapp.viewmodel.models.post.base.Post;
 
 public class ViewImageFragment extends Fragment implements FragmentAnimation {
 
@@ -44,24 +60,28 @@ public class ViewImageFragment extends Fragment implements FragmentAnimation {
         return fragment;
     }
 
+    private Integer postSessionId;
+
     //i store the this fragment state in activity saved state
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(null);
         Bundle args = getArguments();
-        Integer postSessionId = args.getInt("session id");
-        viewModel = new ImagePostViewModel(postSessionId);
+        postSessionId = args.getInt("session id");
     }
 
     private ImageView zoom_out_image;
     private ClickablePanel view_image_frame;
     private View command_panel;
     private boolean command_panel_is_enable;
-    private View root;
+    private DragPanel root;
     private PostContentTextVIew statusTextView;
     private TextView fullnameTextView;
     private View backgroundPanel;
     private ImagePostViewModel viewModel;
+    private TextView cntTimeTextView, cntLikeTextView, cntCommentTextView;
+    private LikeButton like;
+    private PostButton comment;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -69,53 +89,108 @@ public class ViewImageFragment extends Fragment implements FragmentAnimation {
         if (savedInstanceState != null) {
             return null;
         }
-        root = inflater.inflate(R.layout.fragment_view_image, container, false);
-        zoom_out_image = (ImageView) root.findViewById(R.id.zoom_out_image);
-        view_image_frame = (ClickablePanel) root.findViewById(R.id.view_image_frame);
+        root = (DragPanel) inflater.inflate(R.layout.fragment_view_image, container, false);
+        zoom_out_image = root.findViewById(R.id.zoom_out_image);
+        view_image_frame = root.findViewById(R.id.view_image_frame);
         command_panel = root.findViewById(R.id.command_panel);
-        statusTextView = (PostContentTextVIew) root.findViewById(R.id.status_content);
-        fullnameTextView = (TextView) root.findViewById(R.id.fullname);
+        statusTextView = root.findViewById(R.id.status_content);
+        fullnameTextView = root.findViewById(R.id.fullname);
         backgroundPanel = root.findViewById(R.id.background_panel);
         commandContent = root.findViewById(R.id.command_content);
+        cntTimeTextView = root.findViewById(R.id.cnt_time);
+        cntLikeTextView = root.findViewById(R.id.cnt_like);
+        cntCommentTextView = root.findViewById(R.id.cnt_comment);
+        like = root.findViewById(R.id.like_button);
+        comment = root.findViewById(R.id.comment_button);
+        root.setDragHelper(new DragPanel.ChildBoundDragHelper(view_image_frame));
+
+        like.setWhite(true);
         command_panel_is_enable = true;
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                performStart();
                 root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                performStart();
             }
         });
+        root.setDragListener(new DragPanel.DragListener() {
+            @Override
+            public void onStartDrag() {
+                if (command_panel.getAlpha() != 0)
+                    command_panel.setAlpha(0);
+                if (backgroundPanel.getAlpha() != 0.9f) backgroundPanel.setAlpha(0.9f);
+            }
 
+            @Override
+            public void onDrag() {
+                float cur_stran = view_image_frame.getTranslationY();
+                int h = view_image_frame.getHeight();
+                float alpha = 1 - Math.abs(cur_stran) / h;
+                root.setAlpha(alpha);
+            }
+
+            @Override
+            public void onRelease() {
+                backgroundPanel.animate().alpha(1f).setDuration(200);
+                command_panel.animate().alpha(1f).setDuration(200);
+                root.setAlpha(1);
+
+            }
+
+            @Override
+            public void onFinish() {
+                getActivity().getSupportFragmentManager().popBackStackImmediate(getTag(), FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            }
+
+            @Override
+            public void onAboutToFinish() {
+                root.animate().alpha(0).setDuration(200).start();
+            }
+        });
         return root;
     }
 
     public void initOnClick() {
-        view_image_frame.setOnClickListener(new View.OnClickListener() {
+        viewModel.getViewCommentSessionId().observe(getViewLifecycleOwner(), new Observer<Integer>() {
             @Override
-            public void onClick(View view) {
-                if (command_panel_is_enable) {
-                    command_panel.animate().alpha(0).setDuration(300).withEndAction(new Runnable() {
-                        @Override
-                        public void run() {
-                            command_panel.setVisibility(View.GONE);
-                        }
-                    }).start();
-                } else {
-                    command_panel.setVisibility(View.VISIBLE);
-                    command_panel.animate().alpha(1).setDuration(300).start();
-                }
-                command_panel_is_enable = !command_panel_is_enable;
+            public void onChanged(Integer integer) {
+                comment.setOnClickListener(view -> {
+                    HomePage activity = (HomePage) getActivity();
+
+                    Bundle args = new Bundle();
+                    args.putInt("session id", integer);
+                    activity.openCommentFragment(args, viewModel.getTotalCountLike());
+                });
             }
+        });
+        view_image_frame.setOnClickListener(view -> {
+            if (command_panel_is_enable) {
+                command_panel.animate().alpha(0).setDuration(300).withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        command_panel.setVisibility(GONE);
+                    }
+                }).start();
+            } else {
+                command_panel.setVisibility(VISIBLE);
+                command_panel.animate().alpha(1).setDuration(300).start();
+            }
+            command_panel_is_enable = !command_panel_is_enable;
         });
     }
 
 
     @Override
     public void performEnd(Runnable endAction) {
+        ApplicationContainer.getInstance().sessionRepository.deleteIfDetached(postSessionId);
         endAction.run();
     }
 
     public void afterAnimation() {
+
+        HomePage homePage = (HomePage) getActivity();
+        viewModel = new ImagePostViewModel(postSessionId, homePage.getViewModel().getUserInfo().getValue().getFullname());
+
         viewModel.getLiveData().observe(getViewLifecycleOwner(), new Observer<Post>() {
             @Override
             public void onChanged(Post post) {
@@ -129,11 +204,63 @@ public class ViewImageFragment extends Fragment implements FragmentAnimation {
                 } else {
                     statusTextView.setStatusContent(postItem.getStatus());
                 }
+                viewModel.getLiveData().removeObserver(this);
+            }
+        });
+        viewModel.getTime().observe(getViewLifecycleOwner(), s -> cntTimeTextView.setText(s));
+        viewModel.getCountLikeContent().observe(getViewLifecycleOwner(), s -> {
+            if (s.isEmpty()) {
+                cntLikeTextView.setVisibility(GONE);
+            } else {
+                cntLikeTextView.setText(s);
+                if (cntLikeTextView.getVisibility() == GONE) {
+                    cntLikeTextView.setVisibility(VISIBLE);
+                }
+            }
+        });
+        viewModel.getCountComment().observe(getViewLifecycleOwner(), integer -> {
+            if (integer == 0) {
+                cntCommentTextView.setVisibility(GONE);
+            } else {
+                String txt = Integer.toString(integer) + " comments";
+                cntCommentTextView.setText(txt);
+                if (cntCommentTextView.getVisibility() == GONE) {
+                    cntCommentTextView.setVisibility(VISIBLE);
+                }
+            }
+        });
+        viewModel.getPostSessionHandler().observe(getViewLifecycleOwner(), new Observer<SessionHandler>() {
+            @Override
+            public void onChanged(SessionHandler sessionHandler) {
+                sessionHandler.setRetain(true);
+            }
+        });
+        viewModel.getPostSessionHandler().observe(getViewLifecycleOwner(), new Observer<SessionHandler>() {
+            @Override
+            public void onChanged(SessionHandler sessionHandler) {
+                PostSessionHandler postSessionHandler = (PostSessionHandler) sessionHandler;
+                like.initLikeView(getViewLifecycleOwner(), (MutableLiveData<Boolean>) viewModel.getLikeLiveData());
+                like.setLikeHelper(new LikeHelper() {
+                    @Override
+                    public MutableLiveData<Boolean> getLikeSync() {
+                        return postSessionHandler.getLikeSync();
+                    }
 
+                    @Override
+                    public LiveData<String> doLike() {
+                        return postSessionHandler.doLike();
+                    }
+
+                    @Override
+                    public LiveData<String> doUnLike() {
+                        return postSessionHandler.doUnLike();
+                    }
+                });
             }
         });
 
         initOnClick();
+
     }
 
     @Override
@@ -156,7 +283,7 @@ public class ViewImageFragment extends Fragment implements FragmentAnimation {
                         @Override
                         public void run() {
                             afterAnimation();
-                            command_panel.setVisibility(View.VISIBLE);
+                            command_panel.setVisibility(VISIBLE);
                             command_panel.animate().alpha(1).setDuration(150).start();
                         }
                     }).start();
@@ -180,7 +307,7 @@ public class ViewImageFragment extends Fragment implements FragmentAnimation {
             public void run() {
                 zoom_out_image.requestLayout();
                 afterAnimation();
-                command_panel.setVisibility(View.VISIBLE);
+                command_panel.setVisibility(VISIBLE);
                 command_panel.animate().alpha(1).setDuration(150).start();
             }
         }).start();

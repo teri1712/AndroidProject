@@ -69,12 +69,13 @@
             android:layout_height="55dp"
             android:layout_marginTop="15dp"
             android:drawableRight="@drawable/hide"
+            android:paddingEnd="15dp"
+
             android:gravity="center_vertical"
             android:imeOptions="actionDone"
             android:inputType="textPassword"
             android:paddingStart="20dp"
             android:paddingTop="0dp"
-            android:paddingEnd="15dp"
             android:paddingBottom="0dp"
             android:text="password"
 

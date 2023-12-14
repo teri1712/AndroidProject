@@ -5,7 +5,6 @@
     android:layout_height="wrap_content"
     android:paddingTop="7dp">
 
-
     <LinearLayout
         android:id="@+id/main_content_panel"
         android:layout_width="match_parent"
@@ -79,17 +78,18 @@
                 android:layout_gravity="center_vertical"
                 android:layout_marginLeft="10dp"
                 app:background_bound="40dp"
-                app:button_background="@drawable/user_24" />
+                app:button_background="@drawable/avatar" />
 
         </LinearLayout>
 
         <com.example.socialmediaapp.customview.textview.PostContentTextVIew
             android:id="@+id/status_content"
             android:layout_width="match_parent"
-            android:layout_height="45dp"
+            android:layout_height="37dp"
             android:layout_gravity="center_vertical"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
+            android:layout_marginBottom="10dp"
             android:fontFamily="@font/roboto"
             android:textColor="@color/black"
             android:textSize="16sp" />
@@ -99,6 +99,7 @@
             android:id="@+id/media_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/black"
             app:request_press_paint="false"></com.example.socialmediaapp.customview.container.ClickablePanel>
 
         <com.example.socialmediaapp.customview.container.ClickablePanel
@@ -121,8 +122,8 @@
                     android:layout_centerVertical="true"
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="8dp"
-                    android:drawableLeft="@drawable/facebook_reactions"
-                    android:drawablePadding="3dp"
+                    android:drawableLeft="@drawable/like"
+                    android:drawablePadding="5dp"
                     android:fontFamily="@font/roboto"
                     android:gravity="center_vertical"
                     android:paddingTop="0dp"
@@ -220,9 +221,7 @@
                 app:button_text_color="#757575"
                 app:button_text_font="@font/roboto"
                 app:button_text_size="14sp"
-                app:padding_between_text_and_background="5dp"
-
-                />
+                app:padding_between_text_and_background="5dp" />
 
 
         </LinearLayout>

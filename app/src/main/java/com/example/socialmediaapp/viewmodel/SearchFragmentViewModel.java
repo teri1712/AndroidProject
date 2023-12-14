@@ -15,6 +15,7 @@ import com.example.socialmediaapp.application.ApplicationContainer;
 import com.example.socialmediaapp.application.session.PostSessionHandler;
 import com.example.socialmediaapp.application.session.SearchSessionHandler;
 import com.example.socialmediaapp.application.session.SessionHandler;
+import com.example.socialmediaapp.application.session.UserSessionHandler;
 import com.example.socialmediaapp.application.session.ViewProfileSessionHandler;
 import com.example.socialmediaapp.services.ServiceApi;
 import com.example.socialmediaapp.viewmodel.models.post.base.Post;
@@ -27,6 +28,7 @@ public class SearchFragmentViewModel extends ViewModel {
     private MediatorLiveData<List<UserBasicInfo>> searchResult;
     private MutableLiveData<SessionHandler> searchSessionHandler;
     private LiveData<SessionHandler> recentSearchSessionHandler;
+    private MutableLiveData<String> loadSearchResultState;
     private SessionHandler.SessionRepository sessionRepository = ApplicationContainer.getInstance().sessionRepository;
     private LiveData<SessionHandler.SessionRegistry> sessionRegistry;
 
@@ -34,9 +36,9 @@ public class SearchFragmentViewModel extends ViewModel {
         super();
         searchResult = new MediatorLiveData<>();
         searchSessionHandler = sessionRepository.getSessionById(searchSessionId);
-        recentSearchSessionHandler = Transformations.switchMap(searchSessionHandler, new Function<SessionHandler, LiveData<SessionHandler>>() {
+        recentSearchSessionHandler = Transformations.map(searchSessionHandler, new Function<SessionHandler, SessionHandler>() {
             @Override
-            public LiveData<SessionHandler> apply(SessionHandler input) {
+            public SessionHandler apply(SessionHandler input) {
                 return ((SearchSessionHandler) input).getRecentSearchSession();
             }
         });
@@ -46,6 +48,7 @@ public class SearchFragmentViewModel extends ViewModel {
                 return input.getSessionRegistry();
             }
         });
+        loadSearchResultState = new MutableLiveData<>("idle");
     }
 
     public LiveData<SessionHandler> getRecentSearchSessionHandler() {
@@ -60,17 +63,24 @@ public class SearchFragmentViewModel extends ViewModel {
 
     public void searchForUser(String query) {
         SearchSessionHandler ssh = (SearchSessionHandler) searchSessionHandler.getValue();
-        final MutableLiveData<List<UserBasicInfo>> callBack = ssh.searchForUsers(query);
+        LiveData<List<UserBasicInfo>> callBack = ssh.searchForUsers(query);
         if (curSource != null) {
             searchResult.removeSource(curSource);
-            curSource = callBack;
         }
+        curSource = callBack;
+        if (loadSearchResultState.getValue().equals("idle"))
+            loadSearchResultState.setValue("loading");
         searchResult.addSource(callBack, new Observer<List<UserBasicInfo>>() {
             @Override
             public void onChanged(List<UserBasicInfo> userBasicInfos) {
+                loadSearchResultState.setValue("idle");
                 searchResult.setValue(userBasicInfos);
             }
         });
+    }
+
+    public MutableLiveData<String> getLoadSearchResultState() {
+        return loadSearchResultState;
     }
 
     public MutableLiveData<SessionHandler> getSearchSessionHandler() {

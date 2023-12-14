@@ -1,25 +1,26 @@
 package com.example.socialmediaapp.application.entity;
 
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 @Entity
 public class UserBasicInfo {
     @PrimaryKey(autoGenerate = true)
-    private int id;
+    private Integer autoId;
+
+    public Integer getAutoId() {
+        return autoId;
+    }
+
+    public void setAutoId(Integer autoId) {
+        this.autoId = autoId;
+    }
+
     private String fullname;
     private String alias;
     private String avatarUri;
-    private Integer sessionId;
-
-    public Integer getSessionId() {
-        return sessionId;
-    }
-
-    public void setSessionId(Integer sessionId) {
-        this.sessionId = sessionId;
-    }
 
     public String getAlias() {
         return alias;
@@ -30,14 +31,6 @@ public class UserBasicInfo {
     }
 
     public UserBasicInfo() {
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getAvatarUri() {

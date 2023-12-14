@@ -18,79 +18,36 @@ import com.example.socialmediaapp.application.session.UserSessionHandler;
 import java.util.HashMap;
 
 public class EditInformationViewModel extends ViewModel {
-    private SavedStateHandle savedStateHandle;
     private MediatorLiveData<String> postSubmitState;
-    private MutableLiveData<UpdateUserRequestBody> userInfo;
-
     private MutableLiveData<String> fullname, alias, gender, birthday;
 
-    public MutableLiveData<UpdateUserRequestBody> getUserInfo() {
-        return userInfo;
-    }
-
-    public EditInformationViewModel(SavedStateHandle savedStateHandle) {
+    public EditInformationViewModel() {
         super();
-        this.savedStateHandle = savedStateHandle;
         postSubmitState = new MediatorLiveData<>();
         postSubmitState.setValue("Idle");
-        userInfo = new MutableLiveData<>();
-        fullname = (MutableLiveData<String>) Transformations.switchMap(userInfo, new Function<UpdateUserRequestBody, LiveData<String>>() {
-            @Override
-            public LiveData<String> apply(UpdateUserRequestBody input) {
-                return new MutableLiveData<String>(input.getFullname());
-            }
-        });
-        alias = (MutableLiveData<String>) Transformations.switchMap(userInfo, new Function<UpdateUserRequestBody, LiveData<String>>() {
-            @Override
-            public LiveData<String> apply(UpdateUserRequestBody input) {
-                return new MutableLiveData<String>(input.getAlias());
-            }
-        });
-        gender = (MutableLiveData<String>) Transformations.switchMap(userInfo, new Function<UpdateUserRequestBody, LiveData<String>>() {
-            @Override
-            public LiveData<String> apply(UpdateUserRequestBody input) {
-                return new MutableLiveData<String>(input.getGender());
-            }
-        });
-        birthday = (MutableLiveData<String>) Transformations.switchMap(userInfo, new Function<UpdateUserRequestBody, LiveData<String>>() {
-            @Override
-            public LiveData<String> apply(UpdateUserRequestBody input) {
-                return new MutableLiveData<String>(input.getBirthday());
-            }
-        });
+        fullname = new MutableLiveData<>();
+        alias = new MutableLiveData<>();
+        gender = new MutableLiveData<>();
+        birthday = new MutableLiveData<>();
     }
 
     public MutableLiveData<String> getFullname() {
         return fullname;
     }
+
     public MutableLiveData<String> getAlias() {
         return alias;
     }
+
     public MutableLiveData<String> getGender() {
         return gender;
     }
+
     public MutableLiveData<String> getBirthday() {
         return birthday;
     }
-    public MutableLiveData<String> getPostSubmitState() {
+
+    public MediatorLiveData<String> getPostSubmitState() {
         return postSubmitState;
-    }
-    public void send(Context context, UserSessionHandler userSessionHandler) {
-        if (postSubmitState.getValue().equals("In progress")) {
-            Toast.makeText(context, "please wait until progress complete", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        postSubmitState.setValue("In progress");
-        HashMap<String, String> data =new HashMap<>();
-        data.put("fullname", fullname.getValue());
-        data.put("alias", alias.getValue());
-        data.put("gender", gender.getValue());
-        data.put("birthday", birthday.getValue());
-        postSubmitState.addSource(userSessionHandler.changeInformation(data), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                postSubmitState.setValue(s);
-            }
-        });
     }
 }

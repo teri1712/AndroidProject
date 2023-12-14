@@ -1,5 +1,8 @@
 package com.example.socialmediaapp.viewmodel;
 
+import android.se.omapi.Session;
+import android.widget.ListView;
+
 import androidx.arch.core.util.Function;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
@@ -16,12 +19,12 @@ import com.example.socialmediaapp.viewmodel.models.post.Comment;
 public class CommentDataViewModel extends DataViewModel<Comment> {
     private LiveData<SessionHandler> commentSessionHandler;
     private LiveData<Integer> countLike, countComment;
-    private MutableLiveData<Boolean> isLiked;
+    private MutableLiveData<Boolean> likeLiveData;
     private MutableLiveData<String> time;
-    private MediatorLiveData<String> countLikeContent;
     private LiveData<String> sessionState;
     private LiveData<SessionHandler.SessionRegistry> sessionRegistry;
-
+    private LiveData<SessionHandler> replyCommentsSession;
+    private MediatorLiveData<String> countLikeContent;
 
     public CommentDataViewModel(LiveData<SessionHandler> commentSessionHandler, Comment data) {
         super();
@@ -38,33 +41,33 @@ public class CommentDataViewModel extends DataViewModel<Comment> {
                 return input.getSessionRegistry();
             }
         });
+        replyCommentsSession = Transformations.switchMap(commentSessionHandler, new Function<SessionHandler, LiveData<SessionHandler>>() {
+            @Override
+            public LiveData<SessionHandler> apply(SessionHandler input) {
+                SessionHandler.SessionRepository sessionRepository = ApplicationContainer.getInstance().sessionRepository;
+                return sessionRepository.getSessionById(((CommentSessionHandler) input).getReplyCommentSessionId());
+            }
+        });
         liveData = (MutableLiveData<Comment>) Transformations.switchMap(commentSessionHandler, new Function<SessionHandler, LiveData<Comment>>() {
             @Override
             public LiveData<Comment> apply(SessionHandler input) {
                 return ((CommentSessionHandler) input).getDataSyncEmitter();
             }
         });
-
-        isLiked = new MutableLiveData<>();
-        isLiked.setValue(data.isLiked());
         time = new MutableLiveData<>();
         time.setValue(data.getTime());
 
         initLikePanelView();
-        liveData.setValue(data);
-
-
         countLikeContent = new MediatorLiveData<>();
-        countLikeContent.setValue("");
+
         countLikeContent.addSource(countLike, new Observer<Integer>() {
             @Override
             public void onChanged(Integer integer) {
-                if (integer == null || isLiked.getValue() == null) return;
-                changeCountLike(isLiked.getValue(), integer);
-
+                if (integer == null || likeLiveData.getValue() == null) return;
+                changeCountLike(likeLiveData.getValue(), integer);
             }
         });
-        countLikeContent.addSource(isLiked, new Observer<Boolean>() {
+        countLikeContent.addSource(likeLiveData, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean b) {
                 if (b == null || countLike.getValue() == null) return;
@@ -72,6 +75,15 @@ public class CommentDataViewModel extends DataViewModel<Comment> {
             }
         });
 
+    }
+
+    private void changeCountLike(boolean b, int integer) {
+        int value = integer + (b ? 1 : 0);
+        countLikeContent.setValue(value == 0 ? "" : Integer.toString(value));
+    }
+
+    public MutableLiveData<Boolean> getLikeLiveData() {
+        return likeLiveData;
     }
 
     private void initLikePanelView() {
@@ -87,29 +99,26 @@ public class CommentDataViewModel extends DataViewModel<Comment> {
                 return input.getCountComment();
             }
         });
+        likeLiveData = (MediatorLiveData<Boolean>) Transformations.switchMap(commentSessionHandler, new Function<SessionHandler, LiveData<Boolean>>() {
+            @Override
+            public LiveData<Boolean> apply(SessionHandler input) {
+                return ((CommentSessionHandler) input).getLikeSync();
+            }
+        });
     }
 
     public LiveData<SessionHandler> getCommentSessionHandler() {
         return commentSessionHandler;
     }
 
+    public LiveData<SessionHandler> getReplyCommentsSession() {
+        return replyCommentsSession;
+    }
+
     public LiveData<String> getSessionState() {
         return sessionState;
     }
 
-    private void changeCountLike(boolean b, int integer) {
-        String pref = b ? "You and " : "";
-        String suf = b ? " others" : "";
-        if (integer != 0) {
-            countLikeContent.setValue(pref + Integer.toString(integer) + suf);
-        } else {
-            if (!b) {
-                countLikeContent.setValue("");
-            } else {
-                countLikeContent.setValue(liveData.getValue().getAuthor().getFullname());
-            }
-        }
-    }
 
     public MutableLiveData<String> getTime() {
         return time;
@@ -119,16 +128,8 @@ public class CommentDataViewModel extends DataViewModel<Comment> {
         return countLikeContent;
     }
 
-    public LiveData<Integer> getCountLike() {
-        return countLike;
-    }
-
     public LiveData<Integer> getCountComment() {
         return countComment;
-    }
-
-    public MutableLiveData<Boolean> getIsLiked() {
-        return isLiked;
     }
 
 }

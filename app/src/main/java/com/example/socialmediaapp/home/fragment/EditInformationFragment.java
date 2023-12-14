@@ -12,7 +12,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -21,22 +20,30 @@ import android.widget.Toast;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.socialmediaapp.R;
 import com.example.socialmediaapp.activitiy.HomePage;
 import com.example.socialmediaapp.apis.entities.requests.UpdateUserRequestBody;
+import com.example.socialmediaapp.application.ApplicationContainer;
+import com.example.socialmediaapp.application.session.OnlineSessionHandler;
+import com.example.socialmediaapp.application.session.SelfProfileSessionHandler;
+import com.example.socialmediaapp.application.session.SessionHandler;
+import com.example.socialmediaapp.application.session.UserSessionHandler;
 import com.example.socialmediaapp.customview.button.CircleButton;
 import com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView;
 import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
 import com.example.socialmediaapp.viewmodel.EditInformationViewModel;
+import com.example.socialmediaapp.viewmodel.UserSessionViewModel;
 import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
 import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +57,6 @@ public class EditInformationFragment extends Fragment implements FragmentAnimati
 
 
     public EditInformationFragment() {
-        // Required empty public constructor
     }
 
     public static EditInformationFragment newInstance() {
@@ -68,22 +74,21 @@ public class EditInformationFragment extends Fragment implements FragmentAnimati
     private EditText oldPassword, newPassword;
     private TextView usernameValidation, aliasValidation, genderValidation, birhtdayValidation;
     private CircleButton selectAvatarButton, selectBackgroundButton, datePickerButton;
-
-    HomePage activity;
+    private HomePage activity;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        viewModel = new ViewModelProvider(this, new ViewModelFactory(this, null)).get(EditInformationViewModel.class);
+        viewModel = new EditInformationViewModel();
     }
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if (savedInstanceState != null) return null;
 
         root = inflater.inflate(R.layout.fragment_edit_information, container, false);
-        submit_button = (RoundedButton) root.findViewById(R.id.submit_button);
+
+        submit_button = root.findViewById(R.id.submit_button);
         spin = root.findViewById(R.id.spinner);
         fullname = root.findViewById(R.id.fullname_edit_text);
         alias = root.findViewById(R.id.alias_edit_text);
@@ -109,96 +114,12 @@ public class EditInformationFragment extends Fragment implements FragmentAnimati
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                performStart();
                 root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-            }
-        });
-        LiveData<UserInformation> userInfo = activity.getViewModel().getUserInfo();
-        userInfo.observe(getViewLifecycleOwner(), new Observer<UserInformation>() {
-            @Override
-            public void onChanged(UserInformation information) {
-                UpdateUserRequestBody user = new UpdateUserRequestBody();
-                user.setFullname(information.getFullname());
-                user.setAlias(information.getAlias());
-                user.setGender(information.getGender());
-                user.setBirthday(information.getBirthday());
-                viewModel.getUserInfo().setValue(user);
-            }
-        });
-        viewModel.getFullname().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (!Objects.equals(s, fullname.getText().toString())) {
-                    fullname.setText(s);
-                }
-            }
-        });
-        viewModel.getAlias().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (!Objects.equals(s, alias.getText().toString())) {
-                    alias.setText(s);
-                }
-            }
-        });
-        viewModel.getGender().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (!Objects.equals(s, gender.getText().toString())) {
-                    gender.setText(s);
-                }
-            }
-        });
-        viewModel.getBirthday().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (!Objects.equals(s, birthday.getText().toString())) {
-                    birthday.setText(s);
-                }
-            }
-        });
-        activity.getViewModel().getAvatar().observe(getViewLifecycleOwner(), new Observer<Bitmap>() {
-            @Override
-            public void onChanged(Bitmap bitmap) {
-                avatarButton.setBackgroundContent(new BitmapDrawable(getResources(), bitmap), 0);
-            }
-        });
-        activity.getViewModel().getBackground().observe(getViewLifecycleOwner(), new Observer<Bitmap>() {
-            @Override
-            public void onChanged(Bitmap bitmap) {
-                background.setImageDrawable(new BitmapDrawable(getResources(), bitmap));
+                performStart();
             }
         });
 
-        viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (s.equals("In progress")) {
-                    spin.setVisibility(View.VISIBLE);
-                } else {
-                    spin.setVisibility(View.GONE);
-                }
-
-            }
-        });
-        viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (s.equals("Idle") || s.equals("In progress"))
-                    return;
-                Toast.makeText(activity, s, Toast.LENGTH_SHORT).show();
-            }
-        });
-        viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (s.equals("Success")) {
-                    activity.finishFragment("edit information");
-                } else if (s.equals("Failed")) {
-                    viewModel.getPostSubmitState().setValue("Idle");
-                }
-            }
-        });
+        UserSessionViewModel userSessionViewModel = activity.getViewModel();
 
         fullname.addTextChangedListener(new TextWatcher() {
             @Override
@@ -257,6 +178,63 @@ public class EditInformationFragment extends Fragment implements FragmentAnimati
                 viewModel.getGender().setValue(editable.toString());
             }
         });
+        userSessionViewModel.getAvatar().observe(getViewLifecycleOwner(), new Observer<Bitmap>() {
+            @Override
+            public void onChanged(Bitmap bitmap) {
+                avatarButton.setBackgroundContent(new BitmapDrawable(getResources(), bitmap), 0);
+            }
+        });
+        userSessionViewModel.getBackground().observe(getViewLifecycleOwner(), new Observer<Bitmap>() {
+            @Override
+            public void onChanged(Bitmap bitmap) {
+                background.setImageDrawable(new BitmapDrawable(getResources(), bitmap));
+            }
+        });
+        userSessionViewModel.getFullname().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                fullname.setText(s);
+            }
+        });
+        userSessionViewModel.getAlias().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                alias.setText(s);
+            }
+        });
+        userSessionViewModel.getGender().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                gender.setText(s);
+            }
+        });
+        userSessionViewModel.getBirthday().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                birthday.setText(s);
+            }
+        });
+
+        viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                if (s.equals("In progress")) {
+                    spin.setVisibility(View.VISIBLE);
+                } else {
+                    spin.setVisibility(View.GONE);
+                }
+            }
+        });
+        viewModel.getPostSubmitState().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                if (s.equals("Idle") || s.equals("In progress"))
+                    return;
+                Toast.makeText(activity, s, Toast.LENGTH_SHORT).show();
+                viewModel.getPostSubmitState().setValue("Idle");
+            }
+        });
+
 
         viewModel.getFullname().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
@@ -270,17 +248,14 @@ public class EditInformationFragment extends Fragment implements FragmentAnimati
                     usernameValidation.setVisibility(View.GONE);
                     return;
                 }
-                if (usernameValidation.getVisibility() == View.GONE) {
-                    usernameValidation.setVisibility(View.VISIBLE);
-                    usernameValidation.setText(status);
-                }
+                usernameValidation.setText(status);
+                usernameValidation.setVisibility(View.VISIBLE);
             }
         });
         viewModel.getAlias().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
                 if (s == null || s.isEmpty()) {
-
                     usernameValidation.setVisibility(View.GONE);
                     return;
                 }
@@ -289,17 +264,14 @@ public class EditInformationFragment extends Fragment implements FragmentAnimati
                     aliasValidation.setVisibility(View.GONE);
                     return;
                 }
-                if (aliasValidation.getVisibility() == View.GONE) {
-                    aliasValidation.setVisibility(View.VISIBLE);
-                    aliasValidation.setText(status);
-                }
+                aliasValidation.setVisibility(View.VISIBLE);
+                aliasValidation.setText(status);
             }
         });
         viewModel.getGender().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
                 if (s == null || s.isEmpty()) {
-
                     usernameValidation.setVisibility(View.GONE);
                     return;
                 }
@@ -308,10 +280,8 @@ public class EditInformationFragment extends Fragment implements FragmentAnimati
                     genderValidation.setVisibility(View.GONE);
                     return;
                 }
-                if (genderValidation.getVisibility() == View.GONE) {
-                    genderValidation.setVisibility(View.VISIBLE);
-                    genderValidation.setText(status);
-                }
+                genderValidation.setVisibility(View.VISIBLE);
+                genderValidation.setText(status);
             }
         });
         viewModel.getBirthday().observe(getViewLifecycleOwner(), new Observer<String>() {
@@ -326,49 +296,19 @@ public class EditInformationFragment extends Fragment implements FragmentAnimati
                     birhtdayValidation.setVisibility(View.GONE);
                     return;
                 }
-                if (birhtdayValidation.getVisibility() == View.GONE) {
-                    birhtdayValidation.setVisibility(View.VISIBLE);
-                    birhtdayValidation.setText(status);
-                }
+                birhtdayValidation.setVisibility(View.VISIBLE);
+                birhtdayValidation.setText(status);
             }
         });
 
-        viewModel.getFullname().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (!Objects.equals(s, fullname.getText().toString())) {
-                    fullname.setText(s);
-                }
-            }
-        });
-        viewModel.getAlias().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (!Objects.equals(s, alias.getText().toString())) {
-                    alias.setText(s);
-                }
-            }
-        });
-        viewModel.getGender().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if (!Objects.equals(s, gender.getText().toString())) {
-                    gender.setText(s);
-                }
+        OnlineSessionHandler.UserProfileProvider userProfileProvider = ApplicationContainer.getInstance().onlineSessionHandler.getUserProfileProvider();
 
-            }
-        });
-        viewModel.getBirthday().observe(getViewLifecycleOwner(), new Observer<String>() {
+        userProfileProvider.getSelfProfile().observe(getViewLifecycleOwner(), new Observer<SelfProfileSessionHandler>() {
             @Override
-            public void onChanged(String s) {
-                if (!Objects.equals(s, birthday.getText().toString())) {
-                    birthday.setText(s);
-                }
+            public void onChanged(SelfProfileSessionHandler selfProfileSessionHandler) {
+                initOnClick(selfProfileSessionHandler);
             }
         });
-
-
-        initOnClick(root);
         return root;
 
     }
@@ -413,11 +353,28 @@ public class EditInformationFragment extends Fragment implements FragmentAnimati
     }
 
 
-    private void initOnClick(View root) {
+    private void initOnClick(SelfProfileSessionHandler selfProfileSessionHandler) {
         submit_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                viewModel.send(activity, activity.getViewModel().getUserSessionHandler());
+                MediatorLiveData<String> postSubmitState = viewModel.getPostSubmitState();
+                if (postSubmitState.getValue().equals("In progress")) {
+                    Toast.makeText(getContext(), "Please wait", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                postSubmitState.setValue("In progress");
+                HashMap<String, String> data = new HashMap<>();
+                data.put("fullname", viewModel.getFullname().getValue());
+                data.put("alias", viewModel.getAlias().getValue());
+                data.put("gender", viewModel.getGender().getValue());
+                data.put("birthday", viewModel.getBirthday().getValue());
+
+                LiveData<String> callBack = selfProfileSessionHandler.changeInformation(data);
+                callBack.observe(getViewLifecycleOwner(), s -> postSubmitState.addSource(callBack, s1 -> {
+                    postSubmitState.setValue(s1);
+                    postSubmitState.removeSource(callBack);
+                }));
+
             }
         });
         selectAvatarButton.setOnClickListener(new View.OnClickListener() {
@@ -441,16 +398,12 @@ public class EditInformationFragment extends Fragment implements FragmentAnimati
                 int m = c.get(Calendar.MONTH);
                 int d = c.get(Calendar.DAY_OF_MONTH);
                 DatePickerDialog datePickerDialog = new DatePickerDialog(getContext(),
-                        new DatePickerDialog.OnDateSetListener() {
-                            @Override
-                            public void onDateSet(DatePicker view, int year, int month, int day) {
-                                String date = "";
-                                date += Integer.toString(year) + "-";
-                                date += Integer.toString(month) + "-";
-                                date += Integer.toString(day);
-                                viewModel.getUserInfo().getValue().setBirthday(date);
-                                viewModel.getUserInfo().setValue(viewModel.getUserInfo().getValue());
-                            }
+                        (view1, year, month, day) -> {
+                            String date = "";
+                            date += Integer.toString(year) + "-";
+                            date += Integer.toString(month) + "-";
+                            date += Integer.toString(day);
+                            birthday.setText(date);
                         }, y, m, d);
                 datePickerDialog.show();
             }

@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import com.example.socialmediaapp.apis.MediaApi;
 import com.example.socialmediaapp.apis.entities.CommentBody;
 import com.example.socialmediaapp.apis.entities.PostBody;
+import com.example.socialmediaapp.apis.entities.ReplyCommentBody;
 import com.example.socialmediaapp.apis.entities.UserBasicInfoBody;
 import com.example.socialmediaapp.apis.entities.UserProfileBody;
 import com.example.socialmediaapp.apis.entities.UserSessionBody;
@@ -14,6 +15,7 @@ import com.example.socialmediaapp.application.ApplicationContainer;
 import com.example.socialmediaapp.application.entity.Comment;
 import com.example.socialmediaapp.application.entity.ImagePost;
 import com.example.socialmediaapp.application.entity.Post;
+import com.example.socialmediaapp.application.entity.ReplyComment;
 import com.example.socialmediaapp.application.entity.UserBasicInfo;
 import com.example.socialmediaapp.viewmodel.models.UserSession;
 import com.example.socialmediaapp.viewmodel.models.post.MediaPost;
@@ -26,9 +28,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
+import java.util.HashSet;
 
 import okhttp3.ResponseBody;
 import retrofit2.Response;
@@ -38,14 +39,14 @@ public class DtoConverter {
     private Context context;
     private Retrofit retrofit = ApplicationContainer.getInstance().retrofit;
     final private HttpExtraResolver httpExtraResolver = new HttpExtraResolver();
-    private ArrayList<String> cachedFiles;
+    private HashSet<String> cachedFiles;
 
     public DtoConverter(Context context) {
         this.context = context;
-        cachedFiles = new ArrayList<>();
+        cachedFiles = new HashSet<>();
     }
 
-    public ArrayList<String> getCachedFiles() {
+    public HashSet<String> getCachedFiles() {
         return cachedFiles;
     }
 
@@ -59,41 +60,44 @@ public class DtoConverter {
         p.setLiked(postBody.isLiked());
         p.setStatus(postBody.getStatus());
         p.setTime(postBody.getTime());
-        p.setType(postBody.getType());
-        p.setSessionId(sessionId);
         res.put("post", p);
 
         Integer mediaId = postBody.getMediaId();
 
-        if (Objects.equals("image", postBody.getType())) {
+        if (postBody.getType().startsWith("image")) {
             ImagePost imagePost = new ImagePost();
-            imagePost.setPostId(p.getId());
             imagePost.setImageUri(httpExtraResolver.cacheImageFile(sessionId, mediaId));
             res.put("image post", imagePost);
-            imagePost.setSessionId(sessionId);
-        } else {
+            p.setType("image");
+        } else if (postBody.getType().startsWith("video")) {
             com.example.socialmediaapp.application.entity.MediaPost mediaPost = new com.example.socialmediaapp.application.entity.MediaPost();
-            mediaPost.setPostId(p.getId());
             mediaPost.setMediaId(mediaId);
             res.put("media post", mediaPost);
-            mediaPost.setSessionId(sessionId);
+            p.setType("video");
+        } else {
+            p.setType("text");
         }
-
         res.put("user basic info", convertToUserBasicInfo(postBody.getAuthor(), sessionId));
 
         return res;
     }
 
     public com.example.socialmediaapp.viewmodel.models.post.base.Post convertToModelPost(PostBody postBody) throws IOException {
+        if (postBody == null) return null;
         com.example.socialmediaapp.viewmodel.models.post.base.Post post = null;
-        if (postBody.getType().equals("image")) {
+        if (postBody.getType().startsWith("image")) {
             com.example.socialmediaapp.viewmodel.models.post.ImagePost imagePost = new com.example.socialmediaapp.viewmodel.models.post.ImagePost();
             imagePost.setImage(httpExtraResolver.getImageBitmap(postBody.getMediaId()));
             post = imagePost;
-        } else if (post.getType().equals("media")) {
+            post.setType("image");
+        } else if (postBody.getType().startsWith("video")) {
             MediaPost mediaPost = new MediaPost();
             mediaPost.setMediaId(postBody.getMediaId());
             post = mediaPost;
+            post.setType("video");
+        } else {
+            post = new com.example.socialmediaapp.viewmodel.models.post.base.Post();
+            post.setType("text");
         }
         post.setId(postBody.getId());
         post.setAuthor(convertToModelUserBasicInfo(postBody.getAuthor()));
@@ -102,7 +106,6 @@ public class DtoConverter {
         post.setLikeCount(postBody.getLikeCount());
         post.setStatus(postBody.getStatus());
         post.setTime(postBody.getTime());
-        post.setType(postBody.getType());
         return post;
     }
 
@@ -110,7 +113,6 @@ public class DtoConverter {
         UserBasicInfo userBasicInfo = new UserBasicInfo();
         userBasicInfo.setFullname(userBasicInfoBody.getFullname());
         userBasicInfo.setAlias(userBasicInfoBody.getAlias());
-        userBasicInfo.setSessionId(sessionId);
         userBasicInfo.setAvatarUri(httpExtraResolver.cacheImageFile(sessionId, userBasicInfoBody.getAvatarId()));
         return userBasicInfo;
     }
@@ -127,11 +129,13 @@ public class DtoConverter {
     public HashMap<String, Object> convertToComment(CommentBody commentBody, Integer sessionId) throws IOException {
         HashMap<String, Object> m = new HashMap<>();
         Comment comment = new Comment();
+        comment.setId(commentBody.getId());
         comment.setContent(commentBody.getContent());
         comment.setTime(commentBody.getTime());
         comment.setLiked(commentBody.isLiked());
         comment.setLikeCount(commentBody.getCountLike());
-        comment.setSessionId(sessionId);
+        comment.setCommentCount(commentBody.getCountComment());
+        comment.setImageUri(httpExtraResolver.cacheImageFile(sessionId, commentBody.getMediaId()));
         m.put("comment", comment);
         UserBasicInfo userBasicInfo = convertToUserBasicInfo(commentBody.getAuthor(), sessionId);
         m.put("user basic info", userBasicInfo);
@@ -150,6 +154,33 @@ public class DtoConverter {
         return comment;
     }
 
+    public HashMap<String, Object> convertToReplyComment(ReplyCommentBody commentBody, Integer sessionId) throws IOException {
+        HashMap<String, Object> m = new HashMap<>();
+        ReplyComment comment = new ReplyComment();
+        comment.setId(commentBody.getId());
+        comment.setContent(commentBody.getContent());
+        comment.setTime(commentBody.getTime());
+        comment.setLiked(commentBody.isLiked());
+        comment.setLikeCount(commentBody.getCountLike());
+        comment.setImageUri(httpExtraResolver.cacheImageFile(sessionId, commentBody.getMediaId()));
+        m.put("comment", comment);
+        UserBasicInfo userBasicInfo = convertToUserBasicInfo(commentBody.getAuthor(), sessionId);
+        m.put("user basic info", userBasicInfo);
+        return m;
+    }
+
+
+    public com.example.socialmediaapp.viewmodel.models.post.ReplyComment convertToModelReplyComment(ReplyCommentBody commentBody) throws IOException {
+        com.example.socialmediaapp.viewmodel.models.post.ReplyComment comment = new com.example.socialmediaapp.viewmodel.models.post.ReplyComment();
+        comment.setSender(convertToModelUserBasicInfo(commentBody.getAuthor()));
+        comment.setId(commentBody.getId());
+        comment.setContent(commentBody.getContent());
+        comment.setTime(commentBody.getTime());
+        comment.setCountLike(commentBody.getCountLike());
+        comment.setImage(httpExtraResolver.getImageBitmap(commentBody.getMediaId()));
+        return comment;
+    }
+
     public UserSession convertToUserSession(UserSessionBody userSessionBody) throws IOException {
         UserInformation userInformation = new UserInformation();
         userInformation.setFullname(userSessionBody.getUserInfo().getFullname());
@@ -163,26 +194,36 @@ public class DtoConverter {
         return userSession;
     }
 
-    public UserProfile convertToUserProfile(UserProfileBody userProfileBody) {
+    public UserProfile convertToUserProfile(UserProfileBody userProfileBody) throws IOException {
         UserProfile userProfile = (userProfileBody.getType().equals("self")) ? new SelfProfile() : new NotMeProfile();
-        userProfile.setFullname(userProfile.getFullname());
-        userProfile.setAlias(userProfile.getAlias());
-        userProfile.setGender(userProfile.getGender());
-        userProfile.setBirthday(userProfile.getBirthday());
-
+        userProfile.setFullname(userProfileBody.getFullname());
+        userProfile.setAlias(userProfileBody.getAlias());
+        userProfile.setGender(userProfileBody.getGender());
+        userProfile.setBirthday(userProfileBody.getBirthday());
+        if (userProfile instanceof NotMeProfile) {
+            NotMeProfile notMeProfile = (NotMeProfile) userProfile;
+            notMeProfile.setType(userProfileBody.getType());
+        }
+        userProfile.setAvatarPost((com.example.socialmediaapp.viewmodel.models.post.ImagePost) convertToModelPost(userProfileBody.getAvatarPost()));
+        userProfile.setBackgroundPost((com.example.socialmediaapp.viewmodel.models.post.ImagePost) convertToModelPost(userProfileBody.getBackgroundPost()));
         return userProfile;
 
     }
 
     private class HttpExtraResolver {
+        private Integer ord = 0;
 
         private String cacheImageFile(Integer sessionId, Integer mediaId) throws IOException {
             if (mediaId == null) return null;
             File cacheDir = context.getCacheDir();
-            File cache = new File(cacheDir, Integer.toString(sessionId) + "#" + Integer.toString(mediaId));
+            File sessionDir = new File(cacheDir, "SessionCache#" + Integer.toString(sessionId));
+            if (!sessionDir.exists()) {
+                sessionDir.mkdir();
+            }
+            File cache = new File(sessionDir, "image" + Integer.toString(ord++));
             cache.createNewFile();
             FileOutputStream fos = new FileOutputStream(cache);
-            Response<ResponseBody> img = retrofit.create(MediaApi.class).getImage(mediaId).execute();
+            Response<ResponseBody> img = retrofit.create(MediaApi.class).loadImage(mediaId).execute();
             InputStream is = img.body().byteStream();
             byte[] buffer = new byte[2048];
             int cur = 0;
@@ -200,7 +241,7 @@ public class DtoConverter {
 
         private Bitmap getImageBitmap(Integer mediaId) throws IOException {
             if (mediaId == null) return null;
-            Response<ResponseBody> res = retrofit.create(MediaApi.class).getImage(mediaId).execute();
+            Response<ResponseBody> res = retrofit.create(MediaApi.class).loadImage(mediaId).execute();
             byte[] img = res.body().bytes();
             return BitmapFactory.decodeByteArray(img, 0, img.length);
         }

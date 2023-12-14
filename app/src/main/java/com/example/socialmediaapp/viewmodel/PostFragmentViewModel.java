@@ -19,23 +19,21 @@ import com.example.socialmediaapp.viewmodel.models.repo.Repository;
 import com.example.socialmediaapp.viewmodel.models.repo.suck.Update;
 
 import java.util.HashMap;
-import java.util.List;
 
 public class PostFragmentViewModel extends ViewModel {
 
     private Repository<Post> postRepository;
     private SessionHandler.SessionRegistry sessionRegistry;
     private MutableLiveData<String> sessionState;
-    private MediatorLiveData<Update<Post>> postUpdate;
-    private MutableLiveData<Boolean> loadPostState;
+    private MediatorLiveData<Boolean> loadPostState;
+    private boolean paused;
 
     public PostFragmentViewModel(DataAccessHandler<Post> dataAccessHandler) {
-        super();
         postRepository = new Repository<>(dataAccessHandler);
         sessionRegistry = dataAccessHandler.getSessionRegistry();
         sessionState = dataAccessHandler.getSessionState();
-        postUpdate = new MediatorLiveData<>();
-        loadPostState = new MutableLiveData<>();
+        loadPostState = new MediatorLiveData<>();
+        paused = false;
     }
 
     public MutableLiveData<String> getSessionState() {
@@ -53,56 +51,41 @@ public class PostFragmentViewModel extends ViewModel {
         });
     }
 
-    public void deletePostSession(int postSessionId, int posInParent) {
-        sessionRegistry.unBindSession(postSessionId);
-        postUpdate.postValue(new Update<>(Update.Op.REMOVE, null, posInParent));
-    }
-
-    public LiveData<String> uploadPost(Bundle data) {
-        LiveData<HashMap<String, Object>> result = postRepository.uploadNewItem(data);
-        LiveData<String> callBack = Transformations.map(result, new Function<HashMap<String, Object>, String>() {
-            @Override
-            public String apply(HashMap<String, Object> input) {
-                return (String) input.get("status");
-            }
+    public LiveData<HashMap<String, Object>> uploadPost(Bundle data) {
+        LiveData<String> result = postRepository.uploadNewItem(data);
+        MediatorLiveData<HashMap<String, Object>> callBack = new MediatorLiveData<>();
+        callBack.addSource(result, s -> {
+            HashMap<String, Object> m = new HashMap<>();
+            m.put("status", s);
+            m.put("item", postRepository.get(0));
+            callBack.setValue(m);
         });
-        postUpdate.addSource(result, new Observer<HashMap<String, Object>>() {
-            @Override
-            public void onChanged(HashMap<String, Object> hashMap) {
-                String status = (String) hashMap.get("status");
-                Post item = (Post) hashMap.get("item");
-
-                if (status.equals("Success")) {
-                    postUpdate.setValue(new Update<>(Update.Op.ADD, item, 0));
-                }
-                postUpdate.removeSource(result);
-            }
-        });
-
         return callBack;
     }
 
-    public void loadPosts() {
+    public void load(int cnt) {
+        if (loadPostState.getValue() || paused) return;
         loadPostState.setValue(true);
-        Bundle query = new Bundle();
-        MutableLiveData<List<Post>> callBack = postRepository.fetchNewItems(query);
-        postUpdate.addSource(callBack, new Observer<List<Post>>() {
-            @Override
-            public void onChanged(List<Post> posts) {
-                for (Post p : posts) {
-                    postUpdate.setValue(new Update<>(Update.Op.ADD, p, -1));
-                }
-                postUpdate.removeSource(callBack);
-                loadPostState.setValue(false);
-            }
+
+        LiveData<String> callBack = postRepository.loadNewItems(cnt);
+        loadPostState.addSource(callBack, length -> {
+            loadPostState.setValue(false);
         });
+    }
+
+    public void loadEntrance() {
+        load(5);
     }
 
     public MutableLiveData<Boolean> getLoadPostState() {
         return loadPostState;
     }
 
-    public MediatorLiveData<Update<Post>> getPostUpdate() {
-        return postUpdate;
+    public LiveData<String> recycle() {
+        return postRepository.recycle();
+    }
+
+    public Repository<Post> getPostRepository() {
+        return postRepository;
     }
 }

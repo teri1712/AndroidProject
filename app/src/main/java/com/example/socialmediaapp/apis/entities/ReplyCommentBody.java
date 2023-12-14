@@ -1,7 +1,7 @@
 package com.example.socialmediaapp.apis.entities;
 
 public class ReplyCommentBody {
-    private UserBasicInfoBody sender;
+    private UserBasicInfoBody author;
     private Integer id;
     private String content;
     private Integer mediaId;
@@ -40,12 +40,12 @@ public class ReplyCommentBody {
         return id;
     }
 
-    public UserBasicInfoBody getSender() {
-        return sender;
+    public UserBasicInfoBody getAuthor() {
+        return author;
     }
 
-    public void setSender(UserBasicInfoBody sender) {
-        this.sender = sender;
+    public void setAuthor(UserBasicInfoBody author) {
+        this.author = author;
     }
 
     public void setId(Integer id) {

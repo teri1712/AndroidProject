@@ -11,20 +11,25 @@ import com.example.socialmediaapp.application.ApplicationContainer;
 import com.example.socialmediaapp.application.session.PostSessionHandler;
 import com.example.socialmediaapp.application.session.SessionHandler;
 import com.example.socialmediaapp.viewmodel.models.post.base.Post;
+import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
 
 public class PostDataViewModel extends DataViewModel<Post> {
     private LiveData<SessionHandler> postSessionHandler;
     private LiveData<Integer> viewCommentSessionId;
     private LiveData<String> sessionState;
     private LiveData<Integer> countLike, countComment, countShare;
-    private MutableLiveData<Boolean> isLiked;
-    private MutableLiveData<String> time;
+    private LiveData<Boolean> likeLiveData;
+    private LiveData<String> time;
     private MediatorLiveData<String> countLikeContent;
     private LiveData<Integer> postSessionId;
+    private MediatorLiveData<Integer> totalCountLike;
+    private LiveData<UserBasicInfo> author;
+    private LiveData<String> userHostName;
 
-    public PostDataViewModel(LiveData<SessionHandler> postSessionHandler, Post data) {
+    public PostDataViewModel(LiveData<SessionHandler> postSessionHandler, LiveData<String> fullname) {
         super();
         this.postSessionHandler = postSessionHandler;
+        this.userHostName = fullname;
         viewCommentSessionId = Transformations.map(postSessionHandler, new Function<SessionHandler, Integer>() {
             @Override
             public Integer apply(SessionHandler input) {
@@ -49,28 +54,54 @@ public class PostDataViewModel extends DataViewModel<Post> {
                 return ((PostSessionHandler) input).getDataSyncEmitter();
             }
         });
-        isLiked = new MutableLiveData<>();
-        isLiked.setValue(data.isLiked());
-        time = new MutableLiveData<>();
-        time.setValue(data.getTime());
-        countLikeContent = new MediatorLiveData<>();
-        countLikeContent.setValue("");
+        author = Transformations.map(liveData, new Function<Post, UserBasicInfo>() {
+            @Override
+            public UserBasicInfo apply(Post input) {
+                return input.getAuthor();
+            }
+        });
+        time = Transformations.map(liveData, new Function<Post, String>() {
+            @Override
+            public String apply(Post input) {
+                return input.getTime();
+            }
+        });
         initLikePanelView();
+
+        countLikeContent = new MediatorLiveData<>();
         countLikeContent.addSource(countLike, new Observer<Integer>() {
             @Override
             public void onChanged(Integer integer) {
-                if (integer == null || isLiked.getValue() == null) return;
-                changeCountLike(isLiked.getValue(), integer);
+                if (integer == null || likeLiveData.getValue() == null) return;
+                changeCountLike(likeLiveData.getValue(), integer);
             }
         });
-        countLikeContent.addSource(isLiked, new Observer<Boolean>() {
+        countLikeContent.addSource(likeLiveData, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean b) {
                 if (b == null || countLike.getValue() == null) return;
                 changeCountLike(b, countLike.getValue());
             }
         });
-        liveData.setValue(data);
+
+        totalCountLike = new MediatorLiveData<>();
+        totalCountLike.setValue(0);
+        totalCountLike.addSource(countLike, new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer integer) {
+                totalCountLike.setValue(integer);
+            }
+        });
+        totalCountLike.addSource(likeLiveData, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean aBoolean) {
+                Integer cnt = countLike.getValue();
+                if (cnt == null) return;
+                cnt += (aBoolean) ? 1 : 0;
+                totalCountLike.setValue(cnt);
+            }
+        });
+
     }
 
     public LiveData<Integer> getPostSessionId() {
@@ -82,6 +113,7 @@ public class PostDataViewModel extends DataViewModel<Post> {
     }
 
     private void initLikePanelView() {
+
         countLike = Transformations.map(liveData, new Function<Post, Integer>() {
             @Override
             public Integer apply(Post input) {
@@ -100,31 +132,48 @@ public class PostDataViewModel extends DataViewModel<Post> {
                 return input.getShareCount();
             }
         });
+        likeLiveData = Transformations.switchMap(postSessionHandler, new Function<SessionHandler, LiveData<Boolean>>() {
+            @Override
+            public LiveData<Boolean> apply(SessionHandler input) {
+                return ((PostSessionHandler) input).getLikeSync();
+            }
+        });
     }
 
     private void changeCountLike(boolean b, int integer) {
         String pref = b ? "You and " : "";
         String suf = b ? " others" : "";
         if (integer != 0) {
-            countLikeContent.setValue(pref + Integer.toString(integer) + suf);
+            countLikeContent.setValue(pref + integer + suf);
         } else {
             if (!b) {
                 countLikeContent.setValue("");
             } else {
-                countLikeContent.setValue(liveData.getValue().getAuthor().getFullname());
+                countLikeContent.addSource(userHostName, s -> {
+                    countLikeContent.setValue(s);
+                    countLikeContent.removeSource(userHostName);
+                });
             }
         }
+    }
+
+    public LiveData<Boolean> getLikeLiveData() {
+        return likeLiveData;
     }
 
     public LiveData<Integer> getViewCommentSessionId() {
         return viewCommentSessionId;
     }
 
-    public MutableLiveData<String> getTime() {
+    public LiveData<Integer> getTotalCountLike() {
+        return totalCountLike;
+    }
+
+    public LiveData<String> getTime() {
         return time;
     }
 
-    public MediatorLiveData<String> getCountLikeContent() {
+    public LiveData<String> getCountLikeContent() {
         return countLikeContent;
     }
 
@@ -140,7 +189,7 @@ public class PostDataViewModel extends DataViewModel<Post> {
         return countShare;
     }
 
-    public MutableLiveData<Boolean> getIsLiked() {
-        return isLiked;
+    public LiveData<UserBasicInfo> getAuthor() {
+        return author;
     }
 }

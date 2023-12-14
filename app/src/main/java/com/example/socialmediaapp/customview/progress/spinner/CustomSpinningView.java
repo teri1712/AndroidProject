@@ -50,7 +50,7 @@ public class CustomSpinningView extends View {
                 attrs,
                 R.styleable.normal_button);
         try {
-            color = a.getColor(R.styleable.normal_button_button_background_color, Color.argb(255, 0x08, 0x66, 0xFF));
+            color = a.getColor(R.styleable.normal_button_button_background_color, Color.rgb(0x08, 0x66, 0xFF));
         } finally {
             a.recycle();
         }
@@ -65,6 +65,10 @@ public class CustomSpinningView extends View {
         } else {
             performEndLoadingAnimation();
         }
+    }
+
+    public void setColor(int color) {
+        this.color = color;
     }
 
 

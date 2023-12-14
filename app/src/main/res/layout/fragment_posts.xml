@@ -6,13 +6,21 @@
     android:layout_height="match_parent"
     tools:context=".home.fragment.main.PostFragment">
 
-    <LinearLayout
+    <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+        android:id="@+id/load_spinner"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="5dp"
+        app:button_background_color="#757575" />
+
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/posts_panel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
 
 
-    </LinearLayout>
+    </androidx.recyclerview.widget.RecyclerView>
 
 </FrameLayout>

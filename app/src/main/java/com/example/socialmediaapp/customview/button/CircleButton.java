@@ -111,7 +111,7 @@ public class CircleButton extends View {
 
 
         Path clipped = new Path();
-        clipped.addCircle(w / 2, w / 2, w / 2, Path.Direction.CCW);
+        clipped.addCircle(w / 2, w / 2, w / 2, Path.Direction.CW);
         canvas.clipPath(clipped);
         if (bg_color != -1) {
             Paint p = new Paint();

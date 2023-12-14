@@ -19,13 +19,17 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.socialmediaapp.activitiy.HomePage;
 import com.example.socialmediaapp.R;
+import com.example.socialmediaapp.application.session.SessionHandler;
+import com.example.socialmediaapp.application.session.UserSessionHandler;
 import com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView;
 import com.example.socialmediaapp.customview.button.RoundedButton;
 import com.example.socialmediaapp.home.fragment.animations.FragmentAnimation;
 import com.example.socialmediaapp.home.fragment.main.MainPostFragment;
 import com.example.socialmediaapp.home.fragment.main.PostFragment;
+import com.example.socialmediaapp.layoutviews.items.PostItemView;
 import com.example.socialmediaapp.viewmodel.PostFragmentViewModel;
 import com.example.socialmediaapp.viewmodel.UpdateAvatarViewModel;
+import com.example.socialmediaapp.viewmodel.UserSessionViewModel;
 import com.example.socialmediaapp.viewmodel.factory.ViewModelFactory;
 import com.google.android.material.internal.ManufacturerUtils;
 
@@ -78,6 +82,8 @@ public class UpdateAvatarFragment extends Fragment implements FragmentAnimation 
         back_button = root.findViewById(R.id.back_button);
         imageView = root.findViewById(R.id.iamge_view);
         spinner = root.findViewById(R.id.spinner);
+        back_button = root.findViewById(R.id.back_button);
+
         homePage = (HomePage) getActivity();
 
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -86,13 +92,6 @@ public class UpdateAvatarFragment extends Fragment implements FragmentAnimation 
                 ViewGroup.LayoutParams params = imageView.getLayoutParams();
                 params.height = root.getWidth();
                 imageView.requestLayout();
-            }
-        });
-        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                performStart();
-                root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
             }
         });
         viewModel.getImageUri().observe(getViewLifecycleOwner(), new Observer<Uri>() {
@@ -142,15 +141,18 @@ public class UpdateAvatarFragment extends Fragment implements FragmentAnimation 
                 viewModel.getPostStatusContent().setValue(editable.toString());
             }
         });
-        initOnClick(root);
+        initOnClick();
         return root;
 
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        performStart();
+    }
 
-    private void initOnClick(View root) {
-
-        back_button = root.findViewById(R.id.back_button);
+    private void initOnClick() {
         back_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -169,19 +171,13 @@ public class UpdateAvatarFragment extends Fragment implements FragmentAnimation 
 
                 Uri uri = viewModel.getImageUri().getValue();
                 Bundle data = new Bundle();
-                data.putString("status", viewModel.getPostStatusContent().getValue());
+                data.putString("post content", viewModel.getPostStatusContent().getValue());
                 data.putString("type", "avatar");
-                data.putString("media content", (uri == null) ? null : uri.toString());
-                MainPostFragment mainPostFragment = (MainPostFragment) (getActivity().getSupportFragmentManager().findFragmentByTag("post fragment"));
-                PostFragment postFragment = (PostFragment) mainPostFragment.getChildFragmentManager().findFragmentByTag("posts");
-                PostFragmentViewModel postFragmentViewModel = postFragment.getViewModel();
-                postFragmentViewModel.uploadPost(data).observe(getViewLifecycleOwner(), new Observer<String>() {
-                    @Override
-                    public void onChanged(String s) {
-                        postSubmitState.setValue(s);
-                        if (s.equals("Success")) {
-                            homePage.finishFragment("update avatar");
-                        }
+                data.putString("media content", uri.toString());
+                homePage.updateAvatar(data).observe(getViewLifecycleOwner(), s -> {
+                    postSubmitState.setValue(s);
+                    if (s.equals("Success")) {
+                        homePage.finishFragment("update avatar");
                     }
                 });
             }
@@ -191,15 +187,11 @@ public class UpdateAvatarFragment extends Fragment implements FragmentAnimation 
 
     @Override
     public void performEnd(Runnable endAction) {
-        root.animate().translationY(root.getHeight()).setDuration(200).withEndAction(new Runnable() {
-            @Override
-            public void run() {
-                endAction.run();
-            }
-        }).start();
+        root.animate().translationY(root.getHeight()).setDuration(200).withEndAction(() -> endAction.run()).start();
     }
 
     @Override
     public void performStart() {
+        post_status_edit_text.requestFocus();
     }
 }

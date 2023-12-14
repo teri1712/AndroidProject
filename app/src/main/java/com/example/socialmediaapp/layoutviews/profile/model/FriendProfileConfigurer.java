@@ -13,14 +13,14 @@ public class FriendProfileConfigurer extends Configurer {
     private RoundedButton left, right;
 
     public FriendProfileConfigurer(NotMeProfileView profileView, ViewProfileSessionHandler handler) {
-        super(profileView.getContext(),handler);
+        super(profileView.getContext(), handler);
         this.profileView = profileView;
-        right = profileView.getBlueButton();
-        left = profileView.getGreyButton();
     }
 
     @Override
     public void configure() {
+        right = profileView.getGreyButton();
+        left = profileView.getBlueButton();
         left.setTextContent("Friend");
         left.setTextContentColor(Color.BLACK);
         left.setBackgroundColor(Color.argb(15, 0, 0, 0));

@@ -48,6 +48,7 @@ import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
 import com.example.socialmediaapp.viewmodel.UserSessionViewModel;
 import com.google.android.material.internal.ManufacturerUtils;
 
+import java.util.HashMap;
 import java.util.Objects;
 
 public class CreatePostFragment extends Fragment implements FragmentAnimation {
@@ -76,7 +77,6 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
     private EditText post_status_edit_text;
     private ActivityResultLauncher<String> pick_media_content;
     private HomePage homePage;
-
     private CustomSpinningView spinner;
 
     @Override
@@ -108,20 +108,13 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                ViewGroup edit_panel = (ViewGroup) root.findViewById(R.id.edit_panel);
+                ViewGroup edit_panel = root.findViewById(R.id.edit_panel);
                 View pad = new View(getContext());
                 int w = ViewGroup.LayoutParams.MATCH_PARENT;
                 int h = media_picker_panel.getHeight();
                 ViewGroup.LayoutParams params = new LinearLayout.LayoutParams(w, h);
                 pad.setLayoutParams(params);
                 edit_panel.addView(pad);
-                root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-            }
-        });
-        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                performStart();
                 root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
             }
         });
@@ -137,6 +130,12 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
         });
         return root;
 
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        performStart();
     }
 
     private void initViewModel() {
@@ -206,7 +205,6 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
                         displayVideoThumbnail(uri);
                     }
                     media_container.setVisibility(View.VISIBLE);
-                    viewModel.getMediaContent().setValue(uri);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -307,18 +305,18 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
                 Uri uri = viewModel.getMediaContent().getValue();
 
                 Bundle data = new Bundle();
-                data.putString("status", viewModel.getPostStatusContent().getValue());
+                data.putString("post content", viewModel.getPostStatusContent().getValue());
                 data.putString("type", "post");
                 data.putString("media content", (uri == null) ? null : uri.toString());
                 MainPostFragment mainPostFragment = (MainPostFragment) getActivity().getSupportFragmentManager().findFragmentByTag("post fragment");
                 PostFragment postFragment = (PostFragment) (mainPostFragment.getChildFragmentManager().findFragmentByTag("posts"));
                 PostFragmentViewModel postFragmentViewModel = postFragment.getViewModel();
-                LiveData<String> callBack = postFragmentViewModel.uploadPost(data);
-                callBack.observe(getViewLifecycleOwner(), new Observer<String>() {
+                LiveData<HashMap<String, Object>> callBack = postFragmentViewModel.uploadPost(data);
+                callBack.observe(getViewLifecycleOwner(), new Observer<HashMap<String, Object>>() {
                     @Override
-                    public void onChanged(String s) {
+                    public void onChanged(HashMap<String, Object> hashMap) {
+                        String s = (String) hashMap.get("status");
                         postSubmitState.setValue(s);
-
                         if (s.equals("Success")) {
                             homePage.finishFragment("create post");
                         }
@@ -330,18 +328,18 @@ public class CreatePostFragment extends Fragment implements FragmentAnimation {
 
     @Override
     public void performEnd(Runnable endAction) {
-        root.animate().translationY(root.getHeight()).setDuration(200).withEndAction(new Runnable() {
-            @Override
-            public void run() {
-                endAction.run();
-            }
-        }).start();
+        root.animate().translationY(root.getHeight()).setDuration(200).withEndAction(() -> endAction.run()).start();
     }
 
     @Override
     public void performStart() {
+        post_status_edit_text.requestFocus();
+
         View p = (View) getView().getParent();
-        root.setTranslationY(p.getHeight() / 2);
-        root.animate().translationY(0).setDuration(300).setInterpolator(new DecelerateInterpolator()).start();
+        root.setTranslationY(p.getHeight() / 1.5f);
+        root.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        root.animate().translationY(0).setDuration(300)
+                .withEndAction(() -> root.setLayerType(View.LAYER_TYPE_NONE, null))
+                .setInterpolator(new DecelerateInterpolator()).start();
     }
 }

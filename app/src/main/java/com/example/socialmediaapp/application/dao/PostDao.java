@@ -13,30 +13,40 @@ import com.example.socialmediaapp.application.entity.Post;
 import java.util.List;
 
 @Dao
-public interface PostDao {
+public abstract class PostDao {
+  @Query("select * from Post where sessionId = :sessionId and ord = (select max(ord) from Post where sessionId = :sessionId)")
+  public abstract Post findLastPostOfUser(Integer sessionId);
 
-    @Query("select * from Post where ord > :countLoaded and sessionId = :sessionId")
-    List<Post> getPosts(int countLoaded,Integer sessionId);
+  @Query("select * from Post where sessionId = :sessionId and ord > :lastOrder order by ord asc limit :length")
+  public abstract List<Post> loadPostsByOrder(int lastOrder, Integer sessionId, Integer length);
 
-    @Query("delete from Post where sessionId = :sessionId")
-    void deleteAllPost(Integer sessionId);
-    @Query("delete from ImagePost where sessionId = :sessionId")
-    void deleteAllImagePost(Integer sessionId);
-    @Query("delete from MediaPost where sessionId = :sessionId")
-    void deleteAllMediaPost(Integer sessionId);
+  @Query("select * from Post where sessionId = :sessionId")
+  public abstract List<Post> findAllBySession(Integer sessionId);
 
-    @Insert
-    void insert(Post post);
+  @Query("select * from Post where sessionId = :sessionId and ord <= :bound")
+  public abstract List<Post> findAllPostByBound(Integer sessionId, Integer bound);
 
-    @Insert
-    void insertMediaPost(MediaPost mediaPost);
+  @Query("select * from Post where id=:postId and sessionId = :sessionId")
+  public abstract Post findPostById(Integer postId, Integer sessionId);
 
-    @Insert
-    void insertImagePost(ImagePost imagePost);
-    @Query("select * from ImagePost ip where ip.postId = :id")
-    ImagePost findImagePostByPost(Integer id);
+  @Query("select * from ImagePost where postId = :postId")
+  public abstract ImagePost findImagePostByPostId(Integer postId);
 
-    @Query("select * from MediaPost mp where mp.postId = :id")
-    MediaPost findMediaPostByPost(Integer id);
+  @Query("select * from MediaPost where postId = :postId")
+  public abstract MediaPost findMediaPostByPostId(Integer postId);
 
+  @Insert
+  public abstract long insert(Post post);
+
+  @Insert
+  public abstract void insertMediaPost(MediaPost mediaPost);
+
+  @Insert
+  public abstract void insertImagePost(ImagePost imagePost);
+
+  @Query("delete from Post")
+  public abstract void deleteAllPost();
+
+  @Delete
+  public abstract void deletePost(Post post);
 }

@@ -2,28 +2,30 @@ package com.example.socialmediaapp.application.session.helper;
 
 import android.os.Bundle;
 
-import androidx.work.Data;
-import androidx.work.WorkInfo;
-
 import com.example.socialmediaapp.application.session.SessionHandler;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 public abstract class DataAccessHelper<T> {
-    protected SessionHandler session;
-    public abstract List<T> tryToFetchFromLocalStorage(Bundle query);
 
-    public abstract Bundle fetchFromServer(Bundle query) throws IOException;
+   protected SessionHandler session;
 
-    public abstract T uploadToServer(Bundle query) throws IOException, FileNotFoundException;
+   public abstract List<T> loadFromLocalStorage(HashMap<String, Object> query);
 
-    public abstract void clean();
+   public abstract Bundle loadFromServer() throws IOException;
 
-    public void setSession(SessionHandler session) {
-        this.session = session;
-    }
+   public abstract T uploadToServer(Bundle query) throws IOException, FileNotFoundException;
+
+   public abstract void cleanAll();
+
+   public void setSession(SessionHandler session) {
+      this.session = session;
+   }
+
+   public void popRead(T lastItem) {
+   }
 
 }

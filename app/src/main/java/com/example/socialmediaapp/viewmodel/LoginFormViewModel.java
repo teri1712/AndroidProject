@@ -41,6 +41,9 @@ public class LoginFormViewModel extends ViewModel {
 
     public void performAuthentication() {
         MutableLiveData<String> callBack = onlineSessionHandler.authenticate(username.getValue(), password.getValue());
-        authenticationState.addSource(callBack, s -> authenticationState.setValue(s));
+        authenticationState.addSource(callBack, s -> {
+            authenticationState.setValue(s);
+            authenticationState.removeSource(callBack);
+        });
     }
 }

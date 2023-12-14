@@ -17,12 +17,13 @@ public class RequestFriendProfileConfigurer extends Configurer {
     public RequestFriendProfileConfigurer(NotMeProfileView profileView, ViewProfileSessionHandler handler) {
         super(profileView.getContext(), handler);
         this.profileView = profileView;
-        right = profileView.getBlueButton();
-        left = profileView.getGreyButton();
+
     }
 
     @Override
     public void configure() {
+        right = profileView.getGreyButton();
+        left = profileView.getBlueButton();
         left.setTextContent("Cancel request");
         left.setBackgroundColor(Color.parseColor("#0866FF"));
         left.setTextContentColor(Color.WHITE);

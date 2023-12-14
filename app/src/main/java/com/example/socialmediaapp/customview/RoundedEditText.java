@@ -17,6 +17,7 @@ import com.example.socialmediaapp.R;
 
 public class RoundedEditText extends DefaultBackgroundEditText {
     private int rc;
+    private int bgColor;
 
     private void init(AttributeSet attrs) {
         setTextColor(Color.BLACK);
@@ -25,6 +26,7 @@ public class RoundedEditText extends DefaultBackgroundEditText {
                 R.styleable.custom_edit_text);
         try {
             rc = a.getInt(R.styleable.custom_edit_text_custom_corner_ratio, 23);
+            bgColor = a.getColor(R.styleable.custom_edit_text_background_color, Color.argb(15, 0, 0, 0));
         } finally {
             a.recycle();
         }
@@ -51,7 +53,7 @@ public class RoundedEditText extends DefaultBackgroundEditText {
     protected void onDraw(Canvas canvas) {
 
         Paint p = new Paint();
-        p.setARGB(15, 0, 0, 0);
+        p.setColor(bgColor);
         int h = getHeight(), w = getWidth();
         canvas.drawRoundRect(0, 0, w, h, rc, rc, p);
         super.onDraw(canvas);

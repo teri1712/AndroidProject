@@ -3,6 +3,7 @@ package com.example.socialmediaapp.viewmodel.models;
 import android.graphics.Bitmap;
 
 import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
+import com.example.socialmediaapp.viewmodel.models.user.profile.base.UserProfile;
 
 public class UserSession {
     private UserInformation userInfo;

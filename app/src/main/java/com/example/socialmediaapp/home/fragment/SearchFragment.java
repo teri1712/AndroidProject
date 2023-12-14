@@ -21,7 +21,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Observer;
 
 import com.example.socialmediaapp.R;
-import com.example.socialmediaapp.application.session.DataAccessHandler;
+import com.example.socialmediaapp.application.ApplicationContainer;
 import com.example.socialmediaapp.application.session.RecentSearchAccessHandler;
 import com.example.socialmediaapp.application.session.SessionHandler;
 import com.example.socialmediaapp.customview.button.CircleButton;
@@ -62,15 +62,15 @@ public class SearchFragment extends Fragment implements FragmentAnimation {
     private CircleButton eraseTextButton;
     private CustomSpinningView resultSpin;
     private ViewGroup searchResultContainer;
-    private View searchResultView, recenSearchView;
+    private View searchResultView, recentSearchView;
     private TextView lookupTextView;
     private TextView emptyTextView;
+    private Integer sessionId;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Integer sessionId = getArguments().getInt("session id");
-        viewModel = new SearchFragmentViewModel(sessionId);
+        sessionId = getArguments().getInt("session id");
     }
 
     @Override
@@ -83,7 +83,7 @@ public class SearchFragment extends Fragment implements FragmentAnimation {
         searchResultContainer = root.findViewById(R.id.search_result_container);
         lookupTextView = root.findViewById(R.id.lookup_textview);
         searchResultView = root.findViewById(R.id.search_result_view);
-        recenSearchView = root.findViewById(R.id.recent_search_view);
+        recentSearchView = root.findViewById(R.id.recent_search_view);
         emptyTextView = root.findViewById(R.id.empty_textview);
 
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -101,11 +101,28 @@ public class SearchFragment extends Fragment implements FragmentAnimation {
     }
 
     public void initViewModel() {
+        viewModel = new SearchFragmentViewModel(sessionId);
+        viewModel.getLoadSearchResultState().observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                if (s.equals("idle")) {
+                    resultSpin.setVisibility(View.GONE);
+                    lookupTextView.setVisibility(View.GONE);
+                } else {
+                    searchResultContainer.removeAllViews();
+                    lookupTextView.setVisibility(View.VISIBLE);
+                    resultSpin.setVisibility(View.VISIBLE);
+                    emptyTextView.setVisibility(View.GONE);
+                }
+            }
+        });
         viewModel.getSearchResult().observe(getViewLifecycleOwner(), new Observer<List<UserBasicInfo>>() {
             @Override
             public void onChanged(List<UserBasicInfo> userBasicInfos) {
-                if (userBasicInfos == null) return;
                 searchResultContainer.removeAllViews();
+                if (userBasicInfos.isEmpty()) {
+                    emptyTextView.setVisibility(View.VISIBLE);
+                }
                 for (UserBasicInfo userBasicInfo : userBasicInfos) {
                     searchResultContainer.addView(new UserBasicInfoItemView(SearchFragment.this, userBasicInfo));
                 }
@@ -114,6 +131,7 @@ public class SearchFragment extends Fragment implements FragmentAnimation {
         viewModel.getSearchSessionHandler().observe(getViewLifecycleOwner(), new Observer<SessionHandler>() {
             @Override
             public void onChanged(SessionHandler sessionHandler) {
+                sessionHandler.setRetain(true);
                 initPostConstruct();
             }
         });
@@ -142,19 +160,13 @@ public class SearchFragment extends Fragment implements FragmentAnimation {
             @Override
             public void afterTextChanged(Editable editable) {
                 if (editable.length() == 0) {
-                    recenSearchView.setVisibility(View.VISIBLE);
+                    recentSearchView.setVisibility(View.VISIBLE);
                     searchResultView.setVisibility(View.GONE);
                 } else {
                     if (searchResultView.getVisibility() == View.GONE) {
-                        recenSearchView.setVisibility(View.GONE);
+                        recentSearchView.setVisibility(View.GONE);
                         searchResultView.setVisibility(View.VISIBLE);
                     }
-                    if (lookupTextView.getVisibility() == View.GONE) {
-                        lookupTextView.setVisibility(View.VISIBLE);
-                        resultSpin.setVisibility(View.VISIBLE);
-                        emptyTextView.setVisibility(View.GONE);
-                    }
-                    searchResultContainer.removeAllViews();
 
                     String lookup = "Looking for ";
                     SpannableString span = new SpannableString(lookup + editable.toString());
@@ -185,13 +197,12 @@ public class SearchFragment extends Fragment implements FragmentAnimation {
 
     @Override
     public void performEnd(Runnable endAction) {
+        ApplicationContainer.getInstance().sessionRepository.deleteSession(sessionId);
         endAction.run();
     }
 
     @Override
     public void performStart() {
         searchEditText.requestFocus();
-        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.showSoftInput(searchEditText, InputMethodManager.SHOW_IMPLICIT);
     }
 }

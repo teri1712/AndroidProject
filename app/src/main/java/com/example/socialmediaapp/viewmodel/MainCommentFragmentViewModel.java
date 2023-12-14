@@ -12,11 +12,7 @@ import androidx.lifecycle.Transformations;
 import androidx.lifecycle.ViewModel;
 
 import com.example.socialmediaapp.application.ApplicationContainer;
-import com.example.socialmediaapp.application.session.CommentSessionHandler;
-import com.example.socialmediaapp.application.session.DataAccessHandler;
 import com.example.socialmediaapp.application.session.SessionHandler;
-import com.example.socialmediaapp.viewmodel.models.post.Comment;
-import com.example.socialmediaapp.viewmodel.models.repo.Repository;
 
 public class MainCommentFragmentViewModel extends ViewModel {
     private SavedStateHandle savedStateHandle;
@@ -26,7 +22,9 @@ public class MainCommentFragmentViewModel extends ViewModel {
     private LiveData<String> sessionState;
     private MutableLiveData<Integer> countLike;
     private LiveData<SessionHandler> commentFragmentSession;
-    private MediatorLiveData<String> sendState;
+    private MediatorLiveData<String> sendCommentState;
+    private boolean isSending;
+
 
     public MainCommentFragmentViewModel(SavedStateHandle savedStateHandle) {
         super();
@@ -34,8 +32,8 @@ public class MainCommentFragmentViewModel extends ViewModel {
         commentContent = savedStateHandle.getLiveData("comment content");
         image = savedStateHandle.getLiveData("image content");
         countLike = savedStateHandle.getLiveData("count like");
-        sendState = new MediatorLiveData<>();
-        sendState.setValue("Idle");
+        sendCommentState = new MediatorLiveData<>();
+        sendCommentState.setValue("Idle");
 
         cntEditedContent = new MediatorLiveData<>();
         cntEditedContent.setValue(0);
@@ -63,6 +61,15 @@ public class MainCommentFragmentViewModel extends ViewModel {
                 cntEditedContent.setValue(cur);
             }
         });
+        isSending = false;
+    }
+
+    public boolean isSending() {
+        return isSending;
+    }
+
+    public void setSending(boolean sending) {
+        isSending = sending;
     }
 
     private SessionHandler.SessionRepository sessionRepository = ApplicationContainer.getInstance().sessionRepository;
@@ -86,8 +93,8 @@ public class MainCommentFragmentViewModel extends ViewModel {
         return commentFragmentSession;
     }
 
-    public MediatorLiveData<String> getSendState() {
-        return sendState;
+    public MediatorLiveData<String> getSendCommentState() {
+        return sendCommentState;
     }
 
     public LiveData<String> getSessionState() {

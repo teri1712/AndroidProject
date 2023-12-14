@@ -1,27 +1,23 @@
 package com.example.socialmediaapp.application.session;
 
 
-import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
-import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.work.Data;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkInfo;
-import androidx.work.WorkManager;
-import androidx.work.Worker;
-import androidx.work.WorkerParameters;
+import androidx.lifecycle.Transformations;
 
+import com.example.socialmediaapp.apis.CommentApi;
 import com.example.socialmediaapp.apis.PostApi;
 import com.example.socialmediaapp.apis.entities.CommentDataSyncBody;
 import com.example.socialmediaapp.application.ApplicationContainer;
+import com.example.socialmediaapp.application.session.helper.CommentAccessHelper;
+import com.example.socialmediaapp.application.session.helper.ReplyCommentAccessHelper;
 import com.example.socialmediaapp.viewmodel.models.post.Comment;
-import com.google.common.util.concurrent.ListenableFuture;
+import com.example.socialmediaapp.viewmodel.models.post.ReplyComment;
 
 import java.io.IOException;
-import java.util.concurrent.Executor;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -31,18 +27,32 @@ import retrofit2.Retrofit;
 public class CommentSessionHandler extends SessionHandler {
     private Integer commentId;
     private MutableLiveData<Comment> dataSyncEmitter;
-    private WorkManager workManager = ApplicationContainer.getInstance().workManager;
-    private Handler mainHandler = new Handler(Looper.getMainLooper());
+    private MutableLiveData<Boolean> likeSync;
     private Retrofit retrofit = ApplicationContainer.getInstance().retrofit;
-    private String userAlias;
+    private Integer replyCommentSessionId;
 
-    private Executor worker;
 
     public CommentSessionHandler(Comment comment) {
         super();
         this.commentId = comment.getId();
-        this.userAlias = comment.getAuthor().getAlias();
         dataSyncEmitter = new MutableLiveData<>(comment);
+        likeSync = new MutableLiveData<>(comment.isLiked());
+    }
+
+    public MutableLiveData<Boolean> getLikeSync() {
+        return likeSync;
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+
+        DataAccessHandler<ReplyComment> commentDataAccessHandler = new DataAccessHandler<>(new ReplyCommentAccessHelper(commentId));
+        replyCommentSessionId = sessionRegistry.bind(commentDataAccessHandler);
+    }
+
+    public Integer getReplyCommentSessionId() {
+        return replyCommentSessionId;
     }
 
     public MutableLiveData<Comment> getDataSyncEmitter() {
@@ -53,7 +63,9 @@ public class CommentSessionHandler extends SessionHandler {
         MutableLiveData<String> callBack = new MutableLiveData<>();
         post(() -> postToWorker(() -> {
             try {
-                callBack.postValue(likeComment(commentId));
+                String status = likeComment();
+                callBack.postValue(status);
+                return;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -67,7 +79,9 @@ public class CommentSessionHandler extends SessionHandler {
         MutableLiveData<String> callBack = new MutableLiveData<>();
         post(() -> postToWorker(() -> {
             try {
-                callBack.postValue(unlikeComment(commentId));
+                String status = unlikeComment();
+                callBack.postValue(status);
+                return;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -76,37 +90,42 @@ public class CommentSessionHandler extends SessionHandler {
         return callBack;
     }
 
-    public void requestSyncData(Integer postId) {
-        post(() -> postToWorker(() -> {
-            Call<CommentDataSyncBody> req = retrofit.create(PostApi.class).syncCommenData(commentId);
+    private void requestSyncData() {
+        postToWorker(() -> {
+            Call<CommentDataSyncBody> req = retrofit.create(CommentApi.class).syncCommentData(commentId);
             try {
                 Response<CommentDataSyncBody> res = req.execute();
 
                 CommentDataSyncBody body = res.body();
                 Comment comment = dataSyncEmitter.getValue();
-                comment.setCountLike(body.likeCount);
-                comment.setCountComment(body.commentCount);
-                dataSyncEmitter.setValue(comment);
+                comment.setCountLike(body.getCountLike());
+                comment.setCountComment(body.getCountComment());
+                dataSyncEmitter.postValue(comment);
 
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }));
+        });
     }
 
-    private String likeComment(Integer commentId) throws IOException {
-        Call<ResponseBody> req = retrofit.create(PostApi.class).likeComment(commentId);
+    private String likeComment() throws IOException {
+        Call<ResponseBody> req = retrofit.create(CommentApi.class).likeComment(commentId);
         Response<ResponseBody> res = req.execute();
         return res.code() == 200 ? "Success" : "Failed";
     }
 
-    private String unlikeComment(Integer commentId) throws IOException {
-        Call<ResponseBody> req = retrofit.create(PostApi.class).unlikeComment(commentId);
+    private String unlikeComment() throws IOException {
+        Call<ResponseBody> req = retrofit.create(CommentApi.class).unlikeComment(commentId);
         Response<ResponseBody> res = req.execute();
         return res.code() == 200 ? "Success" : "Failed";
     }
 
-    private void postToWorker(Runnable runnable) {
-        worker.execute(runnable);
+
+    @Override
+    protected void post(Runnable action) {
+        super.post(() -> {
+            action.run();
+            requestSyncData();
+        });
     }
 }

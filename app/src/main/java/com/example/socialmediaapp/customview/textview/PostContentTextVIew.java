@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
@@ -167,24 +169,28 @@ public class PostContentTextVIew extends androidx.appcompat.widget.AppCompatText
 
     @Override
     protected void onDraw(Canvas canvas) {
+        setLayerType(LAYER_TYPE_SOFTWARE, null);
+
         super.onDraw(canvas);
 
         if (enable_extendable_feature && !isExtended) {
             float hei = text.descent() - text.ascent();
-            Paint theme = new Paint();
-            theme.setColor(Color.WHITE);
             int padd = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getContext().getResources().getDisplayMetrics());
+            Paint clearPaint = new Paint();
+            clearPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
 
             canvas.drawRect(offset_to_paint_read_more.x, offset_to_paint_read_more.y,
-                    offset_to_paint_read_more.x + text.measureText(erased_tail) + 2 * padd, offset_to_paint_read_more.y + hei,
-                    theme);
+                    offset_to_paint_read_more.x + text.measureText(erased_tail) + 2 * padd, offset_to_paint_read_more.y + hei, clearPaint);
+
+
             if (is_pressed) {
-                theme.setColor(Color.parseColor("#e9ecef"));
+                Paint theme = new Paint();
+                theme.setColor(Color.parseColor("#1fe9ecef"));
                 canvas.drawRect(offset_to_paint_read_more.x + text.measureText("... "), offset_to_paint_read_more.y,
                         offset_to_paint_read_more.x + text.measureText("... Read more") + 2 * padd, offset_to_paint_read_more.y + hei,
                         theme);
             }
-            text.setColor(Color.BLACK);
+            text.setColor(getCurrentTextColor());
             canvas.drawText("...", offset_to_paint_read_more.x + padd, offset_to_paint_read_more.y - text.ascent(), text);
             text.setColor(Color.GRAY);
             canvas.drawText("Read more", offset_to_paint_read_more.x + padd + text.measureText("... "), offset_to_paint_read_more.y - text.ascent(), text);

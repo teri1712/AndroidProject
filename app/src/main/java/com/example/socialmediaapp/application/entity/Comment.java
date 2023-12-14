@@ -1,26 +1,55 @@
 package com.example.socialmediaapp.application.entity;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.PrimaryKey;
 
 @Entity(foreignKeys = @ForeignKey(
         entity = UserBasicInfo.class,
-        parentColumns = "id",
-        childColumns = "authorId",
-        onDelete = ForeignKey.SET_NULL
+        parentColumns = "autoId",
+        childColumns = "userInfoId"
 ))
 public class Comment {
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
+    private Integer autoId;
+    private Integer userInfoId;
     private Integer id;
     private String content;
     private String time;
-    private Integer authorId;
     private Integer likeCount;
+    private Integer commentCount;
     private boolean liked;
     private Integer ord;
-
     private Integer sessionId;
+
+    private String imageUri;
+
+
+    public Integer getAutoId() {
+        return autoId;
+    }
+
+    public void setAutoId(Integer autoId) {
+        this.autoId = autoId;
+    }
+
+    public Integer getUserInfoId() {
+        return userInfoId;
+    }
+
+    public void setUserInfoId(Integer userInfoId) {
+        this.userInfoId = userInfoId;
+    }
+
+    public Integer getCommentCount() {
+        return commentCount;
+    }
+
+    public void setCommentCount(Integer commentCount) {
+        this.commentCount = commentCount;
+    }
+
     public Integer getSessionId() {
         return sessionId;
     }
@@ -46,6 +75,14 @@ public class Comment {
     }
 
     public Comment() {
+    }
+
+    public String getImageUri() {
+        return imageUri;
+    }
+
+    public void setImageUri(String imageUri) {
+        this.imageUri = imageUri;
     }
 
     public boolean isLiked() {
@@ -81,11 +118,4 @@ public class Comment {
         this.content = content;
     }
 
-    public Integer getAuthorId() {
-        return authorId;
-    }
-
-    public void setAuthorId(Integer authorId) {
-        this.authorId = authorId;
-    }
 }

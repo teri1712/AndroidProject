@@ -1,27 +1,44 @@
 package com.example.socialmediaapp.application.entity;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.PrimaryKey;
 
 @Entity(foreignKeys = @ForeignKey(
-        entity = UserBasicInfo.class,
-        parentColumns = "id",
-        childColumns = "authorId",
-        onDelete = ForeignKey.SET_NULL
-))
+        entity = UserBasicInfo.class
+        , parentColumns = "autoId"
+        , childColumns = "userInfoId"
+        , onDelete = ForeignKey.SET_NULL)
+)
 public class Post {
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
+    private Integer autoId;
+    private Integer userInfoId;
     private Integer id;
     private String status;
     private String type;
     private String time;
-    private Integer authorId;
     private Integer likeCount, commentCount, shareCount;
     private boolean liked;
     private Integer ord;
-
     private Integer sessionId;
+
+    public Integer getAutoId() {
+        return autoId;
+    }
+
+    public void setAutoId(Integer autoId) {
+        this.autoId = autoId;
+    }
+
+    public Integer getUserInfoId() {
+        return userInfoId;
+    }
+
+    public void setUserInfoId(Integer userInfoId) {
+        this.userInfoId = userInfoId;
+    }
 
     public Integer getSessionId() {
         return sessionId;
@@ -106,11 +123,4 @@ public class Post {
         this.status = status;
     }
 
-    public Integer getAuthorId() {
-        return authorId;
-    }
-
-    public void setAuthorId(Integer authorId) {
-        this.authorId = authorId;
-    }
 }

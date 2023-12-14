@@ -18,10 +18,10 @@ import androidx.annotation.Nullable;
 import com.example.socialmediaapp.R;
 
 public class ClickablePanel extends FrameLayout {
-    boolean isPressed;
-    boolean requestPressPaint = true;
+    private boolean isPressed;
+    private boolean requestPressPaint = true;
 
-    private void init(AttributeSet attrs) {
+    protected void init(AttributeSet attrs) {
         isPressed = false;
         setWillNotDraw(false);
         if (attrs != null) {
@@ -37,32 +37,31 @@ public class ClickablePanel extends FrameLayout {
 
         setFocusableInTouchMode(true);
         setFocusable(true);
-        setRequestPressPaint(false);
-        setOnTouchListener(new OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        isPressed = true;
-                        break;
-                    case MotionEvent.ACTION_UP:
-                    case MotionEvent.ACTION_CANCEL:
-                        if (isPressed) {
-                            isPressed = false;
-                            if (event.getAction() == MotionEvent.ACTION_UP) {
-                                performClick();
-                            }
+        setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    isPressed = true;
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    if (isPressed) {
+                        isPressed = false;
+                        if (event.getAction() == MotionEvent.ACTION_UP) {
+                            performClick();
+                            requestFocus();
                         }
-
-                        if (event.getAction() == MotionEvent.ACTION_UP) requestFocus();
-                        break;
-                    default:
-                        break;
-                }
-                invalidate();
-                return (MotionEvent.ACTION_MOVE != event.getAction());
+                    }
+                    break;
+                default:
+                    break;
             }
+            invalidate();
+            return (MotionEvent.ACTION_MOVE != event.getAction());
         });
+    }
+
+    public void setRequestPressPaint(boolean requestPressPaint) {
+        this.requestPressPaint = requestPressPaint;
     }
 
     public ClickablePanel(@NonNull Context context) {
@@ -84,11 +83,6 @@ public class ClickablePanel extends FrameLayout {
     public ClickablePanel(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         init(attrs);
-
-    }
-
-    public void setRequestPressPaint(boolean requestPressPaint) {
-        this.requestPressPaint = requestPressPaint;
     }
 
     @Override

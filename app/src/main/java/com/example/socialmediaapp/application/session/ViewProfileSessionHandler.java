@@ -5,7 +5,9 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.arch.core.util.Function;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.Transformations;
 import androidx.work.Data;
 import androidx.work.ListenableWorker;
@@ -35,59 +37,72 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class ViewProfileSessionHandler extends SessionHandler {
-    private MutableLiveData<UserProfile> dataSyncEmitter;
-    private Integer postRepositorySessionId;
-    private LiveData<Integer> avatarPostSessionId;
-    private LiveData<Integer> backgroundPostSessionId;
-    private String userAlias;
-    private Retrofit retrofit = ApplicationContainer.getInstance().retrofit;
-    private DtoConverter dtoConverter;
-    private Executor worker;
+    protected MutableLiveData<UserProfile> dataSyncEmitter;
+    protected DataAccessHandler<Post> postRepositorySession;
+    protected LiveData<SessionHandler> avatarPostSession;
+    protected LiveData<SessionHandler> backgroundPostSession;
+    protected String userAlias;
+    protected Retrofit retrofit = ApplicationContainer.getInstance().retrofit;
+    protected DtoConverter dtoConverter;
+    protected SessionRepository sessionRepository = ApplicationContainer.getInstance().sessionRepository;
 
     public ViewProfileSessionHandler(String userAlias) {
         super();
         this.userAlias = userAlias;
         dataSyncEmitter = new MutableLiveData<>();
         dtoConverter = new DtoConverter(ApplicationContainer.getInstance());
-        avatarPostSessionId = Transformations.switchMap(dataSyncEmitter, new Function<UserProfile, LiveData<Integer>>() {
+        LiveData<Integer> avatarPostSessionId = Transformations.switchMap(dataSyncEmitter, new Function<UserProfile, LiveData<Integer>>() {
             @Override
             public LiveData<Integer> apply(UserProfile input) {
                 ImagePost avatarPost = input.getAvatarPost();
                 return avatarPost == null ? null : sessionRegistry.bindSession(new PostSessionHandler(avatarPost));
             }
         });
-        backgroundPostSessionId = Transformations.switchMap(dataSyncEmitter, new Function<UserProfile, LiveData<Integer>>() {
+        avatarPostSession = Transformations.switchMap(avatarPostSessionId, new Function<Integer, LiveData<SessionHandler>>() {
+            @Override
+            public LiveData<SessionHandler> apply(Integer input) {
+                return sessionRepository.getSessionById(input);
+            }
+        });
+        LiveData<Integer> backgroundPostSessionId = Transformations.switchMap(dataSyncEmitter, new Function<UserProfile, LiveData<Integer>>() {
             @Override
             public LiveData<Integer> apply(UserProfile input) {
-                ImagePost backgroundPost = input.getAvatarPost();
+                ImagePost backgroundPost = input.getBackgroundPost();
                 return backgroundPost == null ? null : sessionRegistry.bindSession(new PostSessionHandler(backgroundPost));
             }
         });
+        backgroundPostSession = Transformations.switchMap(backgroundPostSessionId, new Function<Integer, LiveData<SessionHandler>>() {
+            @Override
+            public LiveData<SessionHandler> apply(Integer input) {
+                return sessionRepository.getSessionById(input);
+            }
+        });
+    }
+
+    public LiveData<SessionHandler> getAvatarPostSession() {
+        return avatarPostSession;
+    }
+
+    public LiveData<SessionHandler> getBackgroundPostSession() {
+        return backgroundPostSession;
     }
 
     public MutableLiveData<UserProfile> getDataSyncEmitter() {
         return dataSyncEmitter;
     }
 
-    public Integer getPostRepositorySessionId() {
-        return postRepositorySessionId;
+    public DataAccessHandler<Post> getPostRepositorySession() {
+        return postRepositorySession;
     }
 
-    public LiveData<Integer> getAvatarPostSessionId() {
-        return avatarPostSessionId;
-    }
-
-    public LiveData<Integer> getBackgroundPostSessionId() {
-        return backgroundPostSessionId;
-    }
 
     @Override
     protected void init() {
-        DataAccessHandler<Post> dataAccessHandler = new DataAccessHandler<>(Post.class, new UserPostAccessHelper(userAlias));
-        postRepositorySessionId = sessionRegistry.bind(dataAccessHandler);
+        super.init();
+        postRepositorySession = new DataAccessHandler<>(new UserPostAccessHelper(userAlias));
+        sessionRegistry.bind(postRepositorySession);
 
         loadUserProfile();
-
     }
 
     private void loadUserProfile() {
@@ -100,7 +115,6 @@ public class ViewProfileSessionHandler extends SessionHandler {
                 e.printStackTrace();
             }
         });
-
     }
 
     public MutableLiveData<String> sendFriendRequest() {
@@ -181,9 +195,5 @@ public class ViewProfileSessionHandler extends SessionHandler {
 
         }));
         return callBack;
-    }
-
-    private void postToWorker(Runnable runnable) {
-        worker.execute(runnable);
     }
 }

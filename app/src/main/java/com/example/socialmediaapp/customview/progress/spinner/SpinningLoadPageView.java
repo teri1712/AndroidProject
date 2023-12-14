@@ -45,15 +45,12 @@ public class SpinningLoadPageView extends View {
         return (int) (Math.pow(progress, 5) * 310);
     }
 
-    private float cal_velo(int cur_angle) {
-        if (cur_angle >= 180) {
-            return Math.max(0.5f, 8 - ((float) cur_angle - 180) * 8 / 180);
-        }
+    public void performLoading() {
+        setVisibility(View.VISIBLE);
+        animate().scaleX(1)
+                .scaleY(1)
+                .setDuration(200).start();
 
-        return Math.max(0.1f, (float) cur_angle * 8 / 180);
-    }
-
-    public void perfromLoadingAnimation() {
         onAnimation = true;
         head_angle = 12;
         tail_angle = 360 - 12;
@@ -64,16 +61,13 @@ public class SpinningLoadPageView extends View {
             @Override
             public void run() {
                 while (thisTurn == aniTurn) {
-                    post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (thisTurn != aniTurn) return;
-                            int dh = (head_angle >= 360 - 12 || head_angle <= 12) ? 1 : 12;
-                            int dt = (tail_angle >= 360 - 12 || tail_angle <= 12) ? 1 : 12;
-                            head_angle = (head_angle + dh) % 360;
-                            tail_angle = (tail_angle + dt) % 360;
-                            invalidate();
-                        }
+                    post(() -> {
+                        if (thisTurn != aniTurn) return;
+                        int dh = (head_angle >= 360 - 12 || head_angle <= 12) ? 1 : 12;
+                        int dt = (tail_angle >= 360 - 12 || tail_angle <= 12) ? 1 : 12;
+                        head_angle = (head_angle + dh) % 360;
+                        tail_angle = (tail_angle + dt) % 360;
+                        invalidate();
                     });
                     try {
                         Thread.sleep(1000 / aniFrame);
@@ -84,23 +78,14 @@ public class SpinningLoadPageView extends View {
         }).start();
     }
 
-    public void performEndLoadingAnimation() {
-        animate().scaleX(0.2f).scaleY(0.2f).setDuration(100).withEndAction(new Runnable() {
-            @Override
-            public void run() {
-                onAnimation = false;
-                SpinningLoadPageView.this.setVisibility(View.GONE);
-                ++aniTurn;
-                SpinningLoadPageView.this.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        SpinningLoadPageView.this.setTranslationY(0);
-                        SpinningLoadPageView.this.setScaleX(1);
-                        SpinningLoadPageView.this.setScaleY(1);
-                    }
+    public void performEnd(Runnable endAction) {
+        animate().scaleX(0)
+                .scaleY(0)
+                .setDuration(200).withEndAction(() -> {
+                    ++aniTurn;
+                    onAnimation = false;
+                    endAction.run();
                 });
-            }
-        });
     }
 
     @Override

@@ -64,7 +64,8 @@ public class HttpBodyConverter {
         return RequestBody.create(content, MediaType.parse("text/plain"));
     }
 
-    static public MultipartBody.Part getMultipartBody(Uri uri, ContentResolver contentResolver,String name) throws FileNotFoundException {
+    static public MultipartBody.Part getMultipartBody(Uri uri, ContentResolver contentResolver, String name) throws FileNotFoundException {
+        if (uri == null) return null;
         return MultipartBody.Part.createFormData(name, "", mediaStreamBody(contentResolver, uri));
     }
 }

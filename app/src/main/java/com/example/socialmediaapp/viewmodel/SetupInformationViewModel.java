@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.example.socialmediaapp.apis.MediaApi;
 import com.example.socialmediaapp.apis.entities.requests.UpdateUserRequestBody;
+import com.example.socialmediaapp.application.session.SelfProfileSessionHandler;
 import com.example.socialmediaapp.application.session.UserSessionHandler;
 
 import java.util.HashMap;
@@ -102,13 +103,16 @@ public class SetupInformationViewModel extends ViewModel {
             }
         });
     }
+
     public MutableLiveData<UpdateUserRequestBody> getUserInfo() {
         return userInfo;
     }
+
     public MutableLiveData<Uri> getAvatar() {
         return avatar;
     }
-    public void send(Context context, UserSessionHandler userSessionHandler) {
+
+    public void send(Context context, SelfProfileSessionHandler selfProfileSessionHandler) {
         if (postSubmitState.getValue().equals("In progress")) {
             Toast.makeText(context, "please wait until progress complete", Toast.LENGTH_SHORT).show();
             return;
@@ -121,10 +125,13 @@ public class SetupInformationViewModel extends ViewModel {
         data.put("birthday", birthday.getValue());
         Uri uri = avatar.getValue();
         data.put("avatar", uri == null ? null : uri.toString());
-        postSubmitState.addSource(userSessionHandler.setUpInformation(data), new Observer<String>() {
+
+        LiveData<String> callBack = selfProfileSessionHandler.setUpInformation(data);
+        postSubmitState.addSource(callBack, new Observer<String>() {
             @Override
             public void onChanged(String s) {
                 postSubmitState.setValue(s);
+                postSubmitState.removeSource(callBack);
             }
         });
     }

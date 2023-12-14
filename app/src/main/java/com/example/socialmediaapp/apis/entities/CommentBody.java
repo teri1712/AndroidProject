@@ -8,10 +8,9 @@ public class CommentBody {
     private Integer id;
     private String content;
     private Integer mediaId;
-
     private boolean liked;
     private String time;
-    private Integer countLike,countComment;
+    private Integer countLike, countComment;
 
     public Integer getCountComment() {
         return countComment;
@@ -46,7 +45,8 @@ public class CommentBody {
         this.countLike = countLike;
     }
 
-    public CommentBody(){}
+    public CommentBody() {
+    }
 
     public Integer getId() {
         return id;
@@ -71,6 +71,7 @@ public class CommentBody {
     public void setAuthor(UserBasicInfoBody author) {
         this.author = author;
     }
+
     public Integer getMediaId() {
         return mediaId;
     }

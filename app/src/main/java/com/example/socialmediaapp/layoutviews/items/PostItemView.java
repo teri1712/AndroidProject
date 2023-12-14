@@ -17,6 +17,7 @@ import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.media3.common.MediaItem;
 import androidx.media3.exoplayer.ExoPlayer;
@@ -33,12 +34,15 @@ import com.example.socialmediaapp.customview.button.PostButton;
 import com.example.socialmediaapp.customview.container.ClickablePanel;
 import com.example.socialmediaapp.customview.textview.PostContentTextVIew;
 import com.example.socialmediaapp.home.fragment.main.PostFragment;
+import com.example.socialmediaapp.viewmodel.UserSessionViewModel;
+import com.example.socialmediaapp.viewmodel.dunno.LikeHelper;
 import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
 import com.example.socialmediaapp.viewmodel.models.post.MediaPost;
 import com.example.socialmediaapp.viewmodel.models.post.base.Post;
 import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
 import com.example.socialmediaapp.viewmodel.PostDataViewModel;
 import com.example.socialmediaapp.viewmodel.PostFragmentViewModel;
+import com.google.android.material.imageview.ShapeableImageView;
 
 public class PostItemView extends FrameLayout {
     private ViewGroup root;
@@ -52,39 +56,84 @@ public class PostItemView extends FrameLayout {
     private LikeButton like;
     private PostDataViewModel viewModel;
     private LifecycleOwner lifecycleOwner;
-    private PostFragmentViewModel postFragmentViewModel;
+    private PostFragment postFragment;
 
-    private ImageView initImageView(ImagePost postItem) {
-        ImageView imageView = new ImageView(getContext());
-        imageView.setImageDrawable(new BitmapDrawable(getResources(), postItem.getImage()));
-        imageView.setScaleType(ImageView.ScaleType.CENTER);
-        viewModel.getPostSessionId().observe(lifecycleOwner, new Observer<Integer>() {
+    private void initOnClick(PostSessionHandler sessionHandler, Post post) {
+        like.initLikeView(lifecycleOwner, (MutableLiveData<Boolean>) viewModel.getLikeLiveData());
+        like.setLikeHelper(new LikeHelper() {
+            @Override
+            public MutableLiveData<Boolean> getLikeSync() {
+                return sessionHandler.getLikeSync();
+            }
+
+            @Override
+            public LiveData<String> doLike() {
+                return sessionHandler.doLike();
+            }
+
+            @Override
+            public LiveData<String> doUnLike() {
+                return sessionHandler.doUnLike();
+            }
+        });
+
+        HomePage activity = (HomePage) getContext();
+        LiveData<Integer> commentId = viewModel.getViewCommentSessionId();
+        commentId.observe(lifecycleOwner, new Observer<Integer>() {
             @Override
             public void onChanged(Integer integer) {
-                mediaContainer.setOnClickListener(new View.OnClickListener() {
+                comment.setOnClickListener(new OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        int p[] = new int[2];
-                        int statusBarHeight = 0;
-                        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-                        if (resourceId > 0) {
-                            statusBarHeight = getResources().getDimensionPixelSize(resourceId);
-                        }
-                        imageView.getLocationInWindow(p);
-                        p[1] -= statusBarHeight;
-                        Rect bound = new Rect(0, 0, imageView.getWidth(), imageView.getHeight());
-                        bound.top += p[1];
-                        bound.bottom += p[1];
-                        bound.left += p[0];
-                        bound.right += p[0];
-                        HomePage activity = (HomePage) getContext();
                         Bundle args = new Bundle();
                         args.putInt("session id", integer);
-                        activity.openViewImageFragment(args, bound, postItem.getImage());
+                        activity.openCommentFragment(args, viewModel.getTotalCountLike());
                     }
                 });
             }
         });
+        avatarButton.setOnClickListener(view -> activity.openViewProfileFragment(post.getAuthor()));
+    }
+
+    private void initImagePostOnClick(ImagePost postItem, Integer postSessionId) {
+        View imageView = mediaContainer.findViewWithTag("image");
+        mediaContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int p[] = new int[2];
+                int statusBarHeight = 0;
+                int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+                if (resourceId > 0) {
+                    statusBarHeight = getResources().getDimensionPixelSize(resourceId);
+                }
+                imageView.getLocationInWindow(p);
+                p[1] -= statusBarHeight;
+                Rect bound = new Rect(0, 0, imageView.getWidth(), imageView.getHeight());
+                bound.top += p[1];
+                bound.bottom += p[1];
+                bound.left += p[0];
+                bound.right += p[0];
+                HomePage activity = (HomePage) getContext();
+                Bundle args = new Bundle();
+                args.putInt("session id", postSessionId);
+                activity.openViewImageFragment(args, bound, postItem.getImage());
+            }
+        });
+
+    }
+
+    private void initUserInfoContent(Post post) {
+        Bitmap avatar = post.getAuthor().getAvatar();
+        avatarButton.setBackgroundContent(new BitmapDrawable(getResources(), avatar), 0);
+        UserBasicInfo author = post.getAuthor();
+        fullnameTextView.setText(author.getFullname());
+    }
+
+    private ImageView initImageView(ImagePost postItem) {
+        ImageView imageView = new ImageView(getContext());
+        BitmapDrawable drawable = new BitmapDrawable(getResources(), postItem.getImage());
+        imageView.setImageDrawable(drawable);
+        imageView.setScaleType(ImageView.ScaleType.CENTER);
         return imageView;
     }
 
@@ -98,49 +147,9 @@ public class PostItemView extends FrameLayout {
         return vid;
     }
 
-    private void initOnClick(LiveData<SessionHandler> sessionHandler) {
-        HomePage activity = (HomePage) getContext();
-        viewModel.getViewCommentSessionId().observe(lifecycleOwner, integer -> comment.setOnClickListener(view -> {
-            Bundle args = new Bundle();
-            args.putInt("session id", integer);
-            activity.openCommentFragment(args, viewModel);
-        }));
-        viewModel.getLiveData().observe(lifecycleOwner, new Observer<Post>() {
-            @Override
-            public void onChanged(Post post) {
-                avatarButton.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        activity.openViewProfileFragment(post.getAuthor());
-                    }
-                });
-            }
-        });
-        sessionHandler.observe(lifecycleOwner, new Observer<SessionHandler>() {
-            @Override
-            public void onChanged(SessionHandler sessionHandler) {
-                PostSessionHandler postSessionHandler = (PostSessionHandler) sessionHandler;
-                erasePostButton.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        ViewGroup parent = (ViewGroup) getParent();
-                        postFragmentViewModel.deletePostSession(postSessionHandler.getId(), parent.indexOfChild(PostItemView.this));
-                    }
-                });
-                like.setClickAction(isActive -> isActive ? postSessionHandler.doLike() : postSessionHandler.doUnLike());
-            }
-        });
-    }
-
-    private void initUserInfoContent(Post post) {
-        Bitmap avatar = post.getAuthor().getAvatar();
-        avatarButton.setBackgroundContent(new BitmapDrawable(getResources(), avatar), 0);
-        UserBasicInfo author = post.getAuthor();
-        fullnameTextView.setText(author.getFullname());
-    }
-
     private void initMediaContent(Post post) {
-        if (post.getType() == null) {
+        String type = post.getType();
+        if (type.equals("text")) {
             mainContentPanel.removeView(mediaContainer);
             mediaContainer = null;
             return;
@@ -148,11 +157,12 @@ public class PostItemView extends FrameLayout {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
         params.gravity = Gravity.CENTER;
         View mediaView = null;
-        if (post.getType().equals("image")) {
+        if (type.equals("image")) {
             mediaView = initImageView((ImagePost) post);
-        } else {
+        } else if (post.getType().equals("video")) {
             mediaView = initMediaPlayer((MediaPost) post);
         }
+        mediaView.setTag(type);
         mediaView.setLayoutParams(params);
         mediaContainer.addView(mediaView);
         mediaContainer.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -187,12 +197,12 @@ public class PostItemView extends FrameLayout {
         return viewModel;
     }
 
-    public PostItemView(Fragment owner, LiveData<SessionHandler> postSessionHandler, Post post) {
-        super(owner.getContext());
-        postFragmentViewModel = ((PostFragment) owner).getViewModel();
-        lifecycleOwner = owner.getViewLifecycleOwner();
+    public PostItemView(PostFragment postFragment) {
+        super(postFragment.getContext());
+        this.postFragment = postFragment;
 
-        LayoutInflater inflater = LayoutInflater.from(owner.getContext());
+        lifecycleOwner = postFragment.getViewLifecycleOwner();
+        LayoutInflater inflater = LayoutInflater.from(postFragment.getContext());
         root = (ViewGroup) inflater.inflate(R.layout.post_item, this, false);
         addView(root);
 
@@ -220,30 +230,33 @@ public class PostItemView extends FrameLayout {
         like.setFocusable(false);
         like.setFocusableInTouchMode(false);
 
-        initViewModel(postSessionHandler, post);
-        initViewData(post);
-
-        initOnClick(postSessionHandler);
     }
 
-    public void initViewModel(LiveData<SessionHandler> postSessionHandler, Post post) {
-        viewModel = new PostDataViewModel(postSessionHandler, post);
 
+    public void initViewModel(Post post) {
+        initViewData(post);
+
+        HomePage homePage = (HomePage) getContext();
+        UserSessionViewModel userSessionViewModel = homePage.getViewModel();
+        LiveData<String> userHost = userSessionViewModel.getFullname();
+
+        PostFragmentViewModel postFragmentViewModel = postFragment.getViewModel();
+        LiveData<SessionHandler> postSessionHandler = postFragmentViewModel.createPostSession(post);
+
+        viewModel = new PostDataViewModel(postSessionHandler, userHost);
         viewModel.getCountLikeContent().observe(lifecycleOwner, s -> {
-            if (s == null || s.isEmpty()) {
+            if (s.isEmpty()) {
                 countLike.setVisibility(GONE);
             } else {
                 countLike.setText(s);
-                if (countLike.getVisibility() == GONE) {
-                    countLike.setVisibility(VISIBLE);
-                }
+                countLike.setVisibility(VISIBLE);
             }
         });
         viewModel.getCountComment().observe(lifecycleOwner, integer -> {
-            if (integer == null || integer == 0) {
+            if (integer == 0) {
                 countComment.setVisibility(GONE);
             } else {
-                String txt = Integer.toString(integer) + " comments";
+                String txt = integer + " comments";
                 countComment.setText(txt);
                 if (countComment.getVisibility() == GONE) {
                     countComment.setVisibility(VISIBLE);
@@ -251,19 +264,36 @@ public class PostItemView extends FrameLayout {
             }
         });
         viewModel.getCountShare().observe(lifecycleOwner, integer -> {
-            if (integer == null || integer == 0) {
+            if (integer == 0) {
                 countShare.setVisibility(GONE);
             } else {
-                String txt = Integer.toString(integer) + " shares";
+                String txt = integer + " shares";
                 countShare.setText(txt);
                 if (countShare.getVisibility() == GONE) {
                     countShare.setVisibility(VISIBLE);
                 }
             }
         });
-        viewModel.getTime().observe(lifecycleOwner, s -> countTime.setText(s));
-
-        like.initLikeView(lifecycleOwner, viewModel.getIsLiked());
-
+        viewModel.getTime().observe(lifecycleOwner, new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                countTime.setText(s);
+            }
+        });
+        postSessionHandler.observe(lifecycleOwner, new Observer<SessionHandler>() {
+            @Override
+            public void onChanged(SessionHandler sessionHandler) {
+                initOnClick((PostSessionHandler) sessionHandler, post);
+            }
+        });
+        if (post.getType().equals("image")) {
+            LiveData<Integer> postSessionId = viewModel.getPostSessionId();
+            postSessionId.observe(lifecycleOwner, new Observer<Integer>() {
+                @Override
+                public void onChanged(Integer integer) {
+                    initImagePostOnClick((ImagePost) post, integer);
+                }
+            });
+        }
     }
 }

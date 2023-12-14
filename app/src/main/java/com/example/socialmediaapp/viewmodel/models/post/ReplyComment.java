@@ -1,6 +1,7 @@
 package com.example.socialmediaapp.viewmodel.models.post;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
 import com.example.socialmediaapp.apis.entities.ReplyCommentBody;
@@ -11,7 +12,7 @@ public class ReplyComment {
     private UserBasicInfo sender;
     private Integer id;
     private String content;
-    private Drawable image;
+    private Bitmap image;
     private boolean liked;
     private String time;
     private Integer countLike;
@@ -44,6 +45,14 @@ public class ReplyComment {
     public ReplyComment() {
     }
 
+    public Bitmap getImage() {
+        return image;
+    }
+
+    public void setImage(Bitmap image) {
+        this.image = image;
+    }
+
     public UserBasicInfo getSender() {
         return sender;
     }
@@ -52,13 +61,6 @@ public class ReplyComment {
         this.sender = sender;
     }
 
-    public Drawable getImage() {
-        return image;
-    }
-
-    public void setImage(Drawable image) {
-        this.image = image;
-    }
 
     public Integer getId() {
         return id;
@@ -74,18 +76,6 @@ public class ReplyComment {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-
-    @Override
-    public int hashCode() {
-        return id;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        Comment c = (Comment) obj;
-        return id == c.getId();
     }
 
 

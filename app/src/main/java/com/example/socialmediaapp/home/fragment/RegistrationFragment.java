@@ -220,11 +220,6 @@ public class RegistrationFragment extends Fragment implements FragmentAnimation 
             public void onChanged(String s) {
                 if (s.equals("On registration") || s.equals("Idle")) return;
                 Toast.makeText(activity, s, Toast.LENGTH_SHORT).show();
-            }
-        });
-        authenState.observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
                 if (s.equals("Success")) {
                     Intent intent = new Intent(activity, HomePage.class);
                     activity.startActivity(intent);

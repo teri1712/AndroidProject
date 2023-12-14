@@ -10,12 +10,13 @@ public class UserProfile {
     protected String fullname;
 
     protected String alias;
-    protected ImagePost avatarPost;
-    protected ImagePost backgroundPost;
 
     protected String gender;
 
     protected String birthday;
+    protected ImagePost avatarPost;
+    protected ImagePost backgroundPost;
+
 
     public String getFullname() {
         return fullname;

@@ -9,15 +9,14 @@
         android:id="@+id/main_content_panel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
         android:orientation="horizontal"
         android:paddingTop="10dp"
         android:paddingBottom="10dp">
 
         <com.example.socialmediaapp.customview.button.CircleButton
             android:id="@+id/avatar_button"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="27dp"
+            android:layout_height="27dp"
             android:layout_marginTop="5dp"
             app:button_background="@drawable/user_24" />
 
@@ -44,7 +43,7 @@
 
                     <TextView
                         android:id="@+id/fullname"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/roboto_medium"
                         android:paddingTop="0dp"
@@ -53,10 +52,9 @@
                         android:textColor="@color/black"
                         android:textSize="16sp" />
 
-
-                    <com.example.socialmediaapp.customview.textview.PostContentTextVIew
+                    <TextView
                         android:id="@+id/comment_content"
-                        android:layout_width="100dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="@font/roboto"
@@ -86,7 +84,7 @@
 
                 <TextView
                     android:id="@+id/cnt_time"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
                     android:layout_marginTop="0dp"
@@ -100,7 +98,7 @@
 
                 <com.example.socialmediaapp.customview.textview.LikeTextView
                     android:id="@+id/like_text_view"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="11dp"
                     android:fontFamily="@font/roboto_bold"
@@ -113,7 +111,6 @@
                     android:textColor="#757575"
                     android:textSize="14sp" />
 
-
                 <TextView
                     android:id="@+id/cnt_like"
                     android:layout_width="wrap_content"
@@ -121,8 +118,8 @@
                     android:layout_centerHorizontal="false"
                     android:layout_centerVertical="true"
                     android:layout_marginLeft="15dp"
-                    android:drawableRight="@drawable/facebook_reactions"
-                    android:drawablePadding="2dp"
+                    android:drawableRight="@drawable/like"
+                    android:drawablePadding="4dp"
                     android:gravity="center_vertical"
                     android:paddingTop="0dp"
                     android:paddingBottom="0dp"

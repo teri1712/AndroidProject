@@ -8,6 +8,6 @@ import retrofit2.http.Path;
 public interface MediaApi {
 
     @GET("/media/image/{id}")
-    Call<ResponseBody> getImage(@Path("id") int id);
+    Call<ResponseBody> loadImage(@Path("id") int id);
 
 }

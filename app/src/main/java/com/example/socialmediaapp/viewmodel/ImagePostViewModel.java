@@ -11,19 +11,21 @@ import com.example.socialmediaapp.application.ApplicationContainer;
 import com.example.socialmediaapp.application.session.PostSessionHandler;
 import com.example.socialmediaapp.application.session.SessionHandler;
 import com.example.socialmediaapp.viewmodel.models.post.base.Post;
+import com.google.android.material.tabs.TabLayout;
 
 public class ImagePostViewModel extends DataViewModel<Post> {
     private LiveData<SessionHandler> postSessionHandler;
     private LiveData<Integer> viewCommentSessionId;
     private LiveData<String> sessionState;
     private LiveData<Integer> countLike, countComment, countShare;
-    private MutableLiveData<Boolean> isLiked;
+    private LiveData<Boolean> likeLiveData;
     private LiveData<String> time;
     private MediatorLiveData<String> countLikeContent;
     private SessionHandler.SessionRepository sessionRepository = ApplicationContainer.getInstance().sessionRepository;
     private Integer postSessionId;
+    private MediatorLiveData<Integer> totalCountLike;
 
-    public ImagePostViewModel(Integer postSessionId) {
+    public ImagePostViewModel(Integer postSessionId, String userHostName) {
         super();
         this.postSessionId = postSessionId;
         postSessionHandler = sessionRepository.getSessionById(postSessionId);
@@ -36,7 +38,7 @@ public class ImagePostViewModel extends DataViewModel<Post> {
         sessionState = Transformations.switchMap(postSessionHandler, new Function<SessionHandler, LiveData<String>>() {
             @Override
             public LiveData<String> apply(SessionHandler input) {
-                return ((PostSessionHandler) input).getSessionState();
+                return input.getSessionState();
             }
         });
         liveData = (MutableLiveData<Post>) Transformations.switchMap(postSessionHandler, new Function<SessionHandler, LiveData<Post>>() {
@@ -45,12 +47,7 @@ public class ImagePostViewModel extends DataViewModel<Post> {
                 return ((PostSessionHandler) input).getDataSyncEmitter();
             }
         });
-        isLiked = (MutableLiveData<Boolean>) Transformations.switchMap(liveData, new Function<Post, LiveData<Boolean>>() {
-            @Override
-            public LiveData<Boolean> apply(Post input) {
-                return new MutableLiveData<>(input.isLiked());
-            }
-        });
+
         time = Transformations.map(liveData, new Function<Post, String>() {
             @Override
             public String apply(Post input) {
@@ -63,15 +60,34 @@ public class ImagePostViewModel extends DataViewModel<Post> {
         countLikeContent.addSource(countLike, new Observer<Integer>() {
             @Override
             public void onChanged(Integer integer) {
-                if (integer == null || isLiked.getValue() == null) return;
-                changeCountLike(isLiked.getValue(), integer);
+                if (integer == null || likeLiveData.getValue() == null) return;
+                changeCountLike(likeLiveData.getValue(), integer);
             }
         });
-        countLikeContent.addSource(isLiked, new Observer<Boolean>() {
+        countLikeContent.addSource(likeLiveData, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean b) {
                 if (b == null || countLike.getValue() == null) return;
                 changeCountLike(b, countLike.getValue());
+            }
+        });
+
+
+        totalCountLike = new MediatorLiveData<>();
+        totalCountLike.setValue(0);
+        totalCountLike.addSource(countLike, new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer integer) {
+                totalCountLike.setValue(integer);
+            }
+        });
+        totalCountLike.addSource(likeLiveData, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean aBoolean) {
+                Integer cnt = countLike.getValue();
+                if (cnt == null) return;
+                cnt += (aBoolean) ? 1 : 0;
+                totalCountLike.setValue(cnt);
             }
         });
     }
@@ -81,6 +97,7 @@ public class ImagePostViewModel extends DataViewModel<Post> {
     }
 
     private void initLikePanelView() {
+
         countLike = Transformations.map(liveData, new Function<Post, Integer>() {
             @Override
             public Integer apply(Post input) {
@@ -97,6 +114,13 @@ public class ImagePostViewModel extends DataViewModel<Post> {
             @Override
             public Integer apply(Post input) {
                 return input.getShareCount();
+            }
+        });
+
+        likeLiveData = Transformations.switchMap(postSessionHandler, new Function<SessionHandler, LiveData<Boolean>>() {
+            @Override
+            public LiveData<Boolean> apply(SessionHandler input) {
+                return ((PostSessionHandler) input).getLikeSync();
             }
         });
     }
@@ -119,6 +143,18 @@ public class ImagePostViewModel extends DataViewModel<Post> {
         }
     }
 
+    public LiveData<Integer> getTotalCountLike() {
+        return totalCountLike;
+    }
+
+    public LiveData<Integer> getCountLike() {
+        return countLike;
+    }
+
+    public LiveData<Boolean> getLikeLiveData() {
+        return likeLiveData;
+    }
+
     public LiveData<Integer> getViewCommentSessionId() {
         return viewCommentSessionId;
     }
@@ -131,10 +167,6 @@ public class ImagePostViewModel extends DataViewModel<Post> {
         return countLikeContent;
     }
 
-    public LiveData<Integer> getCountLike() {
-        return countLike;
-    }
-
     public LiveData<Integer> getCountComment() {
         return countComment;
     }
@@ -143,7 +175,4 @@ public class ImagePostViewModel extends DataViewModel<Post> {
         return countShare;
     }
 
-    public MutableLiveData<Boolean> getIsLiked() {
-        return isLiked;
-    }
 }

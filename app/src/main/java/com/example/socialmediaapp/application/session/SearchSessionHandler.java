@@ -9,7 +9,6 @@ import com.example.socialmediaapp.apis.UserApi;
 import com.example.socialmediaapp.apis.entities.UserBasicInfoBody;
 import com.example.socialmediaapp.application.ApplicationContainer;
 import com.example.socialmediaapp.application.converter.DtoConverter;
-import com.example.socialmediaapp.application.session.helper.RecentSearchAccessHelper;
 import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
 
 import java.io.IOException;
@@ -21,7 +20,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class SearchSessionHandler extends SessionHandler {
-    private LiveData<SessionHandler> recentSearchSession;
+    private RecentSearchAccessHandler recentSearchSession;
     private Retrofit retrofit = ApplicationContainer.getInstance().retrofit;
     private DtoConverter dtoConverter;
     private Thread curFetchingThread;
@@ -31,17 +30,14 @@ public class SearchSessionHandler extends SessionHandler {
         dtoConverter = new DtoConverter(ApplicationContainer.getInstance());
     }
 
-    public LiveData<SessionHandler> getRecentSearchSession() {
-        if (recentSearchSession == null) {
-            RecentSearchAccessHandler dataAccessHandler = new RecentSearchAccessHandler(UserBasicInfo.class);
-            LiveData<Integer> recentSearchSessionId = sessionRegistry.bindSession(dataAccessHandler);
-            recentSearchSession = Transformations.map(recentSearchSessionId, new Function<Integer, SessionHandler>() {
-                @Override
-                public SessionHandler apply(Integer input) {
-                    return ApplicationContainer.getInstance().sessionRepository.getSession(input);
-                }
-            });
-        }
+    @Override
+    protected void init() {
+        super.init();
+        recentSearchSession = new RecentSearchAccessHandler();
+        sessionRegistry.bind(recentSearchSession);
+    }
+
+    public RecentSearchAccessHandler getRecentSearchSession() {
         return recentSearchSession;
     }
 
@@ -64,7 +60,7 @@ public class SearchSessionHandler extends SessionHandler {
         @Override
         public void run() {
             try {
-                Thread.sleep(100);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 return;
             }

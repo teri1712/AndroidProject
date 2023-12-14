@@ -15,28 +15,25 @@ import com.example.socialmediaapp.application.session.CommentSessionHandler;
 import com.example.socialmediaapp.application.session.DataAccessHandler;
 import com.example.socialmediaapp.application.session.SessionHandler;
 import com.example.socialmediaapp.viewmodel.models.post.Comment;
-import com.example.socialmediaapp.viewmodel.models.post.base.Post;
 import com.example.socialmediaapp.viewmodel.models.repo.Repository;
 import com.example.socialmediaapp.viewmodel.models.repo.suck.Update;
 
 import java.util.HashMap;
-import java.util.List;
 
 public class CommentFragmentViewModel extends ViewModel {
-
     private Repository<Comment> commentRepository;
     private SessionHandler.SessionRegistry sessionRegistry;
     private MutableLiveData<String> sessionState;
-    private MediatorLiveData<Update<Comment>> commentUpdate;
-    private MutableLiveData<Boolean> loadCommentState;
+    private MediatorLiveData<Boolean> loadCommentState;
+    private boolean paused;
 
     public CommentFragmentViewModel(DataAccessHandler<Comment> dataAccessHandler) {
         super();
         commentRepository = new Repository<>(dataAccessHandler);
         sessionRegistry = dataAccessHandler.getSessionRegistry();
         sessionState = dataAccessHandler.getSessionState();
-        commentUpdate = new MediatorLiveData<>();
-        loadCommentState = new MutableLiveData<>();
+        loadCommentState = new MediatorLiveData<>();
+        paused = false;
     }
 
     public MutableLiveData<String> getSessionState() {
@@ -54,56 +51,32 @@ public class CommentFragmentViewModel extends ViewModel {
         });
     }
 
-    public void deleteCommentSession(int commentSessionId, int posInParent) {
-        sessionRegistry.unBindSession(commentSessionId);
-        commentUpdate.postValue(new Update<>(Update.Op.REMOVE, null, posInParent));
-    }
-
     public LiveData<String> uploadComment(Bundle data) {
-        LiveData<HashMap<String, Object>> result = commentRepository.uploadNewItem(data);
-        LiveData<String> callBack = Transformations.map(result, new Function<HashMap<String, Object>, String>() {
-            @Override
-            public String apply(HashMap<String, Object> input) {
-                return (String) input.get("status");
-            }
-        });
-        commentUpdate.addSource(result, new Observer<HashMap<String, Object>>() {
-            @Override
-            public void onChanged(HashMap<String, Object> hashMap) {
-                String status = (String) hashMap.get("status");
-                Comment item = (Comment) hashMap.get("item");
-
-                if (status.equals("Success")) {
-                    commentUpdate.setValue(new Update<>(Update.Op.ADD, item, 0));
-                }
-                commentUpdate.removeSource(result);
-            }
-        });
-
-        return callBack;
+        return commentRepository.uploadNewItem(data);
     }
 
-    public void loadComments() {
+    public void load(int cnt) {
+        if (loadCommentState.getValue() || paused) return;
+
         loadCommentState.setValue(true);
-        Bundle query = new Bundle();
-        MutableLiveData<List<Comment>> callBack = commentRepository.fetchNewItems(query);
-        commentUpdate.addSource(callBack, new Observer<List<Comment>>() {
-            @Override
-            public void onChanged(List<Comment> comments) {
-                for (Comment c : comments) {
-                    commentUpdate.setValue(new Update<>(Update.Op.ADD, c, -1));
-                }
-                commentUpdate.removeSource(callBack);
-                loadCommentState.setValue(false);
-            }
+
+        LiveData<String> callBack = commentRepository.loadNewItems(cnt);
+        loadCommentState.addSource(callBack, length -> {
+            loadCommentState.removeSource(callBack);
+            loadCommentState.setValue(false);
         });
+    }
+
+    public Repository<Comment> getCommentRepository() {
+        return commentRepository;
+    }
+
+    public void loadEntrance() {
+        load(10);
     }
 
     public MutableLiveData<Boolean> getLoadCommentState() {
         return loadCommentState;
     }
 
-    public MediatorLiveData<Update<Comment>> getCommentUpdate() {
-        return commentUpdate;
-    }
 }

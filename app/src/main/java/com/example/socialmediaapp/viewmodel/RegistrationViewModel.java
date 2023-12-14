@@ -44,11 +44,9 @@ public class RegistrationViewModel extends ViewModel {
 
     public void performSignUp() {
         MutableLiveData<String> callback = onlineSessionHandler.signUp(username.getValue(), password.getValue());
-        postSubmitState.addSource(callback, new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                postSubmitState.setValue(s);
-            }
+        postSubmitState.addSource(callback, s -> {
+            postSubmitState.setValue(s);
+            postSubmitState.removeSource(callback);
         });
     }
 }

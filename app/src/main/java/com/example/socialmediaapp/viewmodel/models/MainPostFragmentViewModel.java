@@ -18,26 +18,11 @@ import com.example.socialmediaapp.viewmodel.models.post.base.Post;
 import com.example.socialmediaapp.viewmodel.models.repo.Repository;
 
 public class MainPostFragmentViewModel extends ViewModel {
-
     private UserSessionHandler userSessionHandler;
 
     public MainPostFragmentViewModel(UserSessionHandler userSessionHandler) {
         super();
         this.userSessionHandler = userSessionHandler;
-    }
-
-    public LiveData<SessionHandler> recyclePostFragment() {
-        SessionHandler.SessionRegistry sessionRegistry = userSessionHandler.getSessionRegistry();
-        sessionRegistry.unBindSession(userSessionHandler.getPostDataAccessSessionId());
-        DataAccessHandler<Post> postDataAccessHandler = new DataAccessHandler<>(Post.class, new PostAccessHelper());
-        MutableLiveData<Integer> newSessionId = sessionRegistry.bindSession(postDataAccessHandler);
-        LiveData<SessionHandler> newPostSession = Transformations.switchMap(newSessionId, new Function<Integer, LiveData<SessionHandler>>() {
-            @Override
-            public LiveData<SessionHandler> apply(Integer input) {
-                return ApplicationContainer.getInstance().sessionRepository.getSessionById(input);
-            }
-        });
-        return newPostSession;
     }
 
 }

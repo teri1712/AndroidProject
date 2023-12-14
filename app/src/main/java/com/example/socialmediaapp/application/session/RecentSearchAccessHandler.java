@@ -9,21 +9,24 @@ import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
 import java.io.IOException;
 
 public class RecentSearchAccessHandler extends DataAccessHandler<UserBasicInfo> {
-    public RecentSearchAccessHandler(Class<UserBasicInfo> t) {
-        super(t, new RecentSearchAccessHelper());
+    public RecentSearchAccessHandler() {
+        super(new RecentSearchAccessHelper());
     }
 
     public MutableLiveData<String> deleteItem(String userAlias) {
         MutableLiveData<String> callBack = new MutableLiveData<>();
-        post(() -> postToWorker(() -> {
-            RecentSearchAccessHelper recentSearchAccessHelper = (RecentSearchAccessHelper) dataAccessHelper;
-            try {
-                callBack.postValue(recentSearchAccessHelper.deleteRecentSearchItem(userAlias));
-            } catch (IOException e) {
-                callBack.postValue("Failed");
-                e.printStackTrace();
-            }
-        }));
+        post(() -> {
+            postToWorker(() -> {
+                RecentSearchAccessHelper recentSearchAccessHelper = (RecentSearchAccessHelper) dataAccessHelper;
+                try {
+                    callBack.postValue(recentSearchAccessHelper.deleteRecentSearchItem(userAlias));
+                } catch (IOException e) {
+                    callBack.postValue("Failed");
+                    e.printStackTrace();
+                }
+            });
+            waitTillWorkerFinish();
+        });
         return callBack;
     }
 }

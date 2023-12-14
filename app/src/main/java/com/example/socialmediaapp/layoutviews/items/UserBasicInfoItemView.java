@@ -4,11 +4,15 @@ import android.graphics.drawable.BitmapDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 
 import com.example.socialmediaapp.R;
 import com.example.socialmediaapp.activitiy.HomePage;
+import com.example.socialmediaapp.application.session.SessionHandler;
 import com.example.socialmediaapp.customview.AvatarView;
 import com.example.socialmediaapp.customview.button.CircleButton;
 import com.example.socialmediaapp.customview.container.ClickablePanel;
@@ -23,8 +27,8 @@ public class UserBasicInfoItemView extends ClickablePanel {
     private AvatarView avatarView;
     protected CircleButton eraseButton;
     private TextView fullname, alias;
-    private HomePage homePage;
-    private LifecycleOwner lifecycleOwner;
+    protected HomePage homePage;
+    protected LifecycleOwner lifecycleOwner;
     protected SearchFragment owner;
 
     public UserBasicInfoItemView(SearchFragment owner, UserBasicInfo userBasicInfo) {
@@ -44,16 +48,13 @@ public class UserBasicInfoItemView extends ClickablePanel {
         avatarView.setBackgroundContent(new BitmapDrawable(getResources(), userBasicInfo.getAvatar()), 0);
         fullname.setText(userBasicInfo.getFullname());
         alias.setText(userBasicInfo.getAlias());
-        setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                actionOfOnClick();
-            }
+        setOnClickListener(view -> {
+            homePage.openViewProfileFragment(userBasicInfo);
+            actionOfOnClick();
         });
     }
 
     protected void actionOfOnClick() {
-        homePage.openViewProfileFragment(userBasicInfo);
         RecentSearchFragment recentSearchFragment = (RecentSearchFragment) owner.getChildFragmentManager().findFragmentByTag("recent search");
         RecentSearchFragmentViewModel recentSearchFragmentViewModel = recentSearchFragment.getViewModel();
         recentSearchFragmentViewModel.onClickToUserProfile(userBasicInfo.getAlias());

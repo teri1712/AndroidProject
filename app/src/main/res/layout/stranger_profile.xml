@@ -55,7 +55,7 @@
                             android:layout_height="match_parent"
                             android:layout_margin="1dp"
                             app:background_bound="0dp"
-                            app:button_background="@drawable/suzy_avatar" />
+                            app:button_background="@drawable/big_avatar" />
 
 
                         <com.example.socialmediaapp.customview.CircleStrokeView
@@ -73,7 +73,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="15dp"
+                    android:layout_marginTop="10dp"
                     android:fontFamily="@font/roboto_medium"
                     android:gravity="center"
                     android:paddingLeft="0dp"
@@ -86,7 +86,7 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="37dp"
+                    android:layout_height="38dp"
                     android:layout_marginTop="20dp"
                     android:orientation="horizontal">
 
@@ -98,10 +98,9 @@
                         android:layout_marginRight="10dp"
                         app:button_text_font="@font/roboto_medium"
                         android:layout_weight="1"
-                        app:background_bound="17dp"
-
-                        app:button_text_size="16sp"
-                        app:padding_between_text_and_background="5dp"
+                        app:background_bound="15dp"
+                        app:button_text_size="15.5sp"
+                        app:padding_between_text_and_background="4dp"
 
                         />
 
@@ -112,9 +111,9 @@
                         android:layout_height="match_parent"
                         android:layout_marginRight="10dp"
                         android:layout_weight="1"
-                        app:background_bound="26dp"
-                        app:button_text_size="16sp"
-                        app:padding_between_text_and_background="5dp" />
+                        app:background_bound="24dp"
+                        app:button_text_size="15.5sp"
+                        app:padding_between_text_and_background="4dp" />
 
                     <com.example.socialmediaapp.customview.button.RoundedButton
                         android:layout_width="40dp"

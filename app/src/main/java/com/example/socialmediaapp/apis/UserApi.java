@@ -1,6 +1,5 @@
 package com.example.socialmediaapp.apis;
 
-import com.example.socialmediaapp.apis.entities.HomeEntranceBody;
 import com.example.socialmediaapp.apis.entities.PostBody;
 import com.example.socialmediaapp.apis.entities.UserBasicInfoBody;
 import com.example.socialmediaapp.apis.entities.UserProfileBody;
@@ -24,6 +23,8 @@ import retrofit2.http.Query;
 
 public interface UserApi {
 
+    @GET("/user/info/{alias}")
+    Call<UserBasicInfoBody> loadUserBasicInfo(@Query("alias") String alias);
     @GET("/user/profile/{alias}")
     Call<UserProfileBody> loadUserProfile(@Path("alias") String alias);
     @Multipart
@@ -40,14 +41,14 @@ public interface UserApi {
     Call<UserSessionBody> loadUserSession();
     @Multipart
     @POST("/user/new")
-    Call<UserSessionBody> setUpInfo(@Part("fullname") RequestBody status, @Part("alias") RequestBody type,
+    Call<UserProfileBody> setUpInfo(@Part("fullname") RequestBody status, @Part("alias") RequestBody type,
                                  @Part("gender") RequestBody gender,
                                  @Part("birthday") RequestBody birthday,
                                  @Part MultipartBody.Part avatar);
     @GET("/user/search")
     Call<List<UserBasicInfoBody>> searchForUser(@Query("query") String query);
-    @GET("/user/search/recent")
-    Call<List<UserBasicInfoBody>> fetchRecentSearch();
+    @GET("/user/search/recent/{lastAlias}")
+    Call<List<UserBasicInfoBody>> loadRecentSearch(@Path("lastAlias") String lastAlias);
     @PUT("/user/search/{alias}")
     Call<UserBasicInfoBody> addToRecentSearch(@Path("alias") String alias);
     @PUT("/user/search/remove/{alias}")
@@ -63,5 +64,4 @@ public interface UserApi {
     Call<ResponseBody> acceptFriendRequest(@Path("alias") String alias);
     @PUT("/user/friend/reject/{alias}")
     Call<ResponseBody> rejectFriendRequest(@Path("alias") String alias);
-
 }

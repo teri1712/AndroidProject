@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.work.Data;
 import androidx.work.ListenableWorker;
@@ -19,6 +20,8 @@ import com.example.socialmediaapp.apis.PostApi;
 import com.example.socialmediaapp.apis.entities.PostDataSyncBody;
 import com.example.socialmediaapp.application.ApplicationContainer;
 import com.example.socialmediaapp.application.session.helper.CommentAccessHelper;
+import com.example.socialmediaapp.layoutviews.items.PostItemView;
+import com.example.socialmediaapp.viewmodel.PostDataViewModel;
 import com.example.socialmediaapp.viewmodel.models.post.Comment;
 import com.example.socialmediaapp.viewmodel.models.post.base.Post;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -33,18 +36,16 @@ import retrofit2.Retrofit;
 
 public class PostSessionHandler extends SessionHandler {
     private Integer postId;
-    private String userAlias;
     private MutableLiveData<Post> dataSyncEmitter;
-    private WorkManager workManager = ApplicationContainer.getInstance().workManager;
     private Integer commentSessionId;
-    private Executor worker;
     private Retrofit retrofit = ApplicationContainer.getInstance().retrofit;
+    private MutableLiveData<Boolean> likeSync;
 
     public PostSessionHandler(Post post) {
         super();
         this.postId = post.getId();
-        this.userAlias = post.getAuthor().getAlias();
         dataSyncEmitter = new MutableLiveData<>(post);
+        likeSync = new MutableLiveData<>(post.isLiked());
     }
 
     public Integer getCommentSessionId() {
@@ -57,7 +58,8 @@ public class PostSessionHandler extends SessionHandler {
 
     @Override
     protected void init() {
-        DataAccessHandler<Comment> commentDataAccessHandler = new DataAccessHandler<>(Comment.class, new CommentAccessHelper(postId));
+        super.init();
+        DataAccessHandler<Comment> commentDataAccessHandler = new DataAccessHandler<>(new CommentAccessHelper(postId));
         commentSessionId = sessionRegistry.bind(commentDataAccessHandler);
     }
 
@@ -65,7 +67,8 @@ public class PostSessionHandler extends SessionHandler {
         MutableLiveData<String> callBack = new MutableLiveData<>();
         post(() -> postToWorker(() -> {
             try {
-                callBack.postValue(likePost(postId));
+                String status = likePost();
+                callBack.postValue(status);
                 return;
             } catch (IOException e) {
                 e.printStackTrace();
@@ -74,13 +77,18 @@ public class PostSessionHandler extends SessionHandler {
 
         }));
         return callBack;
+    }
+
+    public MutableLiveData<Boolean> getLikeSync() {
+        return likeSync;
     }
 
     public MutableLiveData<String> doUnLike() {
         MutableLiveData<String> callBack = new MutableLiveData<>();
         post(() -> postToWorker(() -> {
             try {
-                callBack.postValue(unLikePost(postId));
+                String status = unLikePost();
+                callBack.postValue(status);
                 return;
             } catch (IOException e) {
                 e.printStackTrace();
@@ -91,7 +99,7 @@ public class PostSessionHandler extends SessionHandler {
         return callBack;
     }
 
-    public void requestSyncData(Integer postId) {
+    private void requestSyncData() {
         postToWorker(() -> {
             Call<PostDataSyncBody> req = retrofit.create(PostApi.class).syncPostData(postId);
             try {
@@ -99,9 +107,9 @@ public class PostSessionHandler extends SessionHandler {
                 PostDataSyncBody body = res.body();
 
                 Post post = dataSyncEmitter.getValue();
-                post.setLikeCount(body.likeCount);
-                post.setCommentCount(body.commentCount);
-                post.setShareCount(body.shareCount);
+                post.setLikeCount(body.getLikeCount());
+                post.setCommentCount(body.getCommentCount());
+                post.setShareCount(body.getShareCount());
                 dataSyncEmitter.postValue(post);
 
             } catch (IOException e) {
@@ -110,19 +118,25 @@ public class PostSessionHandler extends SessionHandler {
         });
     }
 
-    private String likePost(Integer postId) throws IOException {
+    @Override
+    protected void post(Runnable action) {
+        super.post(() -> {
+            action.run();
+            requestSyncData();
+        });
+    }
+
+    private String likePost() throws IOException {
         Call<ResponseBody> req = retrofit.create(PostApi.class).likePost(postId);
         Response<ResponseBody> res = req.execute();
         return res.code() == 200 ? "Success" : "Failed";
     }
 
-    private String unLikePost(Integer postId) throws IOException {
+    private String unLikePost() throws IOException {
         Call<ResponseBody> req = retrofit.create(PostApi.class).unlikePost(postId);
         Response<ResponseBody> res = req.execute();
+
         return res.code() == 200 ? "Success" : "Failed";
     }
 
-    private void postToWorker(Runnable runnable) {
-        worker.execute(runnable);
-    }
 }

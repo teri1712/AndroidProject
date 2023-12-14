@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.socialmediaapp.R;
 import com.example.socialmediaapp.activitiy.HomePage;
+import com.example.socialmediaapp.application.session.SessionHandler;
 import com.example.socialmediaapp.customview.button.CircleButton;
 import com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView;
 import com.example.socialmediaapp.customview.button.RoundedButton;
@@ -80,6 +81,12 @@ public class UpdateBackgroundFragment extends Fragment implements FragmentAnimat
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        performStart();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         root = inflater.inflate(R.layout.fragment_update_background, container, false);
         post_status_edit_text = root.findViewById(R.id.status_edit_text);
@@ -87,6 +94,7 @@ public class UpdateBackgroundFragment extends Fragment implements FragmentAnimat
         back_button = root.findViewById(R.id.back_button);
         imageView = root.findViewById(R.id.image_view);
         spinner = root.findViewById(R.id.spinner);
+        back_button = root.findViewById(R.id.back_button);
         fullname = root.findViewById(R.id.fullname);
         simulate = root.findViewById(R.id.simulate_image_view);
         avatarButton = root.findViewById(R.id.avatar_button);
@@ -109,13 +117,6 @@ public class UpdateBackgroundFragment extends Fragment implements FragmentAnimat
             @Override
             public void onChanged(Bitmap bitmap) {
 
-            }
-        });
-        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                performStart();
-                root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
             }
         });
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -177,14 +178,13 @@ public class UpdateBackgroundFragment extends Fragment implements FragmentAnimat
                 viewModel.getPostStatusContent().setValue(editable.toString());
             }
         });
-        initOnClick(root);
+        initOnClick();
         return root;
 
     }
 
 
-    private void initOnClick(View root) {
-        back_button = root.findViewById(R.id.back_button);
+    private void initOnClick() {
         back_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -203,19 +203,13 @@ public class UpdateBackgroundFragment extends Fragment implements FragmentAnimat
                 Uri uri = viewModel.getImageUri().getValue();
 
                 Bundle data = new Bundle();
-                data.putString("status", viewModel.getPostStatusContent().getValue());
+                data.putString("post content", viewModel.getPostStatusContent().getValue());
                 data.putString("type", "background");
-                data.putString("media content", (uri == null) ? null : uri.toString());
-                MainPostFragment mainPostFragment = (MainPostFragment) (getActivity().getSupportFragmentManager().findFragmentByTag("post fragment"));
-                PostFragment postFragment = (PostFragment) mainPostFragment.getChildFragmentManager().findFragmentByTag("posts");
-                PostFragmentViewModel postFragmentViewModel = postFragment.getViewModel();
-                postFragmentViewModel.uploadPost(data).observe(getViewLifecycleOwner(), new Observer<String>() {
-                    @Override
-                    public void onChanged(String s) {
-                        postSubmitState.setValue(s);
-                        if (s.equals("Success")) {
-                            homePage.finishFragment("update background");
-                        }
+                data.putString("media content", uri.toString());
+                homePage.updateBackground(data).observe(getViewLifecycleOwner(), s -> {
+                    postSubmitState.setValue(s);
+                    if (s.equals("Success")) {
+                        homePage.finishFragment("update background");
                     }
                 });
             }
@@ -235,5 +229,6 @@ public class UpdateBackgroundFragment extends Fragment implements FragmentAnimat
 
     @Override
     public void performStart() {
+        post_status_edit_text.requestFocus();
     }
 }
