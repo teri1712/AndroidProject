@@ -13,7 +13,7 @@
         android:paddingTop="10dp"
         android:paddingBottom="10dp">
 
-        <com.example.socialmediaapp.customview.button.CircleButton
+        <com.example.socialmediaapp.view.button.CircleButton
             android:id="@+id/avatar_button"
             android:layout_width="40dp"
             android:layout_height="40dp"
@@ -22,7 +22,7 @@
             app:background_bound="40dp"
             app:button_background="@drawable/avatar" />
 
-        <com.example.socialmediaapp.customview.RoundedEditText
+        <com.example.socialmediaapp.view.edittext.RoundedEditText
             android:id="@+id/open_create_post"
             android:layout_width="296dp"
             android:layout_height="40dp"
@@ -40,7 +40,7 @@
             app:custom_corner_ratio="50"
             app:default_info="What are you thinking?" />
 
-        <com.example.socialmediaapp.customview.button.CircleButton
+        <com.example.socialmediaapp.view.button.CircleButton
             android:id="@+id/select_image"
             android:layout_width="40dp"
             android:layout_height="40dp"

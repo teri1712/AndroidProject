@@ -3,10 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".home.fragment.main.CommentFragment">
+    android:layout_height="match_parent">
 
-    <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+    <com.example.socialmediaapp.view.progress.spinner.CustomSpinningView
         android:id="@+id/load_spinner"
         android:layout_width="25dp"
         android:layout_height="25dp"
@@ -17,8 +16,12 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/message_panel"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="10dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        android:layout_height="match_parent">
+        app:reverseLayout="true"
+        app:stackFromEnd="false">
 
 
     </androidx.recyclerview.widget.RecyclerView>

@@ -2,20 +2,18 @@ package com.example.socialmediaapp.viewmodel;
 
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.ViewModel;
 
-import com.example.socialmediaapp.application.ApplicationContainer;
+import com.example.socialmediaapp.application.DecadeApplication;
 import com.example.socialmediaapp.application.session.OnlineSessionHandler;
-import com.example.socialmediaapp.services.ServiceApi;
 
 public class LoginFormViewModel extends ViewModel {
     private MutableLiveData<String> username;
     private MutableLiveData<String> password;
     private MediatorLiveData<String> authenticationState;
     private SavedStateHandle handle;
-    private OnlineSessionHandler onlineSessionHandler = ApplicationContainer.getInstance().onlineSessionHandler;
+    private OnlineSessionHandler onlineSessionHandler = DecadeApplication.getInstance().onlineSessionHandler;
 
     public LoginFormViewModel(SavedStateHandle handle) {
         super();

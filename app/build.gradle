@@ -8,7 +8,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.socialmediaapp"
+        applicationId "com.decade.android.social.media"
         minSdk 30
         targetSdk 30
         versionCode 1
@@ -76,6 +76,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
 dependencies {
+    implementation 'androidx.security:security-crypto:1.0.0'
     // Import the Firebase BoM
     implementation platform('com.google.firebase:firebase-bom:32.6.0')
 

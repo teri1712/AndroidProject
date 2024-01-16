@@ -6,13 +6,13 @@
     android:background="@color/white"
     android:orientation="vertical">
 
-    <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+    <com.example.socialmediaapp.view.progress.spinner.CustomSpinningView
         android:id="@+id/spinner"
         android:layout_width="26dp"
         android:layout_height="26dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="30dp"
-        android:visibility="gone" />
+        android:visibility="gone"
+        android:layout_marginTop="50dp"/>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -30,7 +30,7 @@
                 android:layout_height="40dp"
                 android:orientation="horizontal">
 
-                <com.example.socialmediaapp.customview.button.CircleButton
+                <com.example.socialmediaapp.view.button.CircleButton
                     android:id="@+id/back_button"
                     android:layout_width="40dp"
                     android:layout_height="match_parent"
@@ -48,7 +48,7 @@
                     android:textColor="@color/black"
                     android:textSize="20sp" />
 
-                <com.example.socialmediaapp.customview.button.RoundedButton
+                <com.example.socialmediaapp.view.button.RoundedButton
                     android:id="@+id/post_button"
                     android:layout_width="70dp"
                     android:layout_height="match_parent"
@@ -69,7 +69,7 @@
                 android:layout_marginTop="12dp"
                 android:orientation="horizontal">
 
-                <com.example.socialmediaapp.customview.button.CircleButton
+                <com.example.socialmediaapp.view.button.CircleButton
                     android:id="@+id/avatar_button"
                     android:layout_width="55dp"
                     android:layout_height="55dp"
@@ -100,7 +100,7 @@
                         android:layout_height="28dp"
                         android:layout_marginTop="7dp">
 
-                        <com.example.socialmediaapp.customview.button.RoundedButton
+                        <com.example.socialmediaapp.view.button.RoundedButton
                             android:id="@+id/tag_friend_button"
                             android:layout_width="90dp"
                             android:layout_height="match_parent"
@@ -112,7 +112,7 @@
                             app:button_text_size="13sp"
                             app:padding_between_text_and_background="8dp" />
 
-                        <com.example.socialmediaapp.customview.button.RoundedButton
+                        <com.example.socialmediaapp.view.button.RoundedButton
                             android:id="@+id/select_album_button"
                             android:layout_width="85dp"
                             android:layout_height="match_parent"
@@ -127,7 +127,7 @@
                             app:button_text_size="13sp"
                             app:padding_between_text_and_background="5dp" />
 
-                        <com.example.socialmediaapp.customview.button.RoundedButton
+                        <com.example.socialmediaapp.view.button.RoundedButton
                             android:id="@+id/post_with_instagram_button"
                             android:layout_width="100dp"
                             android:layout_height="match_parent"
@@ -147,7 +147,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <com.example.socialmediaapp.customview.DefaultBackgroundEditText
+            <com.example.socialmediaapp.view.edittext.DefaultBackgroundEditText
                 android:id="@+id/post_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -175,7 +175,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
-                <com.example.socialmediaapp.customview.container.ClickablePanel
+                <com.example.socialmediaapp.view.container.ClickablePanel
                     android:id="@+id/play_selected_video"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
@@ -202,9 +202,9 @@
                         android:backgroundTint="@color/white" />
 
 
-                </com.example.socialmediaapp.customview.container.ClickablePanel>
+                </com.example.socialmediaapp.view.container.ClickablePanel>
 
-                <com.example.socialmediaapp.customview.button.CircleButton
+                <com.example.socialmediaapp.view.button.CircleButton
                     android:id="@+id/remove_media_button"
                     android:layout_width="25dp"
                     android:layout_height="25dp"
@@ -231,7 +231,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <com.example.socialmediaapp.customview.container.ClickablePanel
+            <com.example.socialmediaapp.view.container.ClickablePanel
                 android:id="@+id/select_picture_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
@@ -251,7 +251,7 @@
                         android:layout_height="35dp"
                         android:layout_marginLeft="7dp"
                         android:layout_marginTop="10dp"
-                        android:background="@drawable/album" />
+                        android:background="@drawable/photos" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -266,9 +266,9 @@
 
                 </LinearLayout>
 
-            </com.example.socialmediaapp.customview.container.ClickablePanel>
+            </com.example.socialmediaapp.view.container.ClickablePanel>
 
-            <com.example.socialmediaapp.customview.container.ClickablePanel
+            <com.example.socialmediaapp.view.container.ClickablePanel
                 android:id="@+id/select_video_button"
                 android:layout_width="match_parent"
 
@@ -303,9 +303,9 @@
                         android:textSize="18sp" />
 
                 </LinearLayout>
-            </com.example.socialmediaapp.customview.container.ClickablePanel>
+            </com.example.socialmediaapp.view.container.ClickablePanel>
 
-            <com.example.socialmediaapp.customview.container.ClickablePanel
+            <com.example.socialmediaapp.view.container.ClickablePanel
                 android:id="@+id/open_camera_button"
                 android:layout_width="match_parent"
 
@@ -340,7 +340,7 @@
                         android:textSize="18sp" />
 
                 </LinearLayout>
-            </com.example.socialmediaapp.customview.container.ClickablePanel>
+            </com.example.socialmediaapp.view.container.ClickablePanel>
 
 
         </LinearLayout>

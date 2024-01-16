@@ -2,6 +2,7 @@ package com.example.socialmediaapp.viewmodel;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.arch.core.util.Function;
@@ -13,10 +14,8 @@ import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.Transformations;
 import androidx.lifecycle.ViewModel;
 
-import com.example.socialmediaapp.apis.MediaApi;
-import com.example.socialmediaapp.apis.entities.requests.UpdateUserRequestBody;
+import com.example.socialmediaapp.api.entities.requests.UpdateUserRequestBody;
 import com.example.socialmediaapp.application.session.SelfProfileSessionHandler;
-import com.example.socialmediaapp.application.session.UserSessionHandler;
 
 import java.util.HashMap;
 
@@ -118,13 +117,13 @@ public class SetupInformationViewModel extends ViewModel {
             return;
         }
         postSubmitState.setValue("In progress");
-        HashMap<String, String> data = new HashMap<>();
-        data.put("fullname", fullname.getValue());
-        data.put("alias", alias.getValue());
-        data.put("gender", gender.getValue());
-        data.put("birthday", birthday.getValue());
+        Bundle data = new Bundle();
+        data.putString("fullname", fullname.getValue());
+        data.putString("alias", alias.getValue());
+        data.putString("gender", gender.getValue());
+        data.putString("birthday", birthday.getValue());
         Uri uri = avatar.getValue();
-        data.put("avatar", uri == null ? null : uri.toString());
+        data.putString("avatar", uri == null ? null : uri.toString());
 
         LiveData<String> callBack = selfProfileSessionHandler.setUpInformation(data);
         postSubmitState.addSource(callBack, new Observer<String>() {

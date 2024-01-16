@@ -1,289 +1,334 @@
 package com.example.socialmediaapp.application.session;
 
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.ArrayMap;
 
 import androidx.lifecycle.MutableLiveData;
 
-import com.example.socialmediaapp.apis.ChatApi;
-import com.example.socialmediaapp.apis.UserApi;
-import com.example.socialmediaapp.apis.entities.ChatBody;
-import com.example.socialmediaapp.apis.entities.MessageItemBody;
-import com.example.socialmediaapp.apis.entities.UserBasicInfoBody;
-import com.example.socialmediaapp.application.ApplicationContainer;
-import com.example.socialmediaapp.application.dao.ChatDao;
-import com.example.socialmediaapp.application.dao.MessageDao;
-import com.example.socialmediaapp.application.dao.UserBasicInfoDao;
-import com.example.socialmediaapp.application.database.AppDatabase;
-import com.example.socialmediaapp.application.entity.Chat;
-import com.example.socialmediaapp.application.entity.MessageItem;
-import com.example.socialmediaapp.application.entity.UserBasicInfo;
-import com.example.socialmediaapp.application.session.helper.MessageAccessHelper;
-import com.example.socialmediaapp.viewmodel.models.messenger.ChatInfo;
+import com.example.socialmediaapp.api.ChatApi;
+import com.example.socialmediaapp.api.debug.HttpCallSupporter;
+import com.example.socialmediaapp.api.entities.ChatBody;
+import com.example.socialmediaapp.api.entities.MessageItemBody;
+import com.example.socialmediaapp.application.converter.DtoConverter;
+import com.example.socialmediaapp.application.converter.ModelConvertor;
+import com.example.socialmediaapp.application.dao.message.ChatDao;
+import com.example.socialmediaapp.application.dao.user.UserBasicInfoDao;
+import com.example.socialmediaapp.application.database.DecadeDatabase;
+import com.example.socialmediaapp.application.entity.message.Chat;
+import com.example.socialmediaapp.application.entity.message.MessageItem;
+import com.example.socialmediaapp.application.entity.user.UserBasicInfo;
+import com.example.socialmediaapp.application.network.SerialTaskRequest;
+import com.example.socialmediaapp.application.network.TaskRequest;
+import com.example.socialmediaapp.models.messenger.chat.ChatInfo;
+import com.example.socialmediaapp.models.user.UserBasicInfoModel;
+import com.example.socialmediaapp.utils.ImageUtils;
+import com.google.firebase.database.FirebaseDatabase;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Queue;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Response;
 
 public class ChatSessionHandler extends SessionHandler {
-   public class ChatDataSync {
-      private com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo userBasicInfo;
-      private Bundle lastMessage;
-      private long lastSeen;
-      private boolean isActive;
+  public class ChatDataSync {
+    private UserBasicInfoModel userModel;
+    private Bundle lastMessage;
+    private Long lastSeen;
+    private Long meLastSeen;
+    private Boolean isActive;
 
-      public com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo getUserBasicInfo() {
-         return userBasicInfo;
+    public ChatDataSync() {
+    }
+
+    public UserBasicInfoModel getUserBasicInfo() {
+      return userModel;
+    }
+
+    public Bundle getLastMessage() {
+      return lastMessage;
+    }
+
+    public Long getLastSeen() {
+      return lastSeen;
+    }
+
+    public Long getMeLastSeen() {
+      return meLastSeen;
+    }
+
+    public Boolean isActive() {
+      return isActive;
+    }
+  }
+
+  private final DecadeDatabase db;
+  private final UserBasicInfoDao userDao;
+  private final ChatDao dao;
+  protected final ChatInfo chatInfo;
+  protected final MutableLiveData<ChatDataSync> dataSyncLiveData;
+  private final Handler uiThread = new Handler(Looper.getMainLooper());
+  private final ChatThreadHandler msgThreadHandler;
+  protected MessageAccessHandler accessHandler;
+  protected MessageAccessHelper accessHelper;
+
+  public ChatSessionHandler(ChatInfo chatInfo,
+                            ChatThreadHandler msgThreadHandler) {
+    this.db = DecadeDatabase.getInstance();
+    this.dao = db.getChatDao();
+    this.userDao = db.getUserBasicInfoDao();
+    this.chatInfo = chatInfo;
+    this.dataSyncLiveData = new MutableLiveData<>();
+    this.msgThreadHandler = msgThreadHandler;
+    accessHelper = new MessageAccessHelper(chatInfo.getChatId());
+    init();
+  }
+
+  public ChatInfo getChatInfo() {
+    return chatInfo;
+  }
+
+  public MessageAccessHandler getAccessHandler() {
+    return accessHandler;
+  }
+
+  public MutableLiveData<ChatDataSync> getDataSyncLiveData() {
+    return dataSyncLiveData;
+  }
+
+  private Chat pull() throws IOException {
+    String chatId = chatInfo.getChatId();
+
+    MessageAccessHelper accessHelper = new MessageAccessHelper(chatId);
+
+    Chat chat = new Chat();
+    Call<ChatBody> call = HttpCallSupporter
+            .create(ChatApi.class)
+            .loadChat(chatId);
+    Response<ChatBody> res = call.execute();
+    HttpCallSupporter.debug(res);
+    ChatBody chatBody = res.body();
+
+    UserBasicInfo otherInfo = DtoConverter.convertToUserBasicInfo(chatBody.getOther());
+    int userId = (int) userDao.insert(otherInfo);
+    chat.setId(chatInfo.getChatId());
+    chat.setOther(chatInfo.getOther());
+    chat.setMe(chatInfo.getMe());
+    chat.setOtherId(userId);
+    chat.setFullname(chatInfo.getFullname());
+    chat.setLastSeen(chatBody.getLastSeen());
+    chat.setMeLastSeen(chatBody.getMeLastSeen());
+    dao.insert(chat);
+    MessageItemBody lastMessage = chatBody.getLastMessage();
+    if (lastMessage != null) {
+      List<MessageItemBody> item = new ArrayList<>();
+      item.add(lastMessage);
+      Map<String, Object> map = new ArrayMap<>();
+      map.put("items", lastMessage);
+      accessHelper.update(map);
+    }
+    return chat;
+  }
+
+  @Override
+  protected void sync() {
+    // will implement later
+    super.sync();
+  }
+
+//  private void syncUserValues() throws IOException {
+//    UserBasicInfoDao userBasicInfoDao = application.database.getUserBasicInfoDao();
+//
+//    Chat chat = chatDao.findChatById(chatInfo.getChatId());
+//    Integer oldUserId = chat.getUserInfoId();
+//
+//    Response<UserBasicInfoBody> res = DecadeApplication
+//            .getInstance()
+//            .retrofit
+//            .create(UserApi.class)
+//            .loadUserBasicInfo(chatInfo.getOther()).execute();
+//    UserBasicInfoBody body = res.body();
+//    UserBasicInfo userBasicInfo = new UserBasicInfo();
+//    userBasicInfo.setFullname(body.getFullname());
+//    userBasicInfo.setId(body.getId());
+//    userBasicInfo.setAvatarId(body.getAvatarId());
+//
+//    int userId = (int) userBasicInfoDao.insert(userBasicInfo);
+//    chat.setUserInfoId(userId);
+//    chatDao.update(chat);
+//
+//    if (oldUserId != null) {
+//      UserBasicInfo oldUserInstance = userBasicInfoDao.findUserBasicInfo(oldUserId);
+//      if (oldUserInstance.getAvatarId() != null) {
+//        File avatar = new File(oldUserInstance.getAvatarId());
+//        avatar.delete();
+//      }
+//      userBasicInfoDao.delete(oldUserInstance);
+//    }
+//    post(() -> {
+//      Handler mainThread = new Handler(Looper.getMainLooper());
+//      UserBasicInfoModel u = loadInfoValue(userId);
+//      mainThread.post(() -> {
+//        ChatDataSync dataSync = dataSyncLiveData.getValue();
+//        dataSync.userBasicInfoModel = u;
+//        dataSyncLiveData.setValue(dataSync);
+//      });
+//    });
+//  }
+
+  @Override
+  protected void init() {
+    super.init();
+    final boolean exists = dao.findChatById(chatInfo.getChatId()) != null;
+    if (!exists) {
+      try {
+        pull();
+      } catch (IOException e) {
+        e.printStackTrace();
+        assert false;
       }
+    } else {
+//         postToWorker(() -> {
+//            try {
+//               syncUserValues();
+//            } catch (IOException e) {
+//               e.printStackTrace();
+//            }
+//         });
+      sync();
+    }
+    postConstruct();
+  }
 
-      public Bundle getLastMessage() {
-         return lastMessage;
-      }
-
-      public long getLastSeen() {
-         return lastSeen;
-      }
-
-      public boolean isActive() {
-         return isActive;
-      }
-   }
-
-   private final Handler uiThread = new Handler(Looper.getMainLooper());
-   private final MessageSessionHandler messageSessionHandler;
-   protected final ChatInfo chatInfo;
-   protected final MutableLiveData<ChatDataSync> dataSyncLiveData;
-   protected MessageAccessHandler msgAccessHandler;
-   protected MessageAccessHelper messageAccessHelper;
-   private Queue<Bundle> msgQueue;
-
-   public ChatSessionHandler(ChatInfo chatInfo) {
-      this.chatInfo = chatInfo;
-      this.dataSyncLiveData = new MutableLiveData<>(new ChatDataSync());
-      this.messageSessionHandler = ApplicationContainer.getInstance().onlineSessionHandler.getMessageSessionHandler();
-
-      messageAccessHelper = new MessageAccessHelper(chatInfo.getChatId());
-   }
-
-   public MessageAccessHandler getMsgAccessHandler() {
-      return msgAccessHandler;
-   }
-
-   public ChatInfo getChatInfo() {
-      return chatInfo;
-   }
-
-   public MutableLiveData<ChatDataSync> getDataSyncLiveData() {
-      return dataSyncLiveData;
-   }
-
-   private void initMessageDataAccess() {
-      msgAccessHandler = new MessageAccessHandler(this);
-      sessionRegistry.bind(msgAccessHandler);
-   }
-
-   protected static Chat pull(Integer chatId) throws IOException {
-      MessageAccessHelper accessHelper = new MessageAccessHelper(chatId);
-      AppDatabase db = ApplicationContainer.getInstance().database;
-      ChatDao chatDao = db.getChatDao();
-      Chat chat = new Chat();
-
-      Call<ChatBody> chatBodyCall = ApplicationContainer.getInstance().retrofit.create(ChatApi.class).loadChat(chatId);
-
-      ChatBody chatBody = chatBodyCall.execute().body();
-      chat.setId(chatBody.getChatId());
-      chat.setSender(chatBody.getSender());
-      chat.setLastSeen(chatBody.getLastSeen());
-
-      MessageItemBody lastMessage = chatBody.getLastMessage();
-
-      Bundle msg = new Bundle();
-      msg.putString("type", lastMessage.getType());
-      msg.putInt("ord", lastMessage.getOrd());
-      msg.putString("sender", lastMessage.getSender());
-      msg.putLong("ime", lastMessage.getTime());
-      msg.putInt("chat id", chatId);
-      msg.putString("content", lastMessage.getContent());
-      msg.putInt("media id", lastMessage.getMediaId());
-      accessHelper.updateNewMessage(msg);
-
-      chatDao.insert(chat);
-      return chat;
-   }
-
-   @Override
-   protected void init() {
-      super.init();
-      initMessageDataAccess();
-      AppDatabase db = ApplicationContainer.getInstance().database;
-      ChatDao chatDao = db.getChatDao();
-      final boolean exists = chatDao.findChatById(chatInfo.getChatId()) != null;
-      if (!exists) {
-         try {
-            pull(chatInfo.getChatId());
-         } catch (IOException e) {
-            e.printStackTrace();
-         }
-      } else {
-         postToWorker(() -> {
-            try {
-               sync();
-            } catch (IOException e) {
-               e.printStackTrace();
-            }
-         });
-      }
-      postConstruct();
-   }
-
-   protected void postMessageProcess(Bundle newMsg) {
-      uiThread.post(() -> {
-         ChatDataSync dataSync = dataSyncLiveData.getValue();
-         dataSync.lastMessage = newMsg;
-         dataSyncLiveData.setValue(dataSync);
-      });
-      messageSessionHandler.newMessageCompleteProcessed(newMsg);
-   }
-
-   public void onNewMessage(Bundle msg) {
-      if (msgQueue != null) {
-         //if the chat session initialization hasn't completed, queue the message
-         msgQueue.add(msg);
-         return;
-      }
-      msgAccessHandler.updateNewMessage(msg);
-      Bundle newMsg = new Bundle();
-      String type = msg.getString("type");
-      String sender = msg.getString("sender");
-      if (type.equals("text")) {
-         newMsg.putString("content", msg.getString("content"));
-      } else if (type.equals("image")) {
-         newMsg.putString("content", sender + " has sent an image");
-      } else {
-         newMsg.putString("content", sender + " has sent an icon");
-      }
-      newMsg.putString("sender", sender);
-      newMsg.putInt("chat id", msg.getInt("chat id"));
-      newMsg.putLong("time", msg.getLong("time"));
-
-      postMessageProcess(newMsg);
-   }
-
-   public void onMessageSeen(long time) {
-      AppDatabase db = ApplicationContainer.getInstance().database;
-      ChatDao dao = db.getChatDao();
-      db.runInTransaction(() -> {
-         Chat chat = dao.findChatById(chatInfo.getChatId());
-         chat.setLastSeen(time);
-         dao.update(chat);
-      });
-
-      uiThread.post(() -> {
-         ChatDataSync dataSync = dataSyncLiveData.getValue();
-         dataSync.lastSeen = time;
-         dataSyncLiveData.setValue(dataSync);
-      });
-   }
-
-   public void onUserOnlineStateChanged(boolean isActive) {
-      uiThread.post(() -> {
-         ChatDataSync dataSync = dataSyncLiveData.getValue();
-         dataSync.isActive = isActive;
-         dataSyncLiveData.setValue(dataSync);
-      });
-   }
-
-   // try to sync user information, maybe the user's name and avatar changed.
-   private void sync() throws IOException {
-      AppDatabase db = ApplicationContainer.getInstance().database;
-      ChatDao chatDao = db.getChatDao();
-      UserBasicInfoDao userBasicInfoDao = db.getUserBasicInfoDao();
-
-      Chat chat = chatDao.findChatById(chatInfo.getChatId());
-      if (chat == null) {
-         chat = pull(chatInfo.getChatId());
-      }
-      Integer oldUserId = chat.getUserInfoId();
-
-      Call<UserBasicInfoBody> req = ApplicationContainer.getInstance().retrofit.create(UserApi.class).loadUserBasicInfo(chatInfo.getSender());
-      Response<UserBasicInfoBody> res = req.execute();
-      MessageAccessHelper.LocalDataSupporter localDataSupporter = messageAccessHelper.getLocalDataSupporter();
-      UserBasicInfoBody body = res.body();
-      com.example.socialmediaapp.application.entity.UserBasicInfo userBasicInfo = new com.example.socialmediaapp.application.entity.UserBasicInfo();
-      userBasicInfo.setFullname(body.getFullname());
-      userBasicInfo.setAlias(body.getAlias());
-      userBasicInfo.setAvatarUri(localDataSupporter.downloadImage(body.getAvatarId()));
-
-      int userId = (int) userBasicInfoDao.insert(userBasicInfo);
-      chat.setUserInfoId(userId);
-      chatDao.update(chat);
-
-      if (oldUserId != null) {
-         com.example.socialmediaapp.application.entity.UserBasicInfo oldUserInstance = userBasicInfoDao.findUserBasicInfo(oldUserId);
-         File avatar = new File(oldUserInstance.getAvatarUri());
-         avatar.delete();
-         userBasicInfoDao.delete(oldUserInstance);
-      }
-      post(() -> loadInfoValue(userId));
-   }
-
-   private void loadInfoValue(Integer userId) {
-      AppDatabase db = ApplicationContainer.getInstance().database;
-      UserBasicInfoDao userBasicInfoDao = db.getUserBasicInfoDao();
-      UserBasicInfo u = userBasicInfoDao.findUserBasicInfo(userId);
-      com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo userBasicInfo = new com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo();
-      userBasicInfo.setFullname(u.getFullname());
-      userBasicInfo.setAlias(u.getAlias());
-      userBasicInfo.setAvatar(BitmapFactory.decodeFile(u.getAvatarUri()));
-
-      Handler mainThread = new Handler(Looper.getMainLooper());
-      mainThread.post(() -> {
-         ChatDataSync dataSync = dataSyncLiveData.getValue();
-         dataSync.userBasicInfo = userBasicInfo;
-         dataSyncLiveData.setValue(dataSync);
-      });
-   }
-
-   private void initLiveData() {
-      ChatDataSync dataSync = new ChatDataSync();
-
-      AppDatabase db = ApplicationContainer.getInstance().database;
-      ChatDao chatDao = db.getChatDao();
-      MessageDao messageDao = db.getMessageDao();
-
-      // load last message
-      MessageItem lastMessage = chatDao.lastMessage(chatInfo.getChatId());
-      Bundle msg = new Bundle();
-      String type = lastMessage.getType();
-      if (type.equals("text")) {
-         msg.putString("content", messageDao.loadTextMessage(lastMessage.getId()).getContent());
-      } else if (type.equals("image")) {
-         msg.putString("content", lastMessage.getSender() + " has sent an image");
-      } else {
-         msg.putString("content", lastMessage.getSender() + " has sent an icon");
-      }
-      msg.putLong("time", lastMessage.getTime());
+  protected void onNewMessage(Bundle msg) {
+    msg.putString("chat id", chatInfo.getChatId());
+    uiThread.post(() -> {
+      ChatDataSync dataSync = dataSyncLiveData.getValue();
       dataSync.lastMessage = msg;
-
-      //load last seen
-      Chat chat = chatDao.findChatById(chatInfo.getChatId());
-      dataSync.lastSeen = chat.getLastSeen();
-
       dataSyncLiveData.setValue(dataSync);
-      //load user information
-      loadInfoValue(chat.getUserInfoId());
-   }
+    });
+    boolean isMine = msg.getString("sender").equals("You");
+    if (!isMine) {
+      UserBasicInfo u = dao.loadPartnerInfo(chatInfo.getChatId());
+      msg.putString("avatar uri", ImageUtils.imagePrefUrl + u.getAvatarId());
+    }
+    msgThreadHandler.onMessageProcessed(msg);
+  }
 
-   private void postConstruct() {
-      initLiveData();
-      for (Bundle msg : msgQueue) {
-         onNewMessage(msg);
+  public void onMessageSeen(long time) {
+    SerialTaskRequest.Builder builder = new SerialTaskRequest.Builder();
+    ActionHandleTask task = builder.fromTask(ActionHandleTask.class);
+    task.setHandler(this);
+    task.setAction(() -> {
+      db.runInTransaction(() -> {
+        Chat chat = dao.findChatById(chatInfo.getChatId());
+        chat.setLastSeen(time);
+        dao.update(chat);
+      });
+
+      uiThread.post(() -> {
+        ChatDataSync dataSync = dataSyncLiveData.getValue();
+        dataSync.lastSeen = time;
+        dataSyncLiveData.setValue(dataSync);
+      });
+    });
+    TaskRequest request = builder
+            .setAlias("Chat" + chatInfo.getChatId())
+            .setWillRestore(false)
+            .build();
+    postTask(request);
+  }
+
+  public void onMeSeenMessage(long time) {
+    SerialTaskRequest.Builder builder = new SerialTaskRequest.Builder();
+    ActionHandleTask task = builder.fromTask(ActionHandleTask.class);
+    task.setHandler(this);
+    task.setAction(() -> {
+      db.runInTransaction(() -> {
+        Chat chat = dao.findChatById(chatInfo.getChatId());
+        chat.setMeLastSeen(time);
+        dao.update(chat);
+      });
+      try {
+        HttpCallSupporter.create(ChatApi.class)
+                .seenMessage(chatInfo.getChatId(), time)
+                .execute();
+      } catch (IOException e) {
+        e.printStackTrace();
       }
-      msgQueue = null;
-   }
+      FirebaseDatabase.getInstance().getReference()
+              .child("chat")
+              .child(chatInfo.getChatId())
+              .child(chatInfo.getMe())
+              .child("seen")
+              .setValue(time);
+      uiThread.post(() -> {
+        ChatDataSync dataSync = dataSyncLiveData.getValue();
+        dataSync.meLastSeen = time;
+        dataSyncLiveData.setValue(dataSync);
+      });
+    });
+    TaskRequest request = builder
+            .setAlias("Chat" + chatInfo.getChatId())
+            .setWillRestore(false)
+            .build();
+    postTask(request);
+  }
+
+  public void onUserOnlineStateChanged(boolean isActive) {
+    ChatDataSync dataSync = dataSyncLiveData.getValue();
+    if (!isActive && dataSync.isActive == null) return;
+
+    dataSync.isActive = isActive;
+    dataSyncLiveData.setValue(dataSync);
+  }
+
+  private void initMessageDataAccess() {
+    accessHandler = new MessageAccessHandler(this);
+  }
+
+  private void initLiveData() {
+    ChatDataSync dataSync = new ChatDataSync();
+
+    Chat chat = dao.findChatById(chatInfo.getChatId());
+    MessageItem lastMsg = dao.lastMessage(chatInfo.getChatId());
+
+    if (lastMsg != null) {
+      Bundle msg = new Bundle();
+      String type = lastMsg.getType();
+      String name = lastMsg.getMine() ? "You" : chatInfo.getFullname();
+      msg.putString("sender", name);
+      if (type.equals("text")) {
+        msg.putString("view content", db.getMessageDao().loadTextMessage(lastMsg.getId()).getContent());
+      } else if (type.equals("image")) {
+        msg.putString("view content", name + " has sent an image");
+      } else {
+        msg.putString("view content", name + " has sent an icon");
+      }
+      msg.putLong("time", lastMsg.getTime());
+      dataSync.lastMessage = msg;
+    }
+    dataSync.lastSeen = chat.getLastSeen();
+    if (dataSync.lastSeen == null) dataSync.lastSeen = 0L;
+    dataSync.meLastSeen = chat.getMeLastSeen();
+    if (dataSync.meLastSeen == null) dataSync.meLastSeen = 0L;
+
+    UserBasicInfo u = userDao.findUser(chat.getOtherId());
+    dataSync.userModel = ModelConvertor.convertToUserModel(u);
+
+    dataSyncLiveData.postValue(dataSync);
+  }
+
+  private void loadPreferences() {
+  }
+
+  private void postConstruct() {
+    loadPreferences();
+    initMessageDataAccess();
+    initLiveData();
+  }
 }

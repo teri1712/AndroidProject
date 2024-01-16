@@ -1,249 +1,231 @@
 package com.example.socialmediaapp.application.converter;
 
-import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.util.ArrayMap;
 
-import com.example.socialmediaapp.apis.MediaApi;
-import com.example.socialmediaapp.apis.entities.CommentBody;
-import com.example.socialmediaapp.apis.entities.PostBody;
-import com.example.socialmediaapp.apis.entities.ReplyCommentBody;
-import com.example.socialmediaapp.apis.entities.UserBasicInfoBody;
-import com.example.socialmediaapp.apis.entities.UserProfileBody;
-import com.example.socialmediaapp.apis.entities.UserSessionBody;
-import com.example.socialmediaapp.application.ApplicationContainer;
-import com.example.socialmediaapp.application.entity.Comment;
-import com.example.socialmediaapp.application.entity.ImagePost;
-import com.example.socialmediaapp.application.entity.Post;
-import com.example.socialmediaapp.application.entity.ReplyComment;
-import com.example.socialmediaapp.application.entity.UserBasicInfo;
-import com.example.socialmediaapp.viewmodel.models.UserSession;
-import com.example.socialmediaapp.viewmodel.models.post.MediaPost;
-import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
-import com.example.socialmediaapp.viewmodel.models.user.profile.NotMeProfile;
-import com.example.socialmediaapp.viewmodel.models.user.profile.SelfProfile;
-import com.example.socialmediaapp.viewmodel.models.user.profile.base.UserProfile;
+import androidx.lifecycle.MediatorLiveData;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import com.example.socialmediaapp.api.entities.CommentBody;
+import com.example.socialmediaapp.api.entities.FriendRequestBody;
+import com.example.socialmediaapp.api.entities.ImageBody;
+import com.example.socialmediaapp.api.entities.MediaBody;
+import com.example.socialmediaapp.api.entities.MessageItemBody;
+import com.example.socialmediaapp.api.entities.PostBody;
+import com.example.socialmediaapp.api.entities.ReplyCommentBody;
+import com.example.socialmediaapp.api.entities.UserBasicInfoBody;
+import com.example.socialmediaapp.api.entities.UserProfileBody;
+import com.example.socialmediaapp.api.entities.UserSessionBody;
+import com.example.socialmediaapp.application.DecadeApplication;
+import com.example.socialmediaapp.application.entity.comment.Comment;
+import com.example.socialmediaapp.application.entity.message.IconMessageItem;
+import com.example.socialmediaapp.application.entity.message.ImageMessageItem;
+import com.example.socialmediaapp.application.entity.post.ImagePost;
+import com.example.socialmediaapp.application.entity.post.MediaPost;
+import com.example.socialmediaapp.application.entity.message.MessageItem;
+import com.example.socialmediaapp.application.entity.post.Post;
+import com.example.socialmediaapp.application.entity.reply.ReplyComment;
+import com.example.socialmediaapp.application.entity.message.TextMessageItem;
+import com.example.socialmediaapp.application.entity.user.FriendRequestItem;
+import com.example.socialmediaapp.application.entity.user.UserBasicInfo;
+import com.example.socialmediaapp.application.entity.user.UserProfile;
+import com.example.socialmediaapp.models.UserSession;
+import com.example.socialmediaapp.models.messenger.chat.ChatInfo;
+import com.example.socialmediaapp.models.user.UserInformation;
+import com.example.socialmediaapp.utils.ImageUtils;
+import com.example.socialmediaapp.utils.LiveDataBitmapTarget;
+
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
-import java.util.HashSet;
-
-import okhttp3.ResponseBody;
-import retrofit2.Response;
-import retrofit2.Retrofit;
+import java.util.Map;
 
 public class DtoConverter {
-    private Context context;
-    private Retrofit retrofit = ApplicationContainer.getInstance().retrofit;
-    final private HttpExtraResolver httpExtraResolver = new HttpExtraResolver();
-    private HashSet<String> cachedFiles;
+  public static Map<String, Object> convertToPost(PostBody postBody) {
+    Map<String, Object> itemPack = new HashMap<>();
+    Post p = new Post();
 
-    public DtoConverter(Context context) {
-        this.context = context;
-        cachedFiles = new HashSet<>();
+    String type = postBody.getType();
+    p.setId(postBody.getId());
+    p.setType(type);
+    p.setTime(postBody.getTime());
+    p.setLiked(postBody.getLiked());
+    p.setContent(postBody.getStatus());
+    p.setLikeCount(postBody.getLikeCount());
+    p.setShareCount(postBody.getShareCount());
+    p.setCommentCount(postBody.getCommentCount());
+
+    if (type.startsWith("image")) {
+      ImageBody imageBody = postBody.getImageBody();
+      ImagePost imagePost = new ImagePost();
+      imagePost.setMediaId(imageBody.getMediaId());
+      imagePost.setWidth(imageBody.getWidth());
+      imagePost.setHeight(imageBody.getHeight());
+      itemPack.put("image post", imagePost);
+    } else if (type.startsWith("video")) {
+      MediaBody mediaBody = postBody.getMediaBody();
+      MediaPost mediaPost = new MediaPost();
+      mediaPost.setMediaId(mediaBody.getMediaId());
+      itemPack.put("media post", mediaPost);
     }
+    itemPack.put("post", p);
+    itemPack.put("user basic info", convertToUserBasicInfo(postBody.getAuthor()));
+    return itemPack;
+  }
 
-    public HashSet<String> getCachedFiles() {
-        return cachedFiles;
+  public static Map<String, Object> convertToComment(CommentBody commentBody) {
+    Map<String, Object> m = new ArrayMap<>();
+    Comment comment = new Comment();
+
+    comment.setId(commentBody.getId());
+    comment.setMine(commentBody.isMine());
+    comment.setOrd(commentBody.getOrder());
+    comment.setTime(commentBody.getTime());
+    comment.setLiked(commentBody.isLiked());
+    comment.setContent(commentBody.getContent());
+    comment.setCommitted(true);
+    ImageBody imageBody = commentBody.getImageBody();
+    if (imageBody != null) {
+      comment.setImageUri(DecadeApplication.localhost + imageBody.getMediaId());
+      comment.setImageWidth(imageBody.getWidth());
+      comment.setImageHeight(imageBody.getHeight());
     }
+    comment.setLikeCount(commentBody.getCountLike());
+    comment.setCountReply(commentBody.getCountReply());
 
-    public HashMap<String, Object> convertToPost(PostBody postBody, Integer sessionId) throws IOException {
-        HashMap<String, Object> res = new HashMap<>();
-        Post p = new Post();
-        p.setId(postBody.getId());
-        p.setCommentCount(postBody.getCommentCount());
-        p.setLikeCount(postBody.getLikeCount());
-        p.setShareCount(postBody.getShareCount());
-        p.setLiked(postBody.isLiked());
-        p.setStatus(postBody.getStatus());
-        p.setTime(postBody.getTime());
-        res.put("post", p);
+    m.put("comment", comment);
+    m.put("user basic info", convertToUserBasicInfo(commentBody.getAuthor()));
+    return m;
+  }
 
-        Integer mediaId = postBody.getMediaId();
+  public static Map<String, Object> convertToReply(ReplyCommentBody replyBody) {
+    Map<String, Object> m = new HashMap<>();
 
-        if (postBody.getType().startsWith("image")) {
-            ImagePost imagePost = new ImagePost();
-            imagePost.setImageUri(httpExtraResolver.cacheImageFile(sessionId, mediaId));
-            res.put("image post", imagePost);
-            p.setType("image");
-        } else if (postBody.getType().startsWith("video")) {
-            com.example.socialmediaapp.application.entity.MediaPost mediaPost = new com.example.socialmediaapp.application.entity.MediaPost();
-            mediaPost.setMediaId(mediaId);
-            res.put("media post", mediaPost);
-            p.setType("video");
-        } else {
-            p.setType("text");
-        }
-        res.put("user basic info", convertToUserBasicInfo(postBody.getAuthor(), sessionId));
-
-        return res;
+    ReplyComment reply = new ReplyComment();
+    reply.setId(replyBody.getId());
+    reply.setTime(replyBody.getTime());
+    reply.setLiked(replyBody.isLiked());
+    reply.setContent(replyBody.getContent());
+    ImageBody imageBody = replyBody.getImageBody();
+    if (imageBody != null) {
+      reply.setImageId(imageBody.getMediaId());
+      reply.setImageWidth(imageBody.getWidth());
+      reply.setImageHeight(imageBody.getHeight());
     }
+    reply.setLikeCount(replyBody.getCountLike());
+    reply.setMine(replyBody.isMine());
+    reply.setOrd(replyBody.getOrder());
 
-    public com.example.socialmediaapp.viewmodel.models.post.base.Post convertToModelPost(PostBody postBody) throws IOException {
-        if (postBody == null) return null;
-        com.example.socialmediaapp.viewmodel.models.post.base.Post post = null;
-        if (postBody.getType().startsWith("image")) {
-            com.example.socialmediaapp.viewmodel.models.post.ImagePost imagePost = new com.example.socialmediaapp.viewmodel.models.post.ImagePost();
-            imagePost.setImage(httpExtraResolver.getImageBitmap(postBody.getMediaId()));
-            post = imagePost;
-            post.setType("image");
-        } else if (postBody.getType().startsWith("video")) {
-            MediaPost mediaPost = new MediaPost();
-            mediaPost.setMediaId(postBody.getMediaId());
-            post = mediaPost;
-            post.setType("video");
-        } else {
-            post = new com.example.socialmediaapp.viewmodel.models.post.base.Post();
-            post.setType("text");
-        }
-        post.setId(postBody.getId());
-        post.setAuthor(convertToModelUserBasicInfo(postBody.getAuthor()));
-        post.setCommentCount(postBody.getCommentCount());
-        post.setShareCount(postBody.getShareCount());
-        post.setLikeCount(postBody.getLikeCount());
-        post.setStatus(postBody.getStatus());
-        post.setTime(postBody.getTime());
-        return post;
+    m.put("comment", reply);
+    m.put("user basic info", convertToUserBasicInfo(replyBody.getAuthor()));
+    return m;
+  }
+
+  public static UserSession convertToUserSession(UserSessionBody body) throws IOException {
+    UserInformation info = new UserInformation();
+
+    info.setId(body.getUserInfo().getId());
+    info.setAlias(body.getUserInfo().getAlias());
+    info.setGender(body.getUserInfo().getGender());
+    info.setBirthday(body.getUserInfo().getBirthday());
+    info.setFullname(body.getUserInfo().getFullname());
+
+    UserSession userSession = new UserSession();
+    userSession.setUserInfo(info);
+
+    String avtUri = ImageUtils.imagePrefUrl + body.getAvatarId();
+    MediatorLiveData<Bitmap> avatar = new MediatorLiveData<>();
+    ImageUtils.loadInto(avtUri, new LiveDataBitmapTarget(avatar));
+    userSession.setAvatarUri(avtUri);
+    userSession.setAvatar(avatar);
+
+    String bgUri = ImageUtils.imagePrefUrl + body.getBackgroundId();
+    MediatorLiveData<Bitmap> bg = new MediatorLiveData<>();
+    ImageUtils.loadInto(bgUri, new LiveDataBitmapTarget(bg));
+    userSession.setBgUri(bgUri);
+    userSession.setBackground(bg);
+
+    return userSession;
+  }
+
+  public static UserProfile convertToUserProfile(UserProfileBody userProfileBody) {
+    UserProfile userProfile = new UserProfile();
+    userProfile.setId(userProfileBody.getId());
+    userProfile.setType(userProfileBody.getType());
+    userProfile.setAlias(userProfileBody.getAlias());
+    userProfile.setGender(userProfileBody.getGender());
+    userProfile.setChatId(userProfileBody.getChatInfo().getChatId());
+    PostBody bg = userProfileBody.getBackgroundPost();
+    PostBody avt = userProfileBody.getAvatarPost();
+    userProfile.setBackgroundPostId(bg == null ? null : bg.getId());
+    userProfile.setAvatarPostId(avt == null ? null : avt.getId());
+    userProfile.setBirthday(userProfileBody.getBirthday());
+    userProfile.setFullname(userProfileBody.getFullname());
+
+    return userProfile;
+  }
+
+  public static UserBasicInfo convertToUserBasicInfo(UserBasicInfoBody userBasicInfoBody) {
+    UserBasicInfo userBasicInfo = new UserBasicInfo();
+    userBasicInfo.setFullname(userBasicInfoBody.getFullname());
+    userBasicInfo.setId(userBasicInfoBody.getId());
+    userBasicInfo.setAlias(userBasicInfo.getAlias());
+    userBasicInfo.setAvatarId(userBasicInfoBody.getAvatarId());
+    return userBasicInfo;
+  }
+
+
+  public static Map<String, Object> convertToMessageItem(MessageItemBody body) {
+    Map<String, Object> m = new ArrayMap<>();
+    ChatInfo chatInfo = body.getChatInfo();
+
+    MessageItem messageItem = new MessageItem();
+    m.put("message item", messageItem);
+
+    messageItem.setChatId(chatInfo.getChatId());
+    messageItem.setMessageId(body.getId());
+    messageItem.setOrd(body.getOrd());
+    messageItem.setMine(body.getSender().equals(chatInfo.getMe()));
+    messageItem.setTime(body.getTime());
+    String type = body.getType();
+    messageItem.setType(type);
+    switch (type) {
+      case "image": {
+        String imageId = body.getImageBody().getMediaId();
+        int width = body.getImageBody().getWidth();
+        int height = body.getImageBody().getHeight();
+        ImageMessageItem imageMessageItem = new ImageMessageItem();
+        imageMessageItem.setImageUri(ImageUtils.imagePrefUrl + imageId);
+        imageMessageItem.setWidth(width);
+        imageMessageItem.setHeight(height);
+        m.put("image message item", imageMessageItem);
+        break;
+      }
+      case "icon": {
+        IconMessageItem iconMessageItem = new IconMessageItem();
+        m.put("icon message item", iconMessageItem);
+        break;
+      }
+      case "text": {
+        TextMessageItem textMessageItem = new TextMessageItem();
+        textMessageItem.setContent(body.getContent());
+        m.put("text message item", textMessageItem);
+        break;
+      }
+      default:
+        assert false;
+        break;
     }
+    return m;
+  }
 
-    public UserBasicInfo convertToUserBasicInfo(UserBasicInfoBody userBasicInfoBody, Integer sessionId) throws IOException {
-        UserBasicInfo userBasicInfo = new UserBasicInfo();
-        userBasicInfo.setFullname(userBasicInfoBody.getFullname());
-        userBasicInfo.setAlias(userBasicInfoBody.getAlias());
-        userBasicInfo.setAvatarUri(httpExtraResolver.cacheImageFile(sessionId, userBasicInfoBody.getAvatarId()));
-        return userBasicInfo;
-    }
+  public static FriendRequestItem convertToFReq(FriendRequestBody body) {
+    FriendRequestItem fReqItem = new FriendRequestItem();
+    fReqItem.setId(body.getId());
+    fReqItem.setTime(body.getTime());
+    return fReqItem;
+  }
 
+  private static Bitmap getImageBitmap(String imageId) throws IOException {
+    return DecadeApplication.getInstance().picasso.load(ImageUtils.imagePrefUrl + imageId).get();
+  }
 
-    public com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo convertToModelUserBasicInfo(UserBasicInfoBody userBasicInfoBody) throws IOException {
-        com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo userBasicInfo = new com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo();
-        userBasicInfo.setFullname(userBasicInfoBody.getFullname());
-        userBasicInfo.setAlias(userBasicInfoBody.getAlias());
-        userBasicInfo.setAvatar(httpExtraResolver.getImageBitmap(userBasicInfoBody.getAvatarId()));
-        return userBasicInfo;
-    }
-
-    public HashMap<String, Object> convertToComment(CommentBody commentBody, Integer sessionId) throws IOException {
-        HashMap<String, Object> m = new HashMap<>();
-        Comment comment = new Comment();
-        comment.setId(commentBody.getId());
-        comment.setContent(commentBody.getContent());
-        comment.setTime(commentBody.getTime());
-        comment.setLiked(commentBody.isLiked());
-        comment.setLikeCount(commentBody.getCountLike());
-        comment.setCommentCount(commentBody.getCountComment());
-        comment.setImageUri(httpExtraResolver.cacheImageFile(sessionId, commentBody.getMediaId()));
-        m.put("comment", comment);
-        UserBasicInfo userBasicInfo = convertToUserBasicInfo(commentBody.getAuthor(), sessionId);
-        m.put("user basic info", userBasicInfo);
-        return m;
-    }
-
-    public com.example.socialmediaapp.viewmodel.models.post.Comment convertToModelComment(CommentBody commentBody) throws IOException {
-        com.example.socialmediaapp.viewmodel.models.post.Comment comment = new com.example.socialmediaapp.viewmodel.models.post.Comment();
-        comment.setAuthor(convertToModelUserBasicInfo(commentBody.getAuthor()));
-        comment.setId(commentBody.getId());
-        comment.setContent(commentBody.getContent());
-        comment.setTime(commentBody.getTime());
-        comment.setCountLike(commentBody.getCountLike());
-        comment.setCountComment(commentBody.getCountComment());
-        comment.setImage(httpExtraResolver.getImageBitmap(commentBody.getMediaId()));
-        return comment;
-    }
-
-    public HashMap<String, Object> convertToReplyComment(ReplyCommentBody commentBody, Integer sessionId) throws IOException {
-        HashMap<String, Object> m = new HashMap<>();
-        ReplyComment comment = new ReplyComment();
-        comment.setId(commentBody.getId());
-        comment.setContent(commentBody.getContent());
-        comment.setTime(commentBody.getTime());
-        comment.setLiked(commentBody.isLiked());
-        comment.setLikeCount(commentBody.getCountLike());
-        comment.setImageUri(httpExtraResolver.cacheImageFile(sessionId, commentBody.getMediaId()));
-        m.put("comment", comment);
-        UserBasicInfo userBasicInfo = convertToUserBasicInfo(commentBody.getAuthor(), sessionId);
-        m.put("user basic info", userBasicInfo);
-        return m;
-    }
-
-
-    public com.example.socialmediaapp.viewmodel.models.post.ReplyComment convertToModelReplyComment(ReplyCommentBody commentBody) throws IOException {
-        com.example.socialmediaapp.viewmodel.models.post.ReplyComment comment = new com.example.socialmediaapp.viewmodel.models.post.ReplyComment();
-        comment.setSender(convertToModelUserBasicInfo(commentBody.getAuthor()));
-        comment.setId(commentBody.getId());
-        comment.setContent(commentBody.getContent());
-        comment.setTime(commentBody.getTime());
-        comment.setCountLike(commentBody.getCountLike());
-        comment.setImage(httpExtraResolver.getImageBitmap(commentBody.getMediaId()));
-        return comment;
-    }
-
-    public UserSession convertToUserSession(UserSessionBody userSessionBody) throws IOException {
-        UserInformation userInformation = new UserInformation();
-        userInformation.setFullname(userSessionBody.getUserInfo().getFullname());
-        userInformation.setAlias(userSessionBody.getUserInfo().getAlias());
-        userInformation.setGender(userSessionBody.getUserInfo().getGender());
-        userInformation.setBirthday(userSessionBody.getUserInfo().getBirthday());
-        UserSession userSession = new UserSession();
-        userSession.setUserInfo(userInformation);
-        userSession.setAvatar(httpExtraResolver.getImageBitmap(userSessionBody.getAvatarId()));
-        userSession.setBackground(httpExtraResolver.getImageBitmap(userSessionBody.getBackgroundId()));
-        return userSession;
-    }
-
-    public UserProfile convertToUserProfile(UserProfileBody userProfileBody) throws IOException {
-        UserProfile userProfile = (userProfileBody.getType().equals("self")) ? new SelfProfile() : new NotMeProfile();
-        userProfile.setFullname(userProfileBody.getFullname());
-        userProfile.setAlias(userProfileBody.getAlias());
-        userProfile.setGender(userProfileBody.getGender());
-        userProfile.setBirthday(userProfileBody.getBirthday());
-        if (userProfile instanceof NotMeProfile) {
-            NotMeProfile notMeProfile = (NotMeProfile) userProfile;
-            notMeProfile.setType(userProfileBody.getType());
-        }
-        userProfile.setAvatarPost((com.example.socialmediaapp.viewmodel.models.post.ImagePost) convertToModelPost(userProfileBody.getAvatarPost()));
-        userProfile.setBackgroundPost((com.example.socialmediaapp.viewmodel.models.post.ImagePost) convertToModelPost(userProfileBody.getBackgroundPost()));
-        return userProfile;
-
-    }
-
-    private class HttpExtraResolver {
-        private Integer ord = 0;
-
-        private String cacheImageFile(Integer sessionId, Integer mediaId) throws IOException {
-            if (mediaId == null) return null;
-            File cacheDir = context.getCacheDir();
-            File sessionDir = new File(cacheDir, "SessionCache#" + Integer.toString(sessionId));
-            if (!sessionDir.exists()) {
-                sessionDir.mkdir();
-            }
-            File cache = new File(sessionDir, "image" + Integer.toString(ord++));
-            cache.createNewFile();
-            FileOutputStream fos = new FileOutputStream(cache);
-            Response<ResponseBody> img = retrofit.create(MediaApi.class).loadImage(mediaId).execute();
-            InputStream is = img.body().byteStream();
-            byte[] buffer = new byte[2048];
-            int cur = 0;
-            long total = img.body().contentLength();
-            while (cur != total) {
-                int cnt = is.read(buffer, 0, Math.min((int) total - cur, 2048));
-                cur += cnt;
-                fos.write(buffer, 0, cnt);
-            }
-            is.close();
-            fos.close();
-            cachedFiles.add(cache.getAbsolutePath());
-            return cache.getAbsolutePath();
-        }
-
-        private Bitmap getImageBitmap(Integer mediaId) throws IOException {
-            if (mediaId == null) return null;
-            Response<ResponseBody> res = retrofit.create(MediaApi.class).loadImage(mediaId).execute();
-            byte[] img = res.body().bytes();
-            return BitmapFactory.decodeByteArray(img, 0, img.length);
-        }
-    }
 }

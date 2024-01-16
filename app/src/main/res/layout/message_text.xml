@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.socialmediaapp.view.message.MessageClipFrame xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/msg_clipped_view"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <FrameLayout
+        android:id="@+id/main_text_frame"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#3fffffff"
+        android:paddingLeft="14dp"
+        android:paddingTop="7dp"
+        android:paddingRight="14dp"
+        android:paddingBottom="9dp">
+
+        <TextView
+            android:id="@+id/text_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/roboto"
+            android:maxWidth="250dp"
+            android:padding="0dp"
+            android:text="đóm quãng ngãi"
+            android:textColor="@color/white"
+            android:textSize="15sp" />
+    </FrameLayout>
+</com.example.socialmediaapp.view.message.MessageClipFrame>
+

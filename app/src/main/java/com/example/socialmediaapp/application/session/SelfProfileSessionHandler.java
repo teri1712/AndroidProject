@@ -1,25 +1,31 @@
 package com.example.socialmediaapp.application.session;
 
+import android.content.ContentResolver;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.Looper;
+import android.os.Bundle;
 
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.example.socialmediaapp.apis.UserApi;
-import com.example.socialmediaapp.apis.entities.UserProfileBody;
-import com.example.socialmediaapp.apis.entities.UserSessionBody;
-import com.example.socialmediaapp.apis.entities.requests.UpdateUserRequestBody;
-import com.example.socialmediaapp.application.ApplicationContainer;
+import com.example.socialmediaapp.api.UserApi;
+import com.example.socialmediaapp.api.debug.HttpCallSupporter;
+import com.example.socialmediaapp.api.entities.PostBody;
+import com.example.socialmediaapp.api.entities.UserProfileBody;
+import com.example.socialmediaapp.api.entities.requests.UpdateUserRequestBody;
+import com.example.socialmediaapp.application.DecadeApplication;
+import com.example.socialmediaapp.application.converter.DtoConverter;
 import com.example.socialmediaapp.application.converter.HttpBodyConverter;
-import com.example.socialmediaapp.viewmodel.models.UserSession;
-import com.example.socialmediaapp.viewmodel.models.post.ImagePost;
-import com.example.socialmediaapp.viewmodel.models.user.UserInformation;
-import com.example.socialmediaapp.viewmodel.models.user.profile.base.UserProfile;
+import com.example.socialmediaapp.application.converter.ModelConvertor;
+import com.example.socialmediaapp.application.dao.user.ProfileDao;
+import com.example.socialmediaapp.application.database.DecadeDatabase;
+import com.example.socialmediaapp.application.entity.post.Post;
+import com.example.socialmediaapp.application.entity.user.UserProfile;
+import com.example.socialmediaapp.application.network.SerialTaskRequest;
+import com.example.socialmediaapp.application.network.TaskRequest;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Map;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -27,93 +33,249 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class SelfProfileSessionHandler extends ViewProfileSessionHandler {
-    public SelfProfileSessionHandler(String userAlias) {
-        super(userAlias);
+public class SelfProfileSessionHandler extends ProfileSessionHandler {
+  private final ProfileDao dao;
+
+  public SelfProfileSessionHandler(UserProfileProvider profileProvider, UserProfile userProfile) {
+    super(profileProvider, userProfile);
+    this.dao = DecadeDatabase.getInstance().getProfileDao();
+  }
+
+  protected void onNewAvatarPost(Map<String, Object> itemPack) {
+    Post item = (Post) itemPack.get("post");
+    HandlerAccess access = PostHandlerStore.getInstance().register(item, itemPack);
+    profile.setAvatarPostAccessId(access.getId());
+    profile.setAvatarPostId(item.getId());
+    dao.update(profile);
+
+    avtPostAccess.postValue(access);
+  }
+
+  protected void onNewBackgroundPost(Map<String, Object> itemPack) {
+    Post item = (Post) itemPack.get("post");
+    HandlerAccess access = PostHandlerStore.getInstance().register(item, itemPack);
+    profile.setBackgroundPostAccessId(access.getId());
+    profile.setBackgroundPostId(item.getId());
+    dao.update(profile);
+
+    avtPostAccess.postValue(access);
+  }
+
+  private TaskRequest.Builder createSerialTask(
+          Class<? extends SelfProfileTask> clazz,
+          MutableLiveData<?> callBack) {
+    SerialTaskRequest.Builder builder = new SerialTaskRequest.Builder();
+    SelfProfileTask task = builder.fromTask(clazz);
+    task.setHandler(this);
+    task.setCallBack(callBack);
+    return builder.setAlias("Profile" + profile.getId()).setWillRestore(true);
+  }
+
+  public LiveData<String> changeInformation(final Bundle data) {
+    MutableLiveData<String> callBack = new MutableLiveData<>();
+    TaskRequest.Builder builder = createSerialTask(UpdateInformationTask.class, callBack);
+    TaskRequest request = builder.setData(data).build();
+    postTask(request);
+    return callBack;
+  }
+
+  public LiveData<String> setUpInformation(final Bundle data) {
+    MutableLiveData<String> callBack = new MutableLiveData<>();
+    TaskRequest.Builder builder = createSerialTask(SetUpInformationTask.class, callBack);
+    TaskRequest request = builder.setData(data).build();
+    postTask(request);
+    return callBack;
+  }
+
+  public LiveData<HandlerAccess> changeAvatar(Bundle data) {
+    MutableLiveData<HandlerAccess> callBack = new MutableLiveData<>();
+    data.putString("action", "avatar");
+    data.putString("user id", profile.getId());
+    TaskRequest request = createSerialTask(UpdateMediaPostTask.class, callBack)
+            .setData(data).build();
+    postTask(request);
+    return callBack;
+  }
+
+  public LiveData<HandlerAccess> changeBackground(Bundle data) {
+    MutableLiveData<HandlerAccess> callBack = new MutableLiveData<>();
+    data.putString("action", "background");
+    data.putString("user id", profile.getId());
+    TaskRequest request = createSerialTask(UpdateMediaPostTask.class, callBack)
+            .setData(data).build();
+    postTask(request);
+    return callBack;
+  }
+
+  public static class SelfProfileTask<T> extends SessionTask {
+    protected SelfProfileSessionHandler profileHandler;
+    protected MutableLiveData<T> callBack;
+    protected ProfileDao dao;
+
+    public SelfProfileTask() {
+      dao = DecadeDatabase.getInstance().getProfileDao();
     }
 
-    public void emitNewAvatarPost(ImagePost imagePost) {
-        post(() -> {
-            SessionHandler avatarSessionHandler = avatarPostSession.getValue();
-            if (avatarSessionHandler != null) {
-                avatarSessionHandler.invalidate();
-            }
-            SessionHandler sh = new PostSessionHandler(imagePost);
-            sessionRegistry.bind(sh);
-            ((MutableLiveData<SessionHandler>) avatarPostSession).postValue(sh);
-        });
+    @Override
+    public void setHandler(SessionHandler handler) {
+      super.setHandler(handler);
+      profileHandler = (SelfProfileSessionHandler) handler;
     }
 
-    public void emitNewBackgroundPost(ImagePost imagePost) {
-        post(() -> {
-            SessionHandler backgroundSessionHandler = backgroundPostSession.getValue();
-            if (backgroundSessionHandler != null) {
-                backgroundSessionHandler.invalidate();
-            }
-            SessionHandler sh = new PostSessionHandler(imagePost);
-            sessionRegistry.bind(sh);
-            ((MutableLiveData<SessionHandler>) backgroundPostSession).postValue(sh);
-        });
+    public void setCallBack(MutableLiveData<T> callBack) {
+      this.callBack = callBack;
+    }
+  }
+
+  public static class UpdateInformationTask extends SelfProfileTask<String> {
+    private void updateInLocal(Bundle data) {
+      UserProfile profile = null;
+      if (handler != null) {
+        profile = profileHandler.profile;
+      } else {
+        profile = dao.findById(data.getString("user id"));
+      }
+      profile.setFullname(data.getString("fullname"));
+      profile.setGender(data.getString("gender"));
+      profile.setBirthday(data.getString("birthday"));
+      profile.setAlias(data.getString("alias"));
+      dao.update(profile);
+      if (handler != null) {
+        profileHandler.profileLivedata.postValue(ModelConvertor.convertToUserProfileModel(profile));
+      }
     }
 
-    public MutableLiveData<String> changeInformation(HashMap<String, String> m) {
-        MutableLiveData<String> callBack = new MutableLiveData<>();
-        post(() -> postToWorker(() -> {
-            UpdateUserRequestBody body = new UpdateUserRequestBody();
-            body.setFullname(m.get("fullname"));
-            body.setAlias(m.get("alias"));
-            body.setGender(m.get("gender"));
-            body.setBirthday(m.get("birthday"));
-            Call<ResponseBody> req = retrofit.create(UserApi.class).changeInfo(body);
-            try {
-                req.execute();
-                UserProfile userProfile = dataSyncEmitter.getValue();
-                userProfile.setFullname(m.get("fullname"));
-                userProfile.setAlias(m.get("alias"));
-                userProfile.setGender(m.get("gender"));
-                userProfile.setBirthday(m.get("birthday"));
-                dataSyncEmitter.postValue(userProfile);
-                callBack.postValue("Success");
-                return;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            callBack.postValue("Failed");
-        }));
-        return callBack;
+    @Override
+    public void doTask() {
+      Bundle data = getData();
+      UpdateUserRequestBody body = new UpdateUserRequestBody();
+      body.setFullname(data.getString("fullname"));
+      body.setAlias(data.getString("alias"));
+      body.setGender(data.getString("gender"));
+      body.setBirthday(data.getString("birthday"));
+      Call<ResponseBody> req = HttpCallSupporter.create(UserApi.class).changeInfo(body);
+      try {
+        req.execute();
+        updateInLocal(data);
+        callBack.postValue("Success");
+        return;
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      callBack.postValue("Failed");
     }
 
-    public MutableLiveData<String> setUpInformation(HashMap<String, String> m) {
-        MutableLiveData<String> callBack = new MutableLiveData<>();
-        post(() -> {
-            RequestBody fullnamePart = HttpBodyConverter.getTextRequestBody(m.get("fullname"));
-            RequestBody aliasPart = HttpBodyConverter.getTextRequestBody(m.get("alias"));
-            RequestBody genderPart = HttpBodyConverter.getTextRequestBody(m.get("gender"));
-            RequestBody birthdayPart = HttpBodyConverter.getTextRequestBody(m.get("birthday"));
-            String uriPath = m.get("avatar");
-            MultipartBody.Part mediaStreamPart = null;
-            if (uriPath != null) {
-                try {
-                    mediaStreamPart = HttpBodyConverter.getMultipartBody(Uri.parse(uriPath), ApplicationContainer.getInstance().getContentResolver(), "avatar");
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
-            Call<UserProfileBody> req = retrofit.create(UserApi.class).setUpInfo(fullnamePart, aliasPart, genderPart, birthdayPart, mediaStreamPart);
-            try {
-                Response<UserProfileBody> res = req.execute();
-                UserProfileBody body = res.body();
-                UserProfile profile = dtoConverter.convertToUserProfile(body);
+  }
 
-                dataSyncEmitter.postValue(profile);
-                callBack.postValue("Success");
+  public static class SetUpInformationTask extends SelfProfileTask<String> {
 
-                return;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            callBack.postValue("Failed");
-        });
-        return callBack;
+    @Override
+    public void doTask() {
+      Bundle data = getData();
+      RequestBody fullnamePart = HttpBodyConverter.getTextRequestBody(data.getString("fullname"));
+      RequestBody aliasPart = HttpBodyConverter.getTextRequestBody(data.getString("alias"));
+      RequestBody genderPart = HttpBodyConverter.getTextRequestBody(data.getString("gender"));
+      RequestBody birthdayPart = HttpBodyConverter.getTextRequestBody(data.getString("birthday"));
+      String uriPath = data.getString("avatar");
+      MultipartBody.Part mediaStreamPart = null;
+      if (uriPath != null) {
+        ContentResolver resolver = DecadeApplication.getInstance().getContentResolver();
+        Uri uri = Uri.parse(uriPath);
+        try {
+          mediaStreamPart = HttpBodyConverter.getMultipartBody(uri, resolver, "avatar");
+        } catch (FileNotFoundException e) {
+          e.printStackTrace();
+        }
+      }
+      Call<UserProfileBody> req = HttpCallSupporter.create(UserApi.class).setUpInfo(fullnamePart, aliasPart, genderPart, birthdayPart, mediaStreamPart);
+      try {
+        Response<UserProfileBody> res = req.execute();
+        UserProfileBody body = res.body();
+        UserProfile profile = DtoConverter.convertToUserProfile(body);
+        dao.update(profile);
+        if (profileHandler != null) {
+          profileHandler.profile = profile;
+          profileHandler.profileLivedata.postValue(ModelConvertor.convertToUserProfileModel(profile));
+        }
+        callBack.postValue("Success");
+        return;
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      callBack.postValue("Failed");
     }
+  }
+
+  public static class UpdateMediaPostTask extends SelfProfileTask<HandlerAccess> {
+    @Override
+    public void doTask() {
+      ContentResolver resolver = DecadeApplication.getInstance().getContentResolver();
+      Bundle data = getData();
+      String action = data.getString("action");
+      String userId = data.getString("user id");
+      HandlerAccess access = null;
+      switch (action) {
+        case "avatar": {
+          try {
+            String content = data.getString("post content");
+            String uriPath = data.getString("media content");
+            Uri mediaContent = uriPath == null ? null : Uri.parse(uriPath);
+
+            RequestBody contentBody = HttpBodyConverter.getTextRequestBody(content);
+            MultipartBody.Part mediaBody = HttpBodyConverter.getMultipartBody(mediaContent, resolver, "media_data");
+            Call<PostBody> req = HttpCallSupporter.create(UserApi.class).changeAvatar(contentBody, mediaBody);
+            Response<PostBody> res = req.execute();
+            PostBody post = res.body();
+            Map<String, Object> itemPack = DtoConverter.convertToPost(post);
+            if (profileHandler != null) {
+              profileHandler.onNewAvatarPost(itemPack);
+            } else {
+              Post item = (Post) itemPack.get("post");
+              access = PostHandlerStore.getInstance().register(item, itemPack);
+              UserProfile profile = dao.findById(userId);
+              profile.setAvatarPostAccessId(access.getId());
+              profile.setAvatarPostId(item.getId());
+              dao.update(profile);
+            }
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+          break;
+        }
+        case "background": {
+          try {
+
+            String content = data.getString("post content");
+            String uriPath = data.getString("media content");
+            Uri mediaContent = uriPath == null ? null : Uri.parse(uriPath);
+
+            RequestBody contentBody = HttpBodyConverter.getTextRequestBody(content);
+            MultipartBody.Part mediaBody = HttpBodyConverter.getMultipartBody(mediaContent, resolver, "media_data");
+            Call<PostBody> req = HttpCallSupporter.create(UserApi.class).changeBackground(contentBody, mediaBody);
+            Response<PostBody> res = req.execute();
+            PostBody post = res.body();
+
+            Map<String, Object> itemPack = DtoConverter.convertToPost(post);
+            if (profileHandler != null) {
+              profileHandler.onNewBackgroundPost(itemPack);
+            } else {
+              Post item = (Post) itemPack.get("post");
+              access = PostHandlerStore.getInstance().register(item, itemPack);
+              UserProfile profile = dao.findById(userId);
+              profile.setBackgroundPostAccessId(access.getId());
+              profile.setBackgroundPostId(item.getId());
+              dao.update(profile);
+            }
+          } catch (IOException e) {
+            e.printStackTrace();
+            callBack.postValue(null);
+          }
+          break;
+        }
+      }
+      if (callBack != null) {
+        callBack.postValue(access);
+      }
+    }
+  }
 }

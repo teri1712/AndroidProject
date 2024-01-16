@@ -5,12 +5,10 @@ import androidx.room.PrimaryKey;
 
 @Entity
 public class SequenceTable {
-
     @PrimaryKey(autoGenerate = true)
     private Integer id;
     private Integer head;
     private Integer tail;
-
     public Integer getId() {
         return id;
     }

@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.example.socialmediaapp.customview.container.DragPanel xmlns:android="http://schemas.android.com/apk/res/android"
+<com.example.socialmediaapp.view.container.DragPanel xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:dragged_view_id="@id/view_image_frame"
-    tools:context=".home.fragment.ViewImageFragment">
+    app:dragged_view_id="@id/view_image_frame">
 
     <FrameLayout
         android:id="@+id/background_panel"
@@ -14,7 +13,7 @@
         android:alpha="0.9"
         android:background="@color/black" />
 
-    <com.example.socialmediaapp.customview.container.ClickablePanel
+    <com.example.socialmediaapp.view.container.ClickablePanel
         android:id="@+id/view_image_frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -27,7 +26,7 @@
             android:layout_gravity="center"
             android:scaleType="center"
             android:src="@drawable/suzy_background" />
-    </com.example.socialmediaapp.customview.container.ClickablePanel>
+    </com.example.socialmediaapp.view.container.ClickablePanel>
 
     <FrameLayout
         android:id="@+id/command_panel"
@@ -59,7 +58,7 @@
                 android:textColor="@color/white"
                 android:textSize="15sp" />
 
-            <com.example.socialmediaapp.customview.textview.PostContentTextVIew
+            <com.example.socialmediaapp.view.textview.PostContentTextVIew
                 android:id="@+id/status_content"
                 android:layout_width="match_parent"
                 android:layout_height="37dp"
@@ -134,7 +133,7 @@
                 android:orientation="horizontal">
 
 
-                <com.example.socialmediaapp.customview.button.LikeButton
+                <com.example.socialmediaapp.view.button.LikeButton
                     android:id="@+id/like_button"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -148,7 +147,7 @@
                     app:padding_between_text_and_background="5dp" />
 
 
-                <com.example.socialmediaapp.customview.button.PostButton
+                <com.example.socialmediaapp.view.button.PostButton
                     android:id="@+id/comment_button"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -164,7 +163,7 @@
 
                     />
 
-                <com.example.socialmediaapp.customview.button.PostButton
+                <com.example.socialmediaapp.view.button.PostButton
                     android:id="@+id/share_button"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -186,4 +185,4 @@
     </FrameLayout>
 
 
-</com.example.socialmediaapp.customview.container.DragPanel>
+</com.example.socialmediaapp.view.container.DragPanel>

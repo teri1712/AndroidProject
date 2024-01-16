@@ -1,142 +1,228 @@
 package com.example.socialmediaapp.application.session;
 
 
-import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-
-import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.work.Data;
-import androidx.work.ListenableWorker;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkInfo;
-import androidx.work.WorkManager;
-import androidx.work.Worker;
-import androidx.work.WorkerParameters;
 
-import com.example.socialmediaapp.apis.PostApi;
-import com.example.socialmediaapp.apis.entities.PostDataSyncBody;
-import com.example.socialmediaapp.application.ApplicationContainer;
-import com.example.socialmediaapp.application.session.helper.CommentAccessHelper;
-import com.example.socialmediaapp.layoutviews.items.PostItemView;
-import com.example.socialmediaapp.viewmodel.PostDataViewModel;
-import com.example.socialmediaapp.viewmodel.models.post.Comment;
-import com.example.socialmediaapp.viewmodel.models.post.base.Post;
-import com.google.common.util.concurrent.ListenableFuture;
+import com.example.socialmediaapp.api.PostApi;
+import com.example.socialmediaapp.api.debug.HttpCallSupporter;
+import com.example.socialmediaapp.api.entities.PostAccessSyncBody;
+import com.example.socialmediaapp.application.converter.ModelConvertor;
+import com.example.socialmediaapp.application.dao.post.PostDao;
+import com.example.socialmediaapp.application.database.DecadeDatabase;
+import com.example.socialmediaapp.application.entity.post.Post;
+import com.example.socialmediaapp.application.network.SerialTaskRequest;
+import com.example.socialmediaapp.application.network.SingleTaskRequest;
+import com.example.socialmediaapp.application.network.Task;
+import com.example.socialmediaapp.application.network.TaskRequest;
+import com.example.socialmediaapp.models.post.base.PostModel;
 
 import java.io.IOException;
-import java.util.concurrent.Executor;
 
 import okhttp3.ResponseBody;
-import retrofit2.Call;
 import retrofit2.Response;
-import retrofit2.Retrofit;
 
 public class PostSessionHandler extends SessionHandler {
-    private Integer postId;
-    private MutableLiveData<Post> dataSyncEmitter;
-    private Integer commentSessionId;
-    private Retrofit retrofit = ApplicationContainer.getInstance().retrofit;
-    private MutableLiveData<Boolean> likeSync;
+  private volatile Post post;
+  private PostDao dao;
+  private MutableLiveData<PostModel> postData;
+  private CommentAccessHandler commentAccessHandler;
 
-    public PostSessionHandler(Post post) {
-        super();
-        this.postId = post.getId();
-        dataSyncEmitter = new MutableLiveData<>(post);
-        likeSync = new MutableLiveData<>(post.isLiked());
+  protected PostSessionHandler(Post post) {
+    super();
+    this.post = post;
+    this.postData = new MutableLiveData<>();
+    this.dao = DecadeDatabase.getInstance().getPostDao();
+  }
+
+  @Override
+  protected void init() {
+    super.init();
+    try {
+      HttpCallSupporter
+              .create(PostApi.class)
+              .goOnline(post.getId())
+              .execute();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    postData.postValue(ModelConvertor.convertToPostModel(post));
+    commentAccessHandler = new CommentAccessHandler(post, new CommentAccessHelper(post.getId()));
+  }
+
+  @Override
+  protected void sync() {
+    try {
+      PostAccessSyncBody body = loadDataSync();
+      Integer likeCount = body.getLikeCount();
+      Integer commentCount = body.getCommentCount();
+      Integer shareCount = body.getShareCount();
+
+      post.setLikeCount(likeCount);
+      post.setCommentCount(commentCount);
+      post.setShareCount(shareCount);
+      post.setLiked(body.isLiked());
+
+      dao.update(post);
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Override
+  protected void invalidate() {
+    commentAccessHandler.invalidate();
+    super.invalidate();
+  }
+
+  @Override
+  protected void clean() {
+    dao.deletePost(post);
+  }
+
+  public CommentAccessHandler getCommentAccessHandler() {
+    return commentAccessHandler;
+  }
+
+  public LiveData<PostModel> getPostData() {
+    return postData;
+  }
+
+  public void doLike() {
+    PostModel model = postData.getValue();
+    boolean isLike = model.isLiked();
+    if (isLike) return;
+    model.setLiked(true);
+    postData.setValue(model);
+
+    SerialTaskRequest.Builder builder = new SerialTaskRequest.Builder();
+    ActionHandleTask task = builder.fromTask(ActionHandleTask.class);
+    task.setHandler(this);
+    task.setAction(() -> {
+      try {
+        String status = likePost();
+        if (status.equals("Success")) {
+          post.setLiked(true);
+          dao.update(post);
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    });
+    TaskRequest request = builder
+            .setAlias("Post"+post.getId())
+            .setWillRestore(false)
+            .build();
+    postTask(request);
+  }
+
+  public void doUnLike() {
+    PostModel model = postData.getValue();
+    boolean isLike = model.isLiked();
+    if (!isLike) return;
+    model.setLiked(false);
+    postData.setValue(model);
+
+    SerialTaskRequest.Builder builder = new SerialTaskRequest.Builder();
+    ActionHandleTask task = builder.fromTask(ActionHandleTask.class);
+    task.setHandler(this);
+    task.setAction(() -> {
+      try {
+        String status = unLikePost();
+        if (status.equals("Success")) {
+          post.setLiked(false);
+          dao.update(post);
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    });
+    TaskRequest request = builder
+            .setAlias("Post" + post.getId())
+            .setWillRestore(false)
+            .build();
+    postTask(request);
+  }
+
+  private String likePost() throws IOException {
+    Response<ResponseBody> res = HttpCallSupporter.create(PostApi.class)
+            .likePost(post.getId())
+            .execute();
+    return res.code() == 200 ? "Success" : "Failed";
+  }
+
+  private String unLikePost() throws IOException {
+    Response<ResponseBody> res = HttpCallSupporter.create(PostApi.class)
+            .unlikePost(post.getId())
+            .execute();
+    return res.code() == 200 ? "Success" : "Failed";
+  }
+
+  private PostAccessSyncBody loadDataSync() throws IOException {
+    Response<PostAccessSyncBody> res = HttpCallSupporter.create(PostApi.class)
+            .syncPostData(post.getId())
+            .execute();
+    PostAccessSyncBody body = res.body();
+    return body;
+  }
+
+  private void doSyncData() {
+    SingleTaskRequest.Builder builder = new SingleTaskRequest.Builder();
+    SyncTask task = new SingleTaskRequest.Builder().fromTask(SyncTask.class);
+    task.setHandler(this);
+    SingleTaskRequest request = builder
+            .setWillRestore(false)
+            .build();
+    postTask(request);
+  }
+
+  @Override
+  protected void post(Runnable action) {
+    super.post(() -> {
+      action.run();
+      doSyncData();
+    });
+  }
+
+  public static class SyncTask extends Task {
+    private PostSessionHandler handler;
+    private PostDao dao;
+
+    public SyncTask() {
+      super();
+      dao = DecadeDatabase.getInstance().getPostDao();
     }
 
-    public Integer getCommentSessionId() {
-        return commentSessionId;
-    }
-
-    public MutableLiveData<Post> getDataSyncEmitter() {
-        return dataSyncEmitter;
+    public void setHandler(PostSessionHandler handler) {
+      this.handler = handler;
     }
 
     @Override
-    protected void init() {
-        super.init();
-        DataAccessHandler<Comment> commentDataAccessHandler = new DataAccessHandler<>(new CommentAccessHelper(postId));
-        commentSessionId = sessionRegistry.bind(commentDataAccessHandler);
+    public void doTask() {
+      PostAccessSyncBody body = null;
+      try {
+        body = handler.loadDataSync();
+
+        Integer likeCount = body.getLikeCount();
+        Integer commentCount = body.getCommentCount();
+        Integer shareCount = body.getShareCount();
+
+        handler.post.setLikeCount(likeCount);
+        handler.post.setCommentCount(commentCount);
+        handler.post.setShareCount(shareCount);
+
+        dao.update(handler.post);
+
+        PostModel postModel = handler.postData.getValue();
+        postModel.setLikeCount(likeCount);
+        postModel.setCommentCount(commentCount);
+        postModel.setShareCount(shareCount);
+
+        handler.postData.postValue(postModel);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
-
-    public MutableLiveData<String> doLike() {
-        MutableLiveData<String> callBack = new MutableLiveData<>();
-        post(() -> postToWorker(() -> {
-            try {
-                String status = likePost();
-                callBack.postValue(status);
-                return;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            callBack.postValue("Failed");
-
-        }));
-        return callBack;
-    }
-
-    public MutableLiveData<Boolean> getLikeSync() {
-        return likeSync;
-    }
-
-    public MutableLiveData<String> doUnLike() {
-        MutableLiveData<String> callBack = new MutableLiveData<>();
-        post(() -> postToWorker(() -> {
-            try {
-                String status = unLikePost();
-                callBack.postValue(status);
-                return;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            callBack.postValue("Failed");
-
-        }));
-        return callBack;
-    }
-
-    private void requestSyncData() {
-        postToWorker(() -> {
-            Call<PostDataSyncBody> req = retrofit.create(PostApi.class).syncPostData(postId);
-            try {
-                Response<PostDataSyncBody> res = req.execute();
-                PostDataSyncBody body = res.body();
-
-                Post post = dataSyncEmitter.getValue();
-                post.setLikeCount(body.getLikeCount());
-                post.setCommentCount(body.getCommentCount());
-                post.setShareCount(body.getShareCount());
-                dataSyncEmitter.postValue(post);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    @Override
-    protected void post(Runnable action) {
-        super.post(() -> {
-            action.run();
-            requestSyncData();
-        });
-    }
-
-    private String likePost() throws IOException {
-        Call<ResponseBody> req = retrofit.create(PostApi.class).likePost(postId);
-        Response<ResponseBody> res = req.execute();
-        return res.code() == 200 ? "Success" : "Failed";
-    }
-
-    private String unLikePost() throws IOException {
-        Call<ResponseBody> req = retrofit.create(PostApi.class).unlikePost(postId);
-        Response<ResponseBody> res = req.execute();
-
-        return res.code() == 200 ? "Success" : "Failed";
-    }
-
+  }
 }

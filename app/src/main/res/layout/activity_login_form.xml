@@ -4,10 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activitiy.LoginFormActivity">
+    android:background="@color/white"
+    android:paddingLeft="25dp"
+    android:paddingRight="25dp"
+    tools:context=".activity.LoginFormActivity">
 
     <LinearLayout
-        android:layout_width="350dp"
+        android:layout_width="match_parent"
         android:layout_height="608dp"
         android:layout_centerInParent="true"
         android:layout_gravity="center"
@@ -27,7 +30,7 @@
             android:textSize="40sp" />
 
 
-        <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+        <com.example.socialmediaapp.view.progress.spinner.CustomSpinningView
             android:id="@+id/authenProgress"
             android:layout_width="26dp"
             android:layout_height="26dp"
@@ -35,10 +38,10 @@
             android:visibility="gone" />
 
 
-        <com.example.socialmediaapp.customview.RoundedEditText
+        <com.example.socialmediaapp.view.edittext.RoundedEditText
             android:id="@+id/username"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
+            android:layout_height="50dp"
             android:layout_marginTop="20dp"
 
             android:imeOptions="actionNext"
@@ -63,19 +66,19 @@
             android:textSize="16sp"
             android:visibility="gone" />
 
-        <com.example.socialmediaapp.customview.RoundedEditText
+        <com.example.socialmediaapp.view.edittext.RoundedEditText
             android:id="@+id/password"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
+            android:layout_height="50dp"
             android:layout_marginTop="15dp"
             android:drawableRight="@drawable/hide"
-            android:paddingEnd="15dp"
-
             android:gravity="center_vertical"
+
             android:imeOptions="actionDone"
             android:inputType="textPassword"
             android:paddingStart="20dp"
             android:paddingTop="0dp"
+            android:paddingEnd="15dp"
             android:paddingBottom="0dp"
             android:text="password"
 
@@ -123,7 +126,7 @@
         </RelativeLayout>
 
 
-        <com.example.socialmediaapp.customview.button.RoundedButton
+        <com.example.socialmediaapp.view.button.RoundedButton
             android:id="@+id/submit"
             android:layout_width="match_parent"
             android:layout_height="55dp"
@@ -146,7 +149,7 @@
             android:textColor="@color/black"
             android:textSize="16sp" />
 
-        <com.example.socialmediaapp.customview.button.CircleButton
+        <com.example.socialmediaapp.view.button.CircleButton
             android:id="@+id/oauth2Button"
             android:layout_width="40dp"
             android:layout_height="40dp"
@@ -193,6 +196,7 @@
         </LinearLayout>
 
     </LinearLayout>
+
     <FrameLayout
         android:id="@+id/registration_fragment_container"
         android:layout_width="match_parent"

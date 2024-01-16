@@ -25,7 +25,7 @@
                 android:layout_height="40dp"
                 android:orientation="horizontal">
 
-                <com.example.socialmediaapp.customview.button.CircleButton
+                <com.example.socialmediaapp.view.button.CircleButton
                     android:id="@+id/back_button"
                     android:layout_width="40dp"
                     android:layout_height="match_parent"
@@ -43,7 +43,7 @@
                     android:textColor="@color/black"
                     android:textSize="20sp" />
 
-                <com.example.socialmediaapp.customview.button.RoundedButton
+                <com.example.socialmediaapp.view.button.RoundedButton
                     android:id="@+id/save_button"
                     android:layout_width="70dp"
                     android:layout_height="match_parent"
@@ -59,7 +59,7 @@
                 android:layout_height="1.5dp"
                 android:background="#e9ecef" />
 
-            <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+            <com.example.socialmediaapp.view.progress.spinner.CustomSpinningView
                 android:layout_width="30dp"
                 android:layout_marginTop="10dp"
                 android:id="@+id/spinner"
@@ -96,7 +96,7 @@
                     android:textSize="16sp" />
             </LinearLayout>
 
-            <com.example.socialmediaapp.customview.DefaultBackgroundEditText
+            <com.example.socialmediaapp.view.edittext.DefaultBackgroundEditText
                 android:id="@+id/status_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -122,7 +122,7 @@
                     android:scaleType="centerCrop"
                     android:src="@drawable/emyeu" />
 
-                <com.example.socialmediaapp.customview.mask.AvatarCropMask
+                <com.example.socialmediaapp.view.mask.AvatarCropMask
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
             </FrameLayout>

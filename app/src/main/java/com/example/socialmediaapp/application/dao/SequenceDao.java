@@ -31,7 +31,7 @@ public abstract class SequenceDao {
    public int getHeadValue() {
       SequenceTable sequenceTable = get();
       int value = sequenceTable.getHead() - 1;
-      sequenceTable.setTail(value);
+      sequenceTable.setHead(value);
       update(sequenceTable);
       return value;
    }

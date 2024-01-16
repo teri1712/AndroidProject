@@ -4,15 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    tools:context=".home.fragment.EditInformationFragment">
+    tools:context=".home.fragment.information.EditInformationFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="70dp"
-        android:orientation="vertical"
-        android:padding="12dp">
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/signupTextView"
@@ -24,7 +22,7 @@
             android:text="Sign up"
             android:textColor="@color/black"
             android:textSize="40sp" />
-        <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+        <com.example.socialmediaapp.view.progress.spinner.CustomSpinningView
             android:id="@+id/spinner"
             android:layout_width="26dp"
             android:layout_height="26dp"
@@ -35,9 +33,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="15dp"
             android:layout_marginTop="10dp"
-            android:layout_marginRight="15dp"
             android:layout_marginBottom="20dp"
             android:orientation="vertical">
 
@@ -54,7 +50,7 @@
                 android:textSize="18sp" />
 
 
-            <com.example.socialmediaapp.customview.RoundedEditText
+            <com.example.socialmediaapp.view.edittext.RoundedEditText
                 android:id="@+id/fullname"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
@@ -97,7 +93,7 @@
                 android:textSize="18sp" />
 
 
-            <com.example.socialmediaapp.customview.RoundedEditText
+            <com.example.socialmediaapp.view.edittext.RoundedEditText
                 android:id="@+id/password"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
@@ -140,7 +136,7 @@
                 android:textSize="18sp" />
 
 
-            <com.example.socialmediaapp.customview.RoundedEditText
+            <com.example.socialmediaapp.view.edittext.RoundedEditText
                 android:id="@+id/retype_password"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
@@ -171,7 +167,7 @@
 
         </LinearLayout>
 
-        <com.example.socialmediaapp.customview.button.RoundedButton
+        <com.example.socialmediaapp.view.button.RoundedButton
             android:id="@+id/submit_button"
 
             android:layout_width="match_parent"
@@ -197,7 +193,7 @@
             android:textColor="@color/black"
             android:textSize="16sp" />
 
-        <com.example.socialmediaapp.customview.button.CircleButton
+        <com.example.socialmediaapp.view.button.CircleButton
             android:id="@+id/oauth2Button"
             android:layout_width="40dp"
             android:layout_height="40dp"

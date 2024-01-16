@@ -1,150 +1,168 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_height="match_parent"
     android:layout_width="match_parent"
-    tools:context=".home.fragment.main.FriendFragment">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".home.fragment.FriendFragment">
 
-    <ScrollView
-        android:id="@+id/home_scroll_pane"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:scrollbars="none">
-
-        <LinearLayout
-            android:id="@+id/friend_list_panel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-
-            >
-            <View
-                android:id="@+id/padding_head_fragment"
-                android:layout_width="match_parent"
-                android:layout_height="90dp"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="25dp"
-                android:layout_marginLeft="12dp"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
-                android:fontFamily="@font/roboto"
-                android:gravity="top"
-                android:paddingLeft="0dp"
-                android:paddingTop="0dp"
-                android:paddingRight="0dp"
-                android:paddingBottom="0dp"
-                android:text="Total requests"
-                android:textColor="@color/black"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                />
-
-
-
-        </LinearLayout>
-    </ScrollView>
-
-
-    <com.example.socialmediaapp.customview.progress.spinner.SpinningLoadPageView
-        android:id="@+id/load_spinner"
-        android:layout_width="44dp"
-        android:layout_marginTop="20dp"
-        android:layout_height="44dp"
-        android:layout_gravity="center_horizontal"
-
-        android:visibility="gone" />
-
-    <FrameLayout
-        android:id="@+id/header_frame"
+    <LinearLayout
+        android:id="@+id/header_panel"
         android:layout_width="match_parent"
         android:layout_height="95dp"
-        android:background="@color/white">
+        android:orientation="vertical"
+        android:visibility="visible">
+
         <LinearLayout
-            android:id="@+id/header_panel"
+            android:id="@+id/header_info_panel"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
+            android:layout_height="40dp"
+            android:layout_gravity="top"
+            android:orientation="horizontal"
             android:visibility="visible">
 
-            <LinearLayout
-                android:id="@+id/header_info_panel"
-                android:layout_width="match_parent"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="12dp"
+                android:layout_marginTop="10dp"
+                android:fontFamily="@font/lato_bold"
+                android:text="Friends"
+                android:textColor="@color/black"
+                android:textSize="23sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <com.example.socialmediaapp.view.button.CircleButton
+                android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_gravity="top"
-                android:orientation="horizontal"
-                android:visibility="visible">
+                android:gravity="top"
+                app:background_bound="20dp"
+                app:button_background="@drawable/search_24" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="12dp"
-                    android:layout_marginTop="10dp"
-                    android:fontFamily="@font/lato_bold"
-                    android:text="Friends"
-                    android:textColor="@color/black"
-                    android:textSize="23sp"
-                    android:textStyle="bold" />
+        </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layoutDirection="rtl"
-                    android:orientation="horizontal">
+        <LinearLayout
+            android:id="@+id/header_paging_panel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:visibility="visible">
 
-                    <com.example.socialmediaapp.customview.button.CircleButton
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:gravity="top"
-                        app:background_bound="20dp"
-                        app:button_background="@drawable/search_24" />
-                </LinearLayout>
-            </LinearLayout>
+            <com.example.socialmediaapp.view.button.RecCircleButton
+                android:id="@+id/friend_request_page_button"
+                android:layout_width="85dp"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginBottom="12dp"
+                app:button_background_color="#140866FF"
+                app:button_text="Requests"
+                app:button_text_color="#0866FF"
+                app:button_text_font="@font/roboto_medium"
+                app:button_text_size="15sp" />
 
+
+            <com.example.socialmediaapp.view.button.RecCircleButton
+                android:id="@+id/friend_page_button"
+                android:layout_width="110dp"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginBottom="12dp"
+                app:button_background_color="#0F000000"
+                app:button_text="Your friends"
+                app:button_text_color="@color/black"
+                app:button_text_font="@font/roboto_medium"
+                app:button_text_size="15sp" />
+
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <HorizontalScrollView
+        android:id="@+id/horizontal_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
 
             <LinearLayout
-                android:id="@+id/header_paging_panel"
+                android:id="@+id/friend_request_panel"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:visibility="visible">
+                android:orientation="vertical">
 
-                <com.example.socialmediaapp.customview.button.RecCircleButton
-                    android:layout_width="85dp"
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="25dp"
+                    android:layout_marginLeft="12dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:fontFamily="@font/roboto"
+                    android:gravity="top"
+                    android:paddingLeft="0dp"
+                    android:paddingTop="0dp"
+                    android:paddingRight="0dp"
+                    android:paddingBottom="0dp"
+                    android:text="Total requests"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/friend_request_recycler_view"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginRight="5dp"
-                    android:layout_marginBottom="12dp"
-                    app:button_text_font="@font/roboto_medium"
-                    app:button_text="Requests"
-                    app:button_text_color="#0866FF"
-                    app:button_text_size="15sp"
-                    app:button_background_color = "#140866FF" />
+                    android:paddingTop="10dp"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+            </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/friend_panel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-                <com.example.socialmediaapp.customview.button.RecCircleButton
-                    android:layout_width="110dp"
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="25dp"
+                    android:layout_marginLeft="12dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:fontFamily="@font/roboto"
+                    android:gravity="top"
+                    android:paddingLeft="0dp"
+                    android:paddingTop="0dp"
+                    android:paddingRight="0dp"
+                    android:paddingBottom="0dp"
+                    android:text="Total requests"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/friend_recycler_view"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginLeft="5dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginRight="5dp"
-                    android:layout_marginBottom="12dp"
-                    app:button_text_font="@font/roboto_medium"
-                    app:button_text="Your friends"
-                    app:button_text_color="#757575"
-                    app:button_text_size="15sp"
-                    />
-
-
+                    android:paddingTop="10dp"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
             </LinearLayout>
 
         </LinearLayout>
 
-    </FrameLayout>
+    </HorizontalScrollView>
 
 
-</FrameLayout>
+</LinearLayout>

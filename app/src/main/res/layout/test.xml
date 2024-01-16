@@ -1,15 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/white">
+    android:layout_height="50dp"
+    android:background="@color/white"
+    android:orientation="horizontal">
 
-    <FrameLayout
-        android:id="@+id/test_container"
+    <com.example.socialmediaapp.view.button.ActiveFragmentButton
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        app:active_background="@drawable/active_home_24"
+        app:inactive_background="@drawable/inactive_home_24"
+        app:is_active="true" />
 
+    <com.example.socialmediaapp.view.button.ActiveFragmentButton
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        app:active_background="@drawable/active_home_24"
+        app:inactive_background="@drawable/inactive_home_24" />
 
-    </FrameLayout>
-</FrameLayout>
+    <com.example.socialmediaapp.view.button.NotiButton
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        app:active_background="@drawable/active_home_24"
+        app:inactive_background="@drawable/inactive_bell_24" />
+
+    <com.example.socialmediaapp.view.button.ActiveFragmentButton
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        app:active_background="@drawable/active_home_24"
+        app:inactive_background="@drawable/inactive_home_24" />
+
+</LinearLayout>

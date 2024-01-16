@@ -3,24 +3,37 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".home.fragment.main.CommentFragment">
+    android:layout_height="match_parent">
 
-    <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+    <com.example.socialmediaapp.view.progress.spinner.CustomSpinningView
         android:id="@+id/load_spinner"
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="5dp"
+        android:visibility="gone"
         app:button_background_color="#757575" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/comment_panel"
         android:layout_width="match_parent"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:paddingTop="20dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
 
 
     </androidx.recyclerview.widget.RecyclerView>
+
+    <com.example.socialmediaapp.view.button.UltimateRoundedButton
+        android:id="@+id/new_comment_button"
+        android:layout_width="130dp"
+        android:layout_height="42dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:visibility="gone"
+        app:background_bound="18dp"
+        app:button_background="@drawable/black_down_arrow"
+        app:button_text="New comments"
+        app:button_text_size="12sp" />
 
 </FrameLayout>

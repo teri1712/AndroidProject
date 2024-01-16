@@ -3,9 +3,8 @@ package com.example.socialmediaapp.application.entity;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.PrimaryKey;
-import androidx.room.Query;
 
-import retrofit2.http.Path;
+import com.example.socialmediaapp.application.entity.user.UserBasicInfo;
 
 @Entity(foreignKeys = @ForeignKey(
         entity = UserBasicInfo.class,
@@ -14,19 +13,16 @@ import retrofit2.http.Path;
         onDelete = ForeignKey.CASCADE
 ))
 public class SearchItem {
-    @PrimaryKey(autoGenerate = true)
-    private Integer autoId;
-
+    @PrimaryKey
+    private Integer id;
     private Integer userInfoId;
-    private Integer ord;
 
-
-    public Integer getAutoId() {
-        return autoId;
+    public Integer getId() {
+        return id;
     }
 
-    public void setAutoId(Integer autoId) {
-        this.autoId = autoId;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public Integer getUserInfoId() {
@@ -37,11 +33,4 @@ public class SearchItem {
         this.userInfoId = userInfoId;
     }
 
-    public Integer getOrd() {
-        return ord;
-    }
-
-    public void setOrd(Integer ord) {
-        this.ord = ord;
-    }
 }

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".home.fragment.main.VideoFragment">
+    tools:context=".home.fragment.postModel.VideoFragment">
 
     <ScrollView
         android:id="@+id/home_scroll_pane"
@@ -37,7 +37,7 @@
     </ScrollView>
 
 
-    <com.example.socialmediaapp.customview.progress.spinner.SpinningLoadPageView
+    <com.example.socialmediaapp.view.progress.spinner.SpinningLoadPageView
         android:id="@+id/load_spinner"
         android:layout_width="44dp"
         android:layout_height="44dp"
@@ -83,7 +83,7 @@
                     android:layoutDirection="rtl"
                     android:orientation="horizontal">
 
-                    <com.example.socialmediaapp.customview.button.CircleButton
+                    <com.example.socialmediaapp.view.button.CircleButton
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:gravity="top"
@@ -100,7 +100,7 @@
                 android:orientation="horizontal"
                 android:visibility="visible">
 
-                <com.example.socialmediaapp.customview.button.RecCircleButton
+                <com.example.socialmediaapp.view.button.RecCircleButton
                     android:layout_width="115dp"
                     android:layout_height="match_parent"
                     android:layout_marginLeft="10dp"
@@ -114,7 +114,7 @@
                     app:button_background_color = "#140866FF" />
 
 
-                <com.example.socialmediaapp.customview.button.RecCircleButton
+                <com.example.socialmediaapp.view.button.RecCircleButton
                     android:layout_width="60dp"
                     android:layout_height="match_parent"
                     android:layout_marginLeft="5dp"

@@ -1,89 +1,84 @@
 package com.example.socialmediaapp.application.session;
 
-import androidx.arch.core.util.Function;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Transformations;
 
-import com.example.socialmediaapp.apis.UserApi;
-import com.example.socialmediaapp.apis.entities.UserBasicInfoBody;
-import com.example.socialmediaapp.application.ApplicationContainer;
+import com.example.socialmediaapp.api.UserApi;
+import com.example.socialmediaapp.api.debug.HttpCallSupporter;
+import com.example.socialmediaapp.api.entities.UserBasicInfoBody;
+import com.example.socialmediaapp.application.DecadeApplication;
 import com.example.socialmediaapp.application.converter.DtoConverter;
-import com.example.socialmediaapp.viewmodel.models.user.UserBasicInfo;
+import com.example.socialmediaapp.application.converter.ModelConvertor;
+import com.example.socialmediaapp.models.user.UserBasicInfoModel;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class SearchSessionHandler extends SessionHandler {
-    private RecentSearchAccessHandler recentSearchSession;
-    private Retrofit retrofit = ApplicationContainer.getInstance().retrofit;
-    private DtoConverter dtoConverter;
-    private Thread curFetchingThread;
+  private RecentSearchAccessHandler recentHandler;
+  private ScheduledExecutorService scheduledExecutor;
+  private int searchTurn;
 
-    public SearchSessionHandler() {
-        super();
-        dtoConverter = new DtoConverter(ApplicationContainer.getInstance());
-    }
+  public SearchSessionHandler() {
+    super();
+    init();
+  }
 
-    @Override
-    protected void init() {
-        super.init();
-        recentSearchSession = new RecentSearchAccessHandler();
-        sessionRegistry.bind(recentSearchSession);
-    }
+  @Override
+  protected void init() {
+    super.init();
+    searchTurn = 0;
+    scheduledExecutor = DecadeApplication.getInstance().sharedScheduledExecutor;
+    recentHandler = new RecentSearchAccessHandler();
+  }
 
-    public RecentSearchAccessHandler getRecentSearchSession() {
-        return recentSearchSession;
-    }
+  public RecentSearchAccessHandler getRecentHandler() {
+    return recentHandler;
+  }
 
-    public MutableLiveData<List<UserBasicInfo>> searchForUsers(String query) {
-        MutableLiveData<List<UserBasicInfo>> callBack = new MutableLiveData<>();
-        post(() -> {
-            if (curFetchingThread != null) {
-                curFetchingThread.interrupt();
-            }
-            curFetchingThread = new FetchThread(query, callBack);
-            curFetchingThread.start();
-        });
-        return callBack;
-    }
+  @Override
+  protected void invalidate() {
+    recentHandler.invalidate();
+    super.invalidate();
+  }
 
-    private class FetchThread extends Thread {
-        private String query;
-        private MutableLiveData<List<UserBasicInfo>> callBack;
+  public MutableLiveData<List<UserBasicInfoModel>> searchForUser(String query) {
+    MutableLiveData<List<UserBasicInfoModel>> callBack = new MutableLiveData<>();
+    scheduledExecutor.schedule(new Runnable() {
+      final int thisSearchTurn = ++searchTurn;
 
-        @Override
-        public void run() {
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                return;
-            }
-
-            Call<List<UserBasicInfoBody>> req = retrofit.create(UserApi.class).searchForUser(query);
-            Response<List<UserBasicInfoBody>> res = null;
-            try {
-                res = req.execute();
-                List<UserBasicInfoBody> users = res.body();
-                List<UserBasicInfo> batch = new ArrayList<>();
-                for (UserBasicInfoBody u : users) {
-                    batch.add(dtoConverter.convertToModelUserBasicInfo(u));
-                }
-                callBack.postValue(batch);
-            } catch (IOException e) {
-                e.printStackTrace();
-                callBack.postValue(new ArrayList<>());
-            }
+      @Override
+      public void run() {
+        if (thisSearchTurn == searchTurn) {
+          doSearch(callBack, query);
         }
+      }
+    }, 200, TimeUnit.MILLISECONDS);
+    return callBack;
+  }
 
-        public FetchThread(String query, MutableLiveData<List<UserBasicInfo>> callBack) {
-            this.query = query;
-            this.callBack = callBack;
-        }
+  private void doSearch(MutableLiveData<List<UserBasicInfoModel>> callBack, String query) {
+    Call<List<UserBasicInfoBody>> req = HttpCallSupporter
+            .create(UserApi.class)
+            .searchForUser(query);
+    Response<List<UserBasicInfoBody>> res;
+    try {
+      res = req.execute();
+      List<UserBasicInfoBody> users = res.body();
+      List<UserBasicInfoModel> batch = new ArrayList<>();
+      for (UserBasicInfoBody u : users) {
+        batch.add(ModelConvertor.convertBodyToUserBasicInfoModel(u));
+      }
+      callBack.postValue(batch);
+    } catch (IOException e) {
+      e.printStackTrace();
+      callBack.postValue(new ArrayList<>());
     }
+  }
 }

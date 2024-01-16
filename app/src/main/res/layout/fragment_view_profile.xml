@@ -27,7 +27,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop"
-                    android:src="@drawable/suzy_background" />
+                    android:src="@color/grey" />
 
 
             </FrameLayout>
@@ -39,16 +39,16 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="90dp">
 
-                <com.example.socialmediaapp.customview.button.CircleButton
+                <com.example.socialmediaapp.view.button.CircleButton
                     android:id="@+id/avatar_button"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_margin="1dp"
                     app:background_bound="0dp"
-                    app:button_background="@drawable/suzy_avatar" />
+                    app:button_background="@drawable/big_avatar" />
 
 
-                <com.example.socialmediaapp.customview.CircleStrokeView
+                <com.example.socialmediaapp.view.CircleStrokeView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
 

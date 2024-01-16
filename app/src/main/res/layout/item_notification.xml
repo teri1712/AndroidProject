@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.socialmediaapp.view.container.ClickablePanel xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="82dp"
+        android:orientation="horizontal"
+        android:paddingRight="50dp">
+
+        <FrameLayout
+            android:layout_width="65dp"
+            android:layout_height="65dp"
+            android:layout_marginLeft="12dp"
+            android:layout_marginTop="8dp">
+
+            <com.example.socialmediaapp.view.AvatarView
+                android:id="@+id/avatar_view"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_centerVertical="true"
+                app:background_bound="60dp"
+                app:button_background="@drawable/big_avatar" />
+
+            <View
+                android:id="@+id/noti_type_logo"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="bottom|right"
+                android:background="@drawable/friend" />
+        </FrameLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingTop="8dp">
+
+            <TextView
+                android:id="@+id/notify_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="12dp"
+                android:fontFamily="@font/roboto"
+                android:gravity="top"
+                android:maxHeight="40dp"
+                android:paddingLeft="0dp"
+                android:paddingTop="0dp"
+                android:paddingRight="0dp"
+                android:paddingBottom="0dp"
+                android:text="Monkey D Luffy has sent you a friend request "
+                android:textColor="@color/black"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/cnt_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="12dp"
+                android:fontFamily="@font/roboto"
+                android:text="12 hours ago" />
+        </LinearLayout>
+    </LinearLayout>
+</com.example.socialmediaapp.view.container.ClickablePanel>

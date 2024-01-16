@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.example.socialmediaapp.view.button.RoundedButton
+        android:id="@+id/send_image_button"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginBottom="20dp"
+        app:button_background_color="#0084ff"
+        app:button_text="Send"
+        app:button_text_color="@color/white"
+        app:button_text_font="@font/roboto"
+        app:button_text_size="16sp" />
+
+</FrameLayout>

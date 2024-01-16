@@ -46,6 +46,7 @@
     </declare-styleable>
     <declare-styleable name="my_container">
         <attr name="dragged_view_id" format="reference" />
+        <attr name="focus_view_id" format="reference" />
         <attr name="message_item_order" format="integer" />
     </declare-styleable>
 

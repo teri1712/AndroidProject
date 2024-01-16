@@ -4,10 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1f000000"
-    tools:context=".home.fragment.main.PostFragment">
+    android:background="#1f000000">
 
-    <com.example.socialmediaapp.customview.container.SpinningFrame
+    <com.example.socialmediaapp.view.container.SpinningFrame
         android:id="@+id/spinning_frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -20,7 +19,7 @@
         </FrameLayout>
 
 
-    </com.example.socialmediaapp.customview.container.SpinningFrame>
+    </com.example.socialmediaapp.view.container.SpinningFrame>
 
     <LinearLayout
         android:id="@+id/header_panel"
@@ -47,17 +46,17 @@
             android:layoutDirection="rtl"
             android:orientation="horizontal">
 
-            <com.example.socialmediaapp.customview.button.CircleButton
+            <com.example.socialmediaapp.view.button.CircleButton
                 android:id="@+id/message_button"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginRight="5dp"
                 android:gravity="top"
-                app:background_bound="30dp"
-                app:button_background="@drawable/messenger" />
+                app:background_bound="20dp"
+                app:button_background="@drawable/facebook_messenger" />
 
-            <com.example.socialmediaapp.customview.button.CircleButton
+            <com.example.socialmediaapp.view.button.CircleButton
                 android:id="@+id/search_button"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
@@ -68,7 +67,7 @@
         </LinearLayout>
     </LinearLayout>
 
-    <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+    <com.example.socialmediaapp.view.progress.spinner.CustomSpinningView
         android:id="@+id/load_spinner"
         android:layout_width="20dp"
         android:layout_height="20dp"

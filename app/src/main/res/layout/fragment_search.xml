@@ -11,8 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingLeft="10dp"
-        android:visibility="gone"
-        android:paddingTop="58dp">
+        android:paddingTop="58dp"
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -25,23 +25,23 @@
                 android:layout_height="40dp"
                 android:fontFamily="@font/roboto"
                 android:gravity="top"
-                android:visibility="gone"
                 android:text="Looking for ABC"
                 android:textColor="#0866FF"
-                android:textSize="18sp" />
+                android:textSize="18sp"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/empty_textview"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:fontFamily="@font/roboto"
-                android:visibility="gone"
                 android:gravity="top"
                 android:text="no result found"
                 android:textColor="@color/grey"
-                android:textSize="18sp" />
+                android:textSize="18sp"
+                android:visibility="gone" />
 
-            <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+            <com.example.socialmediaapp.view.progress.spinner.CustomSpinningView
                 android:id="@+id/result_spin"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
@@ -106,7 +106,7 @@
             android:layout_height="40dp"
             android:orientation="horizontal">
 
-            <com.example.socialmediaapp.customview.button.CircleButton
+            <com.example.socialmediaapp.view.button.CircleButton
                 android:id="@+id/back_button"
                 android:layout_width="40dp"
                 android:layout_height="match_parent"
@@ -118,7 +118,7 @@
                 android:layout_height="match_parent"
                 android:paddingRight="15dp">
 
-                <com.example.socialmediaapp.customview.RoundedEditText
+                <com.example.socialmediaapp.view.edittext.RoundedEditText
                     android:id="@+id/search_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="38dp"
@@ -131,7 +131,7 @@
                     app:default_info="Search" />
 
 
-                <com.example.socialmediaapp.customview.button.CircleButton
+                <com.example.socialmediaapp.view.button.CircleButton
                     android:id="@+id/erase_text_button"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
@@ -149,5 +149,4 @@
             android:layout_gravity="bottom"
             android:background="#dee2e6" />
     </FrameLayout>
-
 </FrameLayout>

@@ -1,18 +1,12 @@
 package com.example.socialmediaapp.viewmodel;
 
 import android.net.Uri;
-import android.os.Bundle;
 
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.ViewModel;
-import androidx.work.Data;
-
-import com.example.socialmediaapp.activitiy.HomePage;
-import com.example.socialmediaapp.home.fragment.CreatePostFragment;
-import com.example.socialmediaapp.home.fragment.main.PostFragment;
 
 public class CreatePostViewModel extends ViewModel {
     private MutableLiveData<String> postStatusContent;

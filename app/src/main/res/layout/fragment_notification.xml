@@ -1,55 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".home.fragment.main.NotificationFragment">
-
-    <ScrollView
-        android:id="@+id/home_scroll_pane"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:scrollbars="none">
-
-        <LinearLayout
-            android:id="@+id/notify_list_panel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/white"
-            android:orientation="vertical">
-
-            <View
-                android:id="@+id/padding_head_fragment"
-                android:layout_width="match_parent"
-                android:layout_height="50dp" />
-
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:layout_alignParentBottom="true"
-                android:layout_marginBottom="-2dp"
-                android:fontFamily="@font/roboto"
-                android:gravity="center_vertical"
-                android:paddingLeft="12dp"
-                android:paddingTop="0dp"
-                android:paddingRight="0dp"
-                android:text="Recently"
-                android:textColor="@color/black"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-    </ScrollView>
-
-    <com.example.socialmediaapp.customview.progress.spinner.SpinningLoadPageView
-        android:id="@+id/load_spinner"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_marginTop="20dp"
-        android:layout_gravity="center_horizontal"
-        android:visibility="gone" />
+    android:orientation="vertical"
+    tools:context=".home.fragment.NotificationFragment">
 
     <FrameLayout
         android:id="@+id/header_frame"
@@ -75,20 +31,42 @@
                 android:textSize="23sp"
                 android:textStyle="bold" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <View
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layoutDirection="rtl"
-                android:orientation="horizontal">
+                android:layout_weight="1" />
 
-                <com.example.socialmediaapp.customview.button.CircleButton
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:gravity="top"
-                    app:background_bound="22dp"
-                    app:button_background="@drawable/search_24" />
-            </LinearLayout>
+            <com.example.socialmediaapp.view.button.CircleButton
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginRight="10dp"
+                app:background_bound="18dp"
+                app:button_background="@drawable/search_24" />
         </LinearLayout>
 
     </FrameLayout>
-</FrameLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/roboto"
+        android:gravity="center_vertical"
+        android:paddingLeft="12dp"
+        android:paddingTop="0dp"
+        android:paddingRight="0dp"
+        android:text="Recently"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/notification_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="15dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+</LinearLayout>

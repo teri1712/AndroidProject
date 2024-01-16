@@ -18,7 +18,7 @@
             android:orientation="horizontal"
             android:paddingLeft="5dp">
 
-            <com.example.socialmediaapp.customview.button.CircleButton
+            <com.example.socialmediaapp.view.button.CircleButton
                 android:id="@+id/back_button"
                 android:layout_width="35dp"
                 android:layout_height="35dp"
@@ -32,12 +32,12 @@
                 android:padding="5dp">
 
 
-                <com.example.socialmediaapp.customview.button.UserActiveView
+                <com.example.socialmediaapp.view.button.UserActiveView
                     android:id="@+id/avatar_view"
                     android:layout_width="37dp"
                     android:layout_height="37dp"
                     android:layout_marginLeft="5dp"
-                    app:button_background="@drawable/zoro" />
+                    app:button_background="@drawable/avatar" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -64,7 +64,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/roboto"
                         android:gravity="center_vertical"
-                        android:text="online"
+                        android:text="offline"
                         android:textColor="@color/grey"
                         android:textSize="14sp" />
 
@@ -73,7 +73,7 @@
 
             </LinearLayout>
 
-            <com.example.socialmediaapp.customview.button.CircleButton
+            <com.example.socialmediaapp.view.button.CircleButton
                 android:id="@+id/infor_button"
                 android:layout_width="21dp"
                 android:layout_height="21dp"
@@ -97,40 +97,59 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:layout_marginTop="5dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingLeft="5dp"
             android:paddingTop="5dp"
-            android:paddingRight="10dp"
+            android:paddingRight="5dp"
             android:paddingBottom="5dp">
 
-            <com.example.socialmediaapp.customview.button.CircleButton
+            <com.example.socialmediaapp.view.button.CircleButton
+                android:id="@+id/next_button"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                app:background_bound="21dp"
-                app:button_background="@drawable/circle_add_24" />
+                android:visibility="gone"
+                app:background_bound="30dp"
+                app:button_background="@drawable/next_icon"
+                app:button_press_color="#3fffffff" />
 
-            <com.example.socialmediaapp.customview.button.CircleButton
-                android:id="@+id/open_camera_button"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                app:background_bound="21dp"
-                app:button_background="@drawable/messenger_camera_24" />
+            <LinearLayout
+                android:id="@+id/function_panel"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
 
-            <com.example.socialmediaapp.customview.button.CircleButton
-                android:id="@+id/select_image"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                app:background_bound="21dp"
-                app:button_background="@drawable/messenger_picture_24" />
+                <com.example.socialmediaapp.view.button.CircleButton
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    app:background_bound="19dp"
+                    app:button_background="@drawable/circle_add_24"
+                    app:button_press_color="#3fffffff" />
+
+                <com.example.socialmediaapp.view.button.CircleButton
+                    android:id="@+id/open_camera_button"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    app:background_bound="19dp"
+                    app:button_background="@drawable/messenger_camera_24"
+                    app:button_press_color="#3fffffff" />
+
+                <com.example.socialmediaapp.view.button.CircleButton
+                    android:id="@+id/select_image"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    app:background_bound="19dp"
+                    app:button_background="@drawable/messenger_picture_24"
+                    app:button_press_color="#3fffffff" />
+            </LinearLayout>
 
             <FrameLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
 
-                android:layout_gravity="center_vertical"
                 android:layout_weight="1">
 
-                <com.example.socialmediaapp.customview.RoundedEditText
+                <com.example.socialmediaapp.view.edittext.RoundedEditText
                     android:id="@+id/message_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -139,41 +158,43 @@
                     android:paddingTop="0dp"
                     android:paddingBottom="0dp"
                     android:textSize="15sp"
-                    app:background_color="#1fffffff"
+                    app:background_color="#2fffffff"
                     app:custom_corner_ratio="55"
                     app:default_info="Write something..." />
 
-                <com.example.socialmediaapp.customview.button.CircleButton
+                <com.example.socialmediaapp.view.button.CircleButton
                     android:id="@+id/emoji_button"
-                    android:layout_width="21dp"
-                    android:layout_height="21dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:layout_gravity="right|center_vertical"
-                    android:layout_marginRight="10dp"
+                    android:layout_marginRight="12dp"
                     app:background_bound="21dp"
                     app:button_background="@drawable/messenger_smile_24" />
 
             </FrameLayout>
 
-            <com.example.socialmediaapp.customview.button.CircleButton
+            <com.example.socialmediaapp.view.button.CircleButton
                 android:id="@+id/send_button"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 app:background_bound="21dp"
-                app:button_background="@drawable/messeger_like" />
+                app:button_background="@drawable/messeger_like"
+                app:button_press_color="#3fffffff" />
 
         </LinearLayout>
     </LinearLayout>
 
 
-    <com.example.socialmediaapp.customview.button.CircleButton
+    <com.example.socialmediaapp.view.button.CircleButton
         android:id="@+id/scroll_down_button"
         android:layout_width="35dp"
         android:layout_height="35dp"
         android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="50dp"
-        android:alpha="0"
+        android:layout_marginBottom="70dp"
         android:visibility="gone"
         app:background_bound="22dp"
         app:button_background="@drawable/down_arrow"
-        app:button_background_color="#1fffffff" />
+        app:button_background_color="#2fffffff" />
+
+
 </FrameLayout>

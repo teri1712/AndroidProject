@@ -1,67 +1,53 @@
 package com.example.socialmediaapp.layoutviews.profile;
 
-import android.content.Context;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
 
 import com.example.socialmediaapp.R;
-import com.example.socialmediaapp.customview.button.RoundedButton;
-import com.example.socialmediaapp.home.fragment.main.PostFragment;
+import com.example.socialmediaapp.view.button.RoundedButton;
 import com.example.socialmediaapp.layoutviews.profile.base.ProfileView;
-import com.example.socialmediaapp.layoutviews.profile.model.Configurer;
-import com.example.socialmediaapp.viewmodel.models.user.profile.NotMeProfile;
-import com.example.socialmediaapp.viewmodel.models.user.profile.base.UserProfile;
+import com.example.socialmediaapp.layoutviews.profile.model.Configuror;
 
 public class NotMeProfileView extends ProfileView {
-    private RoundedButton blueButton, greyButton;
-    public RoundedButton getBlueButton() {
-        return blueButton;
-    }
-    public RoundedButton getGreyButton() {
-        return greyButton;
-    }
-    private MutableLiveData<Configurer> configuration;
+  private RoundedButton blueButton, greyButton;
 
-    @Override
-    protected void initOnClick() {
-        super.initOnClick();
-        blueButton = root.findViewById(R.id.blue_button);
-        greyButton = root.findViewById(R.id.grey_button);
-        blueButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                configuration.getValue().performActionLeft();
-            }
-        });
-        greyButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                configuration.getValue().performActionRight();
-            }
-        });
-    }
+  public RoundedButton getBlueButton() {
+    return blueButton;
+  }
 
-    public NotMeProfileView(@NonNull Fragment owner) {
-        super(owner, R.layout.stranger_profile);
-        configuration = new MutableLiveData<>();
-    }
+  public RoundedButton getGreyButton() {
+    return greyButton;
+  }
 
-    @Override
-    public void initViewModel() {
-        super.initViewModel();
-        configuration.observe(owner.getViewLifecycleOwner(), new Observer<Configurer>() {
-            @Override
-            public void onChanged(Configurer configurer) {
-                configurer.configure();
-            }
-        });
-    }
+  private Configuror config;
 
-    public void changeConfiguration(Configurer configurer) {
-        configuration.setValue(configurer);
-    }
+  @Override
+  protected void initOnClick() {
+    super.initOnClick();
+    blueButton = root.findViewById(R.id.blue_button);
+    greyButton = root.findViewById(R.id.grey_button);
+    blueButton.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        config.leftAction();
+      }
+    });
+    greyButton.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        config.rightAction();
+      }
+    });
+  }
+
+  public NotMeProfileView(@NonNull Fragment owner) {
+    super(owner, R.layout.item_stranger_profile);
+  }
+
+  public void setConfiguration(Configuror configuror) {
+    config = configuror;
+    config.configure();
+  }
 }

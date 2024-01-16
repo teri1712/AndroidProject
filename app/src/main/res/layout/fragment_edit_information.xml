@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context=".home.fragment.EditInformationFragment">
+    tools:context=".home.fragment.information.EditInformationFragment">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -30,9 +30,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="230dp"
                         android:scaleType="centerCrop"
-                        android:src="@drawable/suzy_background" />
+                        android:src="@color/grey"/>
 
-                    <com.example.socialmediaapp.customview.button.CircleButton
+                    <com.example.socialmediaapp.view.button.CircleButton
                         android:id="@+id/select_background_button"
                         android:layout_width="35dp"
                         android:layout_height="35dp"
@@ -50,21 +50,21 @@
                     android:layout_gravity="center_horizontal"
                     android:layout_marginTop="120dp">
 
-                    <com.example.socialmediaapp.customview.button.CircleButton
+                    <com.example.socialmediaapp.view.button.CircleButton
                         android:id="@+id/avatar_button"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_margin="1dp"
                         app:background_bound="0dp"
-                        app:button_background="@drawable/suzy_avatar"
+                        app:button_background="@drawable/big_avatar"
                         app:enable_on_click="false" />
 
 
-                    <com.example.socialmediaapp.customview.CircleStrokeView
+                    <com.example.socialmediaapp.view.CircleStrokeView
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
 
-                    <com.example.socialmediaapp.customview.button.CircleButton
+                    <com.example.socialmediaapp.view.button.CircleButton
                         android:id="@+id/select_avatar_button"
                         android:layout_width="35dp"
                         android:layout_height="35dp"
@@ -126,7 +126,7 @@
                     android:textSize="16sp"
                     android:visibility="gone" />
 
-                <com.example.socialmediaapp.customview.RoundedEditText
+                <com.example.socialmediaapp.view.edittext.RoundedEditText
                     android:id="@+id/fullname_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
@@ -166,7 +166,7 @@
                     android:textSize="16sp"
                     android:visibility="gone" />
 
-                <com.example.socialmediaapp.customview.RoundedEditText
+                <com.example.socialmediaapp.view.edittext.RoundedEditText
                     android:id="@+id/alias_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
@@ -207,7 +207,7 @@
                     android:textSize="16sp"
                     android:visibility="gone" />
 
-                <com.example.socialmediaapp.customview.RoundedEditText
+                <com.example.socialmediaapp.view.edittext.RoundedEditText
                     android:id="@+id/gender_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
@@ -251,7 +251,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
-                    <com.example.socialmediaapp.customview.RoundedEditText
+                    <com.example.socialmediaapp.view.edittext.RoundedEditText
                         android:id="@+id/birthday_edit_text"
                         android:layout_width="0dp"
                         android:layout_height="40dp"
@@ -268,7 +268,7 @@
                         app:default_info="username" />
 
 
-                    <com.example.socialmediaapp.customview.button.CircleButton
+                    <com.example.socialmediaapp.view.button.CircleButton
                         android:id="@+id/date_picker_button"
                         android:layout_width="40dp"
                         android:layout_height="match_parent"
@@ -280,7 +280,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <com.example.socialmediaapp.customview.button.RoundedButton
+            <com.example.socialmediaapp.view.button.RoundedButton
                 android:id="@+id/submit_button"
 
                 android:layout_width="match_parent"
@@ -334,7 +334,7 @@
                     android:textColor="@color/black"
                     android:textSize="17sp" />
 
-                <com.example.socialmediaapp.customview.RoundedEditText
+                <com.example.socialmediaapp.view.edittext.RoundedEditText
                     android:id="@+id/old_password_confirm"
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
@@ -364,7 +364,7 @@
                     android:textColor="@color/black"
                     android:textSize="17sp" />
 
-                <com.example.socialmediaapp.customview.RoundedEditText
+                <com.example.socialmediaapp.view.edittext.RoundedEditText
                     android:id="@+id/new_password"
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
@@ -385,7 +385,7 @@
 
             </LinearLayout>
 
-            <com.example.socialmediaapp.customview.button.RoundedButton
+            <com.example.socialmediaapp.view.button.RoundedButton
                 android:id="@+id/change_password_button"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
@@ -398,7 +398,7 @@
         </LinearLayout>
     </ScrollView>
 
-    <com.example.socialmediaapp.customview.progress.spinner.CustomSpinningView
+    <com.example.socialmediaapp.view.progress.spinner.CustomSpinningView
         android:id="@+id/spinner"
         android:layout_width="30dp"
         android:layout_height="30dp"

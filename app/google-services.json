@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "33559098598",
+    "project_id": "teriiiiii-bf9aa",
+    "storage_bucket": "teriiiiii-bf9aa.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:33559098598:android:4f9da92188ee1ca04ff727",
+        "android_client_info": {
+          "package_name": "com.decade.android.social.media"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCF854yZkMyuKfz0fpih27kdP4puLY3S84"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,14 +1,10 @@
 package com.example.socialmediaapp.viewmodel;
 
-import android.content.Context;
 import android.net.Uri;
-import android.widget.Toast;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.ViewModel;
-
-import com.example.socialmediaapp.services.ServiceApi;
 
 public class UpdateBackgroundViewModel extends ViewModel {
     private SavedStateHandle savedStateHandle;

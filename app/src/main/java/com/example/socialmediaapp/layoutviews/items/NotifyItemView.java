@@ -14,7 +14,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import com.example.socialmediaapp.R;
-import com.example.socialmediaapp.customview.button.CircleButton;
+import com.example.socialmediaapp.view.button.CircleButton;
 
 public class NotifyItemView extends FrameLayout {
     private View view;
@@ -37,7 +37,7 @@ public class NotifyItemView extends FrameLayout {
         super(context);
         setWillNotDraw(false);
         LayoutInflater inflater = LayoutInflater.from(context);
-        view = inflater.inflate(R.layout.notify_item, this, true);
+        view = inflater.inflate(R.layout.item_notification, this, true);
         isPressed = false;
         isRead = false;
         setOnTouchListener(new OnTouchListener() {

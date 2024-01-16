@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.example.socialmediaapp.customview.container.DragPanel xmlns:android="http://schemas.android.com/apk/res/android"
+<com.example.socialmediaapp.view.container.DragPanel xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/drag_panel"
     android:layout_width="match_parent"
@@ -64,7 +64,7 @@
                 android:paddingRight="10dp"
                 android:paddingBottom="5dp">
 
-                <com.example.socialmediaapp.customview.RoundedEditText
+                <com.example.socialmediaapp.view.edittext.RoundedEditText
                     android:id="@+id/comment_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -82,14 +82,14 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp">
 
-                    <com.example.socialmediaapp.customview.button.CircleButton
+                    <com.example.socialmediaapp.view.button.CircleButton
                         android:id="@+id/select_image"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         app:background_bound="24dp"
                         app:button_background="@drawable/comment_select_image" />
 
-                    <com.example.socialmediaapp.customview.button.CircleButton
+                    <com.example.socialmediaapp.view.button.CircleButton
                         android:id="@+id/select_gif"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
@@ -97,7 +97,7 @@
                         app:background_bound="26dp"
                         app:button_background="@drawable/gif_24" />
 
-                    <com.example.socialmediaapp.customview.button.CircleButton
+                    <com.example.socialmediaapp.view.button.CircleButton
                         android:id="@+id/select_icon"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
@@ -105,7 +105,7 @@
                         app:background_bound="24dp"
                         app:button_background="@drawable/smile_24" />
 
-                    <com.example.socialmediaapp.customview.button.CircleButton
+                    <com.example.socialmediaapp.view.button.CircleButton
                         android:id="@+id/send_button"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
@@ -130,7 +130,7 @@
                         android:maxHeight="150dp"
                         app:shapeAppearanceOverlay="@style/RoundedCorners" />
 
-                    <com.example.socialmediaapp.customview.button.CircleButton
+                    <com.example.socialmediaapp.view.button.CircleButton
                         android:id="@+id/remove_media_button"
                         android:layout_width="25dp"
                         android:layout_height="25dp"
@@ -147,4 +147,4 @@
         </FrameLayout>
     </LinearLayout>
 
-</com.example.socialmediaapp.customview.container.DragPanel>
+</com.example.socialmediaapp.view.container.DragPanel>

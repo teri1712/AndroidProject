@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal">
+
+        <com.example.socialmediaapp.view.button.CircleButton
+            android:id="@+id/back_button"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"
+            app:background_bound="30dp"
+            app:button_background="@drawable/back_24" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fontFamily="@font/roboto"
+            android:gravity="center"
+            android:text="Post"
+            android:textColor="@color/black"
+            android:textSize="20sp" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/comment_panel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
+
+        </androidx.recyclerview.widget.RecyclerView>
+
+        <com.example.socialmediaapp.view.progress.spinner.CustomSpinningView
+            android:id="@+id/load_spinner"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="5dp"
+            android:visibility="gone" />
+
+        <com.example.socialmediaapp.view.button.UltimateRoundedButton
+            android:id="@+id/new_comment_button"
+            android:layout_width="130dp"
+            android:layout_height="45dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="15dp"
+            android:visibility="gone"
+            app:background_bound="18dp"
+            app:button_background="@drawable/black_down_arrow"
+            app:button_text="New comments"
+            app:button_text_size="12sp" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="@color/grey" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingLeft="10dp"
+            android:paddingTop="5dp"
+            android:paddingRight="10dp"
+            android:paddingBottom="5dp">
+
+            <com.example.socialmediaapp.view.edittext.RoundedEditText
+                android:id="@+id/comment_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:minHeight="36dp"
+                android:paddingStart="18dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:textSize="16sp"
+                app:custom_corner_ratio="50"
+                app:default_info="Write something..." />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp">
+
+                <com.example.socialmediaapp.view.button.CircleButton
+                    android:id="@+id/select_image"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    app:background_bound="24dp"
+                    app:button_background="@drawable/comment_select_image" />
+
+                <com.example.socialmediaapp.view.button.CircleButton
+                    android:id="@+id/select_gif"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_toRightOf="@id/select_image"
+                    app:background_bound="26dp"
+                    app:button_background="@drawable/gif_24" />
+
+                <com.example.socialmediaapp.view.button.CircleButton
+                    android:id="@+id/select_icon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_toRightOf="@id/select_gif"
+                    app:background_bound="24dp"
+                    app:button_background="@drawable/smile_24" />
+
+                <com.example.socialmediaapp.view.button.CircleButton
+                    android:id="@+id/send_button"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_alignParentEnd="true"
+                    app:background_bound="21dp"
+                    app:button_background="@drawable/comment_active_send" />
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/image_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/image_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:maxHeight="150dp"
+                    app:shapeAppearanceOverlay="@style/RoundedCorners" />
+
+                <com.example.socialmediaapp.view.button.CircleButton
+                    android:id="@+id/remove_media_button"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_gravity="top"
+                    android:layout_margin="5dp"
+                    app:background_bound="20dp"
+                    app:button_background="@drawable/cross_small_24"
+                    app:button_background_color="#18000000" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</LinearLayout>

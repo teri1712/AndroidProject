@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_content_panel"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+    android:paddingBottom="10dp">
+
+    <com.example.socialmediaapp.view.button.CircleButton
+        android:id="@+id/avatar_button"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        app:background_bound="40dp"
+        app:button_background="@drawable/user_24" />
+
+    <LinearLayout
+        android:id="@+id/information_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:orientation="vertical">
+
+        <com.example.socialmediaapp.view.container.RoundedPanel
+            android:id="@+id/background_panel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="15dp"
+            android:paddingTop="4dp"
+            android:paddingRight="20dp"
+            android:paddingBottom="5.5dp"
+            app:custom_corner_ratio="50">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/fullname"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/roboto_medium"
+                    android:paddingTop="0dp"
+                    android:paddingBottom="0dp"
+                    android:text="Android"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+
+
+                <TextView
+                    android:id="@+id/comment_content"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="@font/roboto"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </com.example.socialmediaapp.view.container.RoundedPanel>
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:maxHeight="220dp"
+            android:visibility="gone"
+            app:shapeAppearanceOverlay="@style/RoundedCorners" />
+
+        <LinearLayout
+            android:id="@+id/like_info_panel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="3dp">
+
+            <TextView
+                android:id="@+id/cnt_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="0dp"
+                android:fontFamily="@font/roboto_medium"
+                android:gravity="center_vertical"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:text="12 hours"
+                android:textColor="#757575"
+                android:textSize="14sp" />
+
+            <com.example.socialmediaapp.view.textview.LikeTextView
+                android:id="@+id/like_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="11dp"
+                android:fontFamily="@font/roboto_bold"
+                android:gravity="center_vertical"
+                android:paddingLeft="3dp"
+                android:paddingTop="2dp"
+                android:paddingRight="3dp"
+                android:paddingBottom="2dp"
+                android:text="Like"
+                android:textColor="#757575"
+                android:textSize="14sp" />
+
+            <com.example.socialmediaapp.view.textview.ClickableTextView
+                android:id="@+id/reply_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="11dp"
+                android:fontFamily="@font/roboto_bold"
+                android:gravity="center_vertical"
+                android:paddingLeft="3dp"
+                android:paddingTop="2dp"
+                android:paddingRight="3dp"
+                android:paddingBottom="2dp"
+                android:text="Reply"
+                android:textColor="#757575"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/cnt_like"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="false"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="15dp"
+                android:drawableRight="@drawable/like"
+                android:drawablePadding="4dp"
+                android:gravity="center_vertical"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:text="5"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+</LinearLayout>

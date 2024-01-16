@@ -5,127 +5,133 @@
     android:layout_height="match_parent"
     android:background="@color/white">
 
-
-    <HorizontalScrollView
-        android:id="@+id/scroll_page"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:scrollbars="none">
+        android:orientation="vertical">
 
-        <LinearLayout
-            android:id="@+id/page_panel"
+        <HorizontalScrollView
+            android:id="@+id/scroll_page"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true"
+            android:scrollbars="none">
 
-            <FrameLayout
-                android:id="@+id/posts"
+            <LinearLayout
+                android:id="@+id/page_panel"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@color/white" />
+                android:orientation="horizontal">
 
-            <FrameLayout
-                android:id="@+id/media"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/black" />
+                <FrameLayout
+                    android:id="@+id/posts"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/white" />
 
-            <FrameLayout
-                android:id="@+id/friends"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/white" />
+                <FrameLayout
+                    android:id="@+id/media"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/white" />
 
-            <FrameLayout
-                android:id="@+id/notifications"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/black"
+                <FrameLayout
+                    android:id="@+id/friends"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/white" />
 
-                />
+                <FrameLayout
+                    android:id="@+id/notifications"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/white" />
 
-            <FrameLayout
-                android:id="@+id/settings"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@color/white" />
+                <FrameLayout
+                    android:id="@+id/settings"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@color/white" />
 
 
-        </LinearLayout>
-    </HorizontalScrollView>
+            </LinearLayout>
+        </HorizontalScrollView>
 
-    <FrameLayout
-        android:id="@+id/command_frame"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_gravity="bottom"
-        android:background="@color/white">
-
-        <LinearLayout
-            android:id="@+id/command_panel"
+        <FrameLayout
+            android:id="@+id/command_frame"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:layout_height="50dp"
+            android:layout_gravity="bottom"
+            android:background="@color/white">
 
-            <com.example.socialmediaapp.customview.button.ActiveFragmentButton
-                android:id="@+id/home_button"
+            <LinearLayout
+                android:id="@+id/command_panel"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                app:active_background="@drawable/active_home_24"
-                app:inactive_background="@drawable/inactive_home_24"
-                app:is_active="true" />
+                android:orientation="horizontal">
 
-            <com.example.socialmediaapp.customview.button.ActiveFragmentButton
-                android:id="@+id/media_button"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                app:active_background="@drawable/active_meida_24"
-                app:inactive_background="@drawable/inactive_media_24"
-                app:is_active="false" />
+                <com.example.socialmediaapp.view.button.ActiveFragmentButton
+                    android:id="@+id/home_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    app:active_background="@drawable/active_home_24"
+                    app:inactive_background="@drawable/inactive_home_24"
+                    app:is_active="true" />
 
-            <com.example.socialmediaapp.customview.button.ActiveFragmentButton
-                android:id="@+id/friends_button"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                app:active_background="@drawable/active_users_24"
-                app:inactive_background="@drawable/inactive_friend_24"
-                app:is_active="false" />
+                <com.example.socialmediaapp.view.button.ActiveFragmentButton
+                    android:id="@+id/media_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    app:active_background="@drawable/active_meida_24"
+                    app:inactive_background="@drawable/inactive_media_24"
+                    app:is_active="false" />
 
-            <com.example.socialmediaapp.customview.button.ActiveFragmentButton
-                android:id="@+id/notify_button"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                app:active_background="@drawable/active_bell_24"
-                app:inactive_background="@drawable/inactive_bell_24"
-                app:is_active="false"
+                <com.example.socialmediaapp.view.button.ActiveFragmentButton
+                    android:id="@+id/friends_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    app:active_background="@drawable/active_users_24"
+                    app:inactive_background="@drawable/inactive_friend_24"
+                    app:is_active="false" />
 
-                />
+                <com.example.socialmediaapp.view.button.NotiButton
+                    android:id="@+id/notify_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    app:active_background="@drawable/active_bell_24"
+                    app:inactive_background="@drawable/inactive_bell_24"
+                    app:is_active="false"
 
-            <com.example.socialmediaapp.customview.button.ActiveFragmentButton
-                android:id="@+id/settings_button"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                app:active_background="@drawable/active_list_24"
-                app:inactive_background="@drawable/inactive_list_24"
-                app:is_active="false"
+                    />
 
-                />
+                <com.example.socialmediaapp.view.button.ActiveFragmentButton
+                    android:id="@+id/settings_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    app:active_background="@drawable/active_list_24"
+                    app:inactive_background="@drawable/inactive_list_24"
+                    app:is_active="false" />
 
-        </LinearLayout>
+            </LinearLayout>
 
 
-    </FrameLayout>
+        </FrameLayout>
+    </LinearLayout>
 
     <FrameLayout
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <FrameLayout
+        android:id="@+id/view_image_fragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 </FrameLayout>

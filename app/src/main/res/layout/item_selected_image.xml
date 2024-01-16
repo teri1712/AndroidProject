@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="1dp"
+    android:background="@color/grey">
+
+    <ImageView
+        android:id="@+id/image_view"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:adjustViewBounds="true"
+        android:src="@drawable/luffy" />
+
+    <FrameLayout
+        android:id="@+id/selected_mask"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="#5fffffff">
+
+        <com.example.socialmediaapp.view.container.CircleConainer
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            app:button_background_color="#0084ff">
+
+            <TextView
+                android:id="@+id/selected_number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="@font/roboto_medium"
+                android:padding="0dp"
+                android:text="1"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+
+        </com.example.socialmediaapp.view.container.CircleConainer>
+    </FrameLayout>
+</FrameLayout>
